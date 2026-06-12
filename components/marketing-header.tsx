@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { GraduationCap, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BrandMark } from '@/components/brand-mark'
 
 const NAV = [
   { href: '/features', label: 'Features' },
@@ -24,9 +25,7 @@ export function MarketingHeader({ activePath }: MarketingHeaderProps) {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between">
 
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:shadow-primary/50 transition-all duration-200">
-            <GraduationCap className="w-4.5 h-4.5 text-primary-foreground" />
-          </div>
+          <BrandMark className="w-9 h-9 group-hover:scale-110 transition-transform duration-200" />
           <span className="font-bold text-lg tracking-tight">Mwalimu AI</span>
         </Link>
 

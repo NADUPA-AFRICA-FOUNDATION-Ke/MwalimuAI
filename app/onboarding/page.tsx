@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useProfile, type TeacherProfile } from '@/context/profile-context'
-import { GraduationCap, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, BookMarked, Check } from 'lucide-react'
+import { ArrowRight, ArrowLeft, CheckCircle2, Sparkles, BookMarked, Check } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 import { getT } from '@/lib/i18n'
 
 const SUBJECTS = [
@@ -206,9 +207,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-xl shadow-primary/30">
-            <GraduationCap className="w-6 h-6 text-primary-foreground" />
-          </div>
+          <BrandMark className="w-12 h-12" />
           <span className="font-bold text-2xl tracking-tight">Mwalimu AI</span>
         </div>
 

@@ -7,7 +7,8 @@ import { Spinner } from '@/components/ui/spinner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, GraduationCap, ArrowLeft, MonitorSmartphone } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, MonitorSmartphone } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 import { createClient } from '@/lib/supabase/client'
 import { FORCED_LOGOUT_FLAG } from '@/context/profile-context'
 
@@ -77,9 +78,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-2.5 w-fit">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-              <GraduationCap className="w-4.5 h-4.5 text-white" />
-            </div>
+            <BrandMark className="w-9 h-9" />
             <span className="font-bold text-base text-white tracking-tight">Mwalimu AI</span>
           </Link>
         </div>
@@ -126,9 +125,7 @@ export default function LoginPage() {
           </Link>
           {/* Mobile logo */}
           <Link href="/" className="flex items-center gap-2 lg:hidden">
-            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-              <GraduationCap className="w-3.5 h-3.5 text-white" />
-            </div>
+            <BrandMark className="w-7 h-7" />
             <span className="font-bold text-sm tracking-tight">Mwalimu AI</span>
           </Link>
           <p className="text-sm text-gray-400">

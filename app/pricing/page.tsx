@@ -9,7 +9,6 @@ import {
   Check,
   Loader2,
   AlertCircle,
-  GraduationCap,
   Sparkles,
   Building2,
   ArrowRight,
@@ -18,6 +17,7 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 import { useProfile } from '@/context/profile-context'
 import { cn } from '@/lib/utils'
 
@@ -259,9 +259,7 @@ function PricingContent() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between">
 
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-110 group-hover:shadow-primary/50 transition-all duration-200">
-              <GraduationCap className="w-4.5 h-4.5 text-primary-foreground" />
-            </div>
+            <BrandMark className="w-9 h-9 group-hover:scale-110 transition-transform duration-200" />
             <span className="font-bold text-lg tracking-tight">Mwalimu AI</span>
           </Link>
 
@@ -436,9 +434,7 @@ function PricingContent() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-200">
-                <GraduationCap className="w-4 h-4 text-primary-foreground" />
-              </div>
+              <BrandMark className="w-8 h-8 group-hover:scale-110 transition-transform duration-200" />
               <span className="font-bold tracking-tight">Mwalimu AI</span>
             </Link>
             <p className="text-xs text-muted-foreground order-last md:order-none">

@@ -7,7 +7,8 @@ import { Card } from '@/components/ui/card'
 import { BackButton } from '@/components/back-button'
 import { getBlogPost, getAllBlogPosts } from '@/lib/blog-data'
 import { renderInline } from '@/lib/render-md'
-import { Calendar, Clock, User, GraduationCap, ArrowRight } from 'lucide-react'
+import { Calendar, Clock, User, ArrowRight } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 
 export async function generateStaticParams() {
   const posts = getAllBlogPosts()
@@ -51,9 +52,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="flex items-center gap-4">
             <BackButton fallbackHref="/blog" label="Back to Blog" />
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md shadow-primary/25">
-                <GraduationCap className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <BrandMark className="w-10 h-10" />
               <span className="font-bold text-lg hidden sm:inline">Mwalimu AI</span>
             </Link>
           </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { GraduationCap } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 
 export function MarketingFooter() {
   return (
@@ -7,9 +7,7 @@ export function MarketingFooter() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-200">
-              <GraduationCap className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <BrandMark className="w-8 h-8 group-hover:scale-110 transition-transform duration-200" />
             <span className="font-bold tracking-tight">Mwalimu AI</span>
           </Link>
 

@@ -9,7 +9,8 @@ import { downloadCertificatePDF } from '@/lib/certificate-pdf'
 import { useProfile } from '@/context/profile-context'
 import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/back-button'
-import { Award, Printer, Share2, CheckCircle2, GraduationCap, Lock, ShieldCheck } from 'lucide-react'
+import { Award, Printer, Share2, CheckCircle2, Lock, ShieldCheck } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 
 export default function CertificatePage() {
   const params  = useParams<{ programId: string }>()
@@ -126,15 +127,13 @@ export default function CertificatePage() {
 
           <div className="px-10 py-10 text-center relative">
             {/* Background watermark */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-3 pointer-events-none">
-              <GraduationCap className="w-72 h-72 text-primary" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+              <BrandMark className="w-72 h-72" alt="" />
             </div>
 
             {/* Header */}
             <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/30">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
+              <BrandMark className="w-12 h-12" />
               <div className="text-left">
                 <p className="font-bold text-lg text-gray-900 leading-tight">Mwalimu AI</p>
                 <p className="text-xs text-gray-500">Professional Development Platform</p>

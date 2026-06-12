@@ -1,4 +1,4 @@
-import type { Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from '@/components/providers'
@@ -15,6 +15,25 @@ export const viewport: Viewport = {
     { media: '(prefers-color-scheme: light)', color: '#fafafa' },
     { media: '(prefers-color-scheme: dark)',  color: '#0f0f14' },
   ],
+}
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://mwalimu-ai-nu.vercel.app'),
+  title: {
+    default: 'Mwalimu AI — Learn Smarter. Teach Better.',
+    template: '%s · Mwalimu AI',
+  },
+  description: 'AI-powered professional development for Kenyan CBC teachers.',
+  applicationName: 'Mwalimu AI',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
 }
 
 export default function RootLayout({

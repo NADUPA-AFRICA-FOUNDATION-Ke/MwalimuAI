@@ -9,6 +9,7 @@ import {
   Home as HomeIcon, BookOpen, MessageSquare, Trophy, Settings, Sparkles,
   CheckCircle2, XCircle, ChevronDown,
 } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 
 /* ── hooks ─────────────────────────────────────────────── */
 function useFadeIn(threshold = 0.08) {
@@ -64,9 +65,7 @@ function DashboardMockup() {
 
         {/* Sidebar */}
         <div className="w-14 bg-white border-r border-gray-100 flex flex-col items-center py-4 gap-1.5 shrink-0">
-          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center mb-3">
-            <GraduationCap className="w-4 h-4 text-white" />
-          </div>
+          <BrandMark className="w-9 h-9 mb-3" />
           {[
             { Icon: HomeIcon,      active: true  },
             { Icon: BookOpen,      active: false },
@@ -371,9 +370,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 md:px-10 h-[68px] flex items-center justify-between">
 
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-              <GraduationCap className="w-4.5 h-4.5 text-white" />
-            </div>
+            <BrandMark className="w-9 h-9" />
             <span className={`font-bold text-base tracking-tight transition-colors duration-300 ${scrolled ? 'text-foreground' : 'text-white'}`}>
               Mwalimu AI
             </span>
@@ -861,9 +858,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-14">
             <div className="col-span-2">
               <Link href="/" className="flex items-center gap-2.5 mb-5 w-fit">
-                <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-                  <GraduationCap className="w-4.5 h-4.5 text-white" />
-                </div>
+                <BrandMark className="w-9 h-9" />
                 <span className="font-bold text-base text-white tracking-tight">Mwalimu AI</span>
               </Link>
               <p className="text-sm text-white/40 max-w-[200px] leading-relaxed">

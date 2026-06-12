@@ -26,6 +26,27 @@ const INK:   RGB = [17, 24, 39]
 const GRAY:  RGB = [107, 114, 128]
 const FAINT: RGB = [156, 163, 175]
 
+// The logo mark as a data URL, fetched once and cached. Returns null if it
+// cannot be loaded (e.g. offline) so the caller can fall back to a drawn badge.
+let _markCache: string | null | undefined
+async function loadMark(): Promise<string | null> {
+  if (_markCache !== undefined) return _markCache
+  try {
+    const res = await fetch('/mwalimu-mark.png')
+    if (!res.ok) throw new Error('mark fetch failed')
+    const blob = await res.blob()
+    _markCache = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader()
+      r.onloadend = () => resolve(r.result as string)
+      r.onerror = () => reject(new Error('mark read failed'))
+      r.readAsDataURL(blob)
+    })
+  } catch {
+    _markCache = null
+  }
+  return _markCache
+}
+
 export async function downloadCertificatePDF(opts: CertificateOptions): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
@@ -56,12 +77,19 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   // ── Header: brand ─────────────────────────────────────────────
   let y = 26
   const logoSize = 13
-  fill(TEAL)
-  doc.roundedRect(CX - 32, y - 9, logoSize, logoSize, 3.2, 3.2, 'F')
+  const mark = await loadMark()
+  if (mark) {
+    doc.addImage(mark, 'PNG', CX - 32, y - 9.5, logoSize, logoSize)
+  } else {
+    // Fallback: drawn badge if the mark image is unavailable.
+    fill(TEAL)
+    doc.roundedRect(CX - 32, y - 9, logoSize, logoSize, 3.2, 3.2, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(15)
+    text([255, 255, 255])
+    doc.text('M', CX - 32 + logoSize / 2, y - 0.6, { align: 'center' })
+  }
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(15)
-  text([255, 255, 255])
-  doc.text('M', CX - 32 + logoSize / 2, y - 0.6, { align: 'center' })
   doc.setFontSize(13)
   text(INK)
   doc.text('Mwalimu AI', CX - 15, y - 3.2)

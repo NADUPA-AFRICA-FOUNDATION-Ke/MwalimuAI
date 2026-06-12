@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { BackButton } from '@/components/back-button'
-import { GraduationCap, Mail, CheckCircle } from 'lucide-react'
+import { Mail, CheckCircle } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 import Link from 'next/link'
 
 export default function Page() {
@@ -48,9 +49,7 @@ export default function Page() {
           <BackButton fallbackHref="/auth/login" />
 
           <Link href="/" className="flex items-center justify-center gap-3 self-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
-              <GraduationCap className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
-            </div>
+            <BrandMark className="h-11 w-11" />
             <span className="text-xl font-bold tracking-tight">Mwalimu AI</span>
           </Link>
 

@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { LogOut, Menu, GraduationCap, Sun, Moon, Monitor, PanelLeft } from 'lucide-react'
+import { LogOut, Menu, Sun, Moon, Monitor, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { BrandMark } from '@/components/brand-mark'
 import { NotificationCenter } from '@/components/notification-center'
 import { useTheme } from 'next-themes'
 import { useProfile } from '@/context/profile-context'
@@ -69,9 +70,7 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
             </button>
           )}
           <Link href="/dashboard" className="flex items-center gap-2 ml-1 group">
-            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
-              <GraduationCap className="w-3.5 h-3.5 text-white" />
-            </div>
+            <BrandMark className="w-7 h-7 transition-transform duration-150 group-hover:scale-105" />
             <span className="font-bold text-[13.5px] hidden sm:inline tracking-tight">Mwalimu AI</span>
           </Link>
         </div>

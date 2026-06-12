@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
-import { GraduationCap, Mail, CheckCircle, RefreshCw } from 'lucide-react'
+import { Mail, CheckCircle, RefreshCw } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
 import Link from 'next/link'
 
 export default function Page() {
@@ -69,9 +70,7 @@ export default function Page() {
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-6">
           <Link href="/" className="flex items-center justify-center gap-3 self-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
-              <GraduationCap className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
-            </div>
+            <BrandMark className="h-11 w-11" />
             <span className="text-xl font-bold tracking-tight">Mwalimu AI</span>
           </Link>
 
