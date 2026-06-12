@@ -3,6 +3,9 @@
  * Draws the certificate directly with jsPDF (A4 landscape, vector text).
  * Replaces the html2canvas pipeline, which crashed on Tailwind v4 oklch()
  * colors and produced raster output.
+ *
+ * Authenticity cues: a faint full-bleed logo watermark, corner flourishes,
+ * and an embossed seal (milled-edge rings + star) around the signature.
  */
 
 export interface CertificateOptions {
@@ -58,6 +61,24 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   const fill   = (c: RGB) => doc.setFillColor(c[0], c[1], c[2])
   const stroke = (c: RGB) => doc.setDrawColor(c[0], c[1], c[2])
   const text   = (c: RGB) => doc.setTextColor(c[0], c[1], c[2])
+  // jsPDF's opacity (GState) and polygon (lines) APIs aren't in the typings.
+  const setOpacity = (o: number) =>
+    (doc as unknown as { setGState: (g: unknown) => void; GState: new (o: object) => unknown })
+      .setGState(new (doc as unknown as { GState: new (o: object) => unknown }).GState({ opacity: o }))
+  // Small filled 5-point star, used as the seal's centre motif.
+  const star = (cx2: number, cy2: number, outer: number, inner: number) => {
+    const pts: Array<[number, number]> = []
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? outer : inner
+      const a = -Math.PI / 2 + (i * Math.PI) / 5
+      pts.push([cx2 + Math.cos(a) * r, cy2 + Math.sin(a) * r])
+    }
+    const deltas = pts.slice(1).map((p, i) => [p[0] - pts[i][0], p[1] - pts[i][1]])
+    ;(doc as unknown as { lines: (l: number[][], x: number, y: number, s: number[], st: string, c: boolean) => void })
+      .lines(deltas, pts[0][0], pts[0][1], [1, 1], 'F', true)
+  }
+
+  const mark = await loadMark()
 
   // ── Background and frame ──────────────────────────────────────
   fill([255, 255, 255])
@@ -74,10 +95,31 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   doc.setLineWidth(0.4)
   doc.roundedRect(10.5, 12, W - 21, H - 23.5, 3, 3, 'S')
 
+  // ── Watermark: the logo, faint, behind all content ────────────
+  if (mark) {
+    const wm = 150
+    setOpacity(0.05)
+    doc.addImage(mark, 'PNG', CX - wm / 2, 105 - wm / 2, wm, wm)
+    setOpacity(1)
+  }
+
+  // ── Corner flourishes ─────────────────────────────────────────
+  const corner = (x: number, sx: number, yy: number, sy: number) => {
+    stroke(MID)
+    doc.setLineWidth(0.6)
+    doc.line(x, yy, x + sx * 9, yy)
+    doc.line(x, yy, x, yy + sy * 9)
+    fill(TEAL)
+    doc.circle(x, yy, 0.8, 'F')
+  }
+  corner(14.5, 1, 16, 1)
+  corner(W - 14.5, -1, 16, 1)
+  corner(14.5, 1, H - 15.5, -1)
+  corner(W - 14.5, -1, H - 15.5, -1)
+
   // ── Header: brand ─────────────────────────────────────────────
   let y = 26
   const logoSize = 13
-  const mark = await loadMark()
   if (mark) {
     doc.addImage(mark, 'PNG', CX - 32, y - 9.5, logoSize, logoSize)
   } else {
@@ -216,7 +258,8 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   const footY = 176
   stroke([243, 244, 246])
   doc.setLineWidth(0.3)
-  doc.line(30, footY - 10, W - 30, footY - 10)
+  doc.line(30, footY - 10, CX - 20, footY - 10)
+  doc.line(CX + 20, footY - 10, W - 30, footY - 10)
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(6.5)
@@ -235,17 +278,34 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   doc.setFontSize(10)
   doc.text(`${opts.hours} hours`, W - 32, footY + 1.5, { align: 'right' })
 
+  // ── Official seal wrapping the authorised signature ───────────
+  const sealY = footY + 0.5
+  const sealR = 13
+  stroke(TEAL)
+  doc.setLineWidth(0.7)
+  doc.circle(CX, sealY, sealR, 'S')
+  // milled edge ticks
+  stroke(TEAL)
+  doc.setLineWidth(0.35)
+  for (let i = 0; i < 48; i++) {
+    const a = (i * Math.PI) / 24
+    doc.line(
+      CX + Math.cos(a) * sealR,       sealY + Math.sin(a) * sealR,
+      CX + Math.cos(a) * (sealR - 1), sealY + Math.sin(a) * (sealR - 1),
+    )
+  }
+  fill(TEAL)
+  star(CX, sealY - 6.4, 2.2, 0.9)
   doc.setFont('times', 'bolditalic')
-  doc.setFontSize(15)
+  doc.setFontSize(10)
   text(TEAL)
-  doc.text('Mwalimu AI', CX, footY - 1.5, { align: 'center' })
-  stroke([209, 213, 219])
-  doc.setLineWidth(0.3)
-  doc.line(CX - 21, footY + 1.5, CX + 21, footY + 1.5)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7)
+  doc.text('Mwalimu AI', CX, sealY + 0.2, { align: 'center' })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.6)
+  doc.setCharSpace(0.5)
   text(FAINT)
-  doc.text('Authorised Signature', CX, footY + 5.5, { align: 'center' })
+  doc.text('AUTHORISED SIGNATURE', CX, sealY + 5.4, { align: 'center' })
+  doc.setCharSpace(0)
 
   // ── Verification line ─────────────────────────────────────────
   doc.setFontSize(7)
