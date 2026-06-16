@@ -5,8 +5,11 @@
  * colors and produced raster output.
  *
  * Authenticity cues: a faint full-bleed logo watermark, corner flourishes,
- * and an embossed seal (milled-edge rings + star) around the signature.
+ * and an embossed seal (milled-edge rings + star) around the signature. The
+ * reverse side carries a scan-to-verify QR code and security microtext.
  */
+
+import { makeQR } from './qr'
 
 export interface CertificateOptions {
   teacherName:  string
@@ -310,7 +313,143 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   // ── Verification line ─────────────────────────────────────────
   doc.setFontSize(7)
   text(FAINT)
-  doc.text(`Verify this certificate at ${opts.verifyUrl} using the certificate number above`, CX, 196, { align: 'center' })
+  doc.text(`Verify this certificate at ${opts.verifyUrl} using the certificate number above. See reverse for QR.`, CX, 196, { align: 'center' })
+
+  // ═══════════════════════════════════════════════════════════════
+  // REVERSE SIDE — scan-to-verify QR, watermark and security microtext
+  // ═══════════════════════════════════════════════════════════════
+  doc.addPage()
+
+  // background, bands, frame, corners (mirrors the front)
+  fill([255, 255, 255])
+  doc.rect(0, 0, W, H, 'F')
+  fill(TEAL)
+  doc.rect(0, 0, W, 3.5, 'F')
+  doc.rect(0, H - 3, W, 3, 'F')
+  stroke(MID)
+  doc.setLineWidth(0.7)
+  doc.roundedRect(8, 9.5, W - 16, H - 18.5, 4, 4, 'S')
+  stroke(LIGHT)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(10.5, 12, W - 21, H - 23.5, 3, 3, 'S')
+  if (mark) {
+    const wm = 150
+    setOpacity(0.05)
+    doc.addImage(mark, 'PNG', CX - wm / 2, 105 - wm / 2, wm, wm)
+    setOpacity(1)
+  }
+  corner(14.5, 1, 16, 1)
+  corner(W - 14.5, -1, 16, 1)
+  corner(14.5, 1, H - 15.5, -1)
+  corner(W - 14.5, -1, H - 15.5, -1)
+
+  // security microtext, top and bottom
+  const microLine = (yy: number) => {
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(3.4)
+    text([206, 212, 218])
+    const unit = `MWALIMU AI  ·  VERIFIED CREDENTIAL  ·  ${opts.serial}  ·  `
+    let s = ''
+    while (doc.getTextWidth(s + unit) < W - 40) s += unit
+    doc.text(s, CX, yy, { align: 'center' })
+  }
+  microLine(16)
+  microLine(H - 13)
+
+  // brand header
+  let by = 28
+  if (mark) doc.addImage(mark, 'PNG', CX - 30, by - 9.5, 12, 12)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  text(INK)
+  doc.text('Mwalimu AI', CX - 15, by - 3.5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7)
+  text(GRAY)
+  doc.text('Certificate Verification', CX - 15, by + 0.8)
+
+  // heading badge
+  by = 44
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.setCharSpace(0.4)
+  const vbadge = 'AUTHENTICITY & VERIFICATION'
+  const vbW = doc.getTextWidth(vbadge) + 14
+  fill(LIGHT)
+  doc.roundedRect(CX - vbW / 2, by - 4.6, vbW, 7.6, 3.8, 3.8, 'F')
+  text(TEAL)
+  doc.text(vbadge, CX, by, { align: 'center' })
+  doc.setCharSpace(0)
+
+  // intro
+  by = 55
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8.5)
+  text(GRAY)
+  doc.text(
+    'This certificate is registered in the Mwalimu AI credential registry and can be independently',
+    CX, by, { align: 'center' },
+  )
+  doc.text('verified by anyone. Scan the QR code below or enter the certificate number online.', CX, by + 4.6, { align: 'center' })
+
+  // QR on a clean white panel (so the watermark never reduces scannability)
+  const qrText = `${opts.verifyUrl}?serial=${encodeURIComponent(opts.serial)}`
+  const qr = makeQR(qrText, 'M')
+  const n = qr.getModuleCount()
+  const QS = 46
+  const qx = CX - QS / 2
+  const qy = 70
+  const cell = QS / n
+  const pad = 5
+  fill([255, 255, 255])
+  doc.roundedRect(qx - pad, qy - pad, QS + pad * 2, QS + pad * 2, 3, 3, 'F')
+  stroke(MID)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(qx - pad, qy - pad, QS + pad * 2, QS + pad * 2, 3, 3, 'S')
+  fill([17, 24, 39])
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (qr.isDark(r, c)) doc.rect(qx + c * cell, qy + r * cell, cell, cell, 'F')
+    }
+  }
+
+  // scan caption + serial + url
+  let cy = qy + QS + pad + 8
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.setCharSpace(0.6)
+  text(FAINT)
+  doc.text('SCAN TO VERIFY THIS CERTIFICATE', CX, cy, { align: 'center' })
+  doc.setCharSpace(0)
+  cy += 7
+  doc.setFont('courier', 'bold')
+  doc.setFontSize(13)
+  text(INK)
+  doc.text(opts.serial, CX, cy, { align: 'center' })
+  cy += 6
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.5)
+  text(GRAY)
+  doc.text(opts.verifyUrl, CX, cy, { align: 'center' })
+
+  // issued-to summary
+  cy += 9
+  stroke([243, 244, 246])
+  doc.setLineWidth(0.3)
+  doc.line(CX - 60, cy - 4, CX + 60, cy - 4)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  text(FAINT)
+  doc.text('Issued to', CX - 60, cy + 1)
+  doc.text('Programme', CX - 60, cy + 6.5)
+  doc.setFont('helvetica', 'bold')
+  text(INK)
+  doc.text(opts.teacherName, CX + 60, cy + 1, { align: 'right' })
+  let pt = opts.programTitle
+  doc.setFontSize(8)
+  while (doc.getTextWidth(pt) > 95 && pt.length > 8) pt = pt.slice(0, -2)
+  if (pt !== opts.programTitle) pt = pt.replace(/\s+\S*$/, '') + '…'
+  doc.text(pt, CX + 60, cy + 6.5, { align: 'right' })
 
   const safeName = opts.programTitle.replace(/[^a-z0-9 ]/gi, '_').slice(0, 60)
   doc.save(`${safeName}_Certificate.pdf`)

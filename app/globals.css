@@ -478,3 +478,29 @@ html[data-a11y-spacing] .leading-relaxed {
     transition: none !important;
   }
 }
+
+/* ── Certificate 3D flip (front ⇄ verification back) ───────────── */
+.cert-flip {
+  perspective: 2200px;
+}
+.cert-flip-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cert-flip[data-flipped='true'] .cert-flip-inner {
+  transform: rotateY(180deg);
+}
+.cert-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+/* Front stays in flow and defines the height; back overlays it. */
+.cert-face-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cert-flip-inner { transition: none !important; }
+}

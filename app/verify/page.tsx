@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -23,9 +23,10 @@ export default function VerifyPage() {
   const [status, setStatus] = useState<Status>('idle')
   const [cert, setCert]     = useState<VerifiedCert | null>(null)
 
-  const check = async () => {
-    const cleaned = serial.trim().toUpperCase()
+  const check = async (override?: string) => {
+    const cleaned = (override ?? serial).trim().toUpperCase()
     if (!cleaned) return
+    setSerial(cleaned)
     setStatus('checking')
     setCert(null)
     try {
@@ -60,6 +61,13 @@ export default function VerifyPage() {
       setStatus('invalid')
     }
   }
+
+  // Auto-verify when arriving from a certificate QR (…/verify?serial=MW-…).
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get('serial')
+    if (param) check(param)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
@@ -99,7 +107,7 @@ export default function VerifyPage() {
               autoComplete="off"
               spellCheck={false}
             />
-            <Button onClick={check} disabled={!serial.trim() || status === 'checking'} className="rounded-xl gap-2 shrink-0">
+            <Button onClick={() => check()} disabled={!serial.trim() || status === 'checking'} className="rounded-xl gap-2 shrink-0">
               {status === 'checking'
                 ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 : <Search className="w-4 h-4" aria-hidden="true" />}

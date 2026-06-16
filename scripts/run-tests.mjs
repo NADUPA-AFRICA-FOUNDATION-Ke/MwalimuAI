@@ -6,7 +6,7 @@
  * Usage: npm test   (or: node scripts/run-tests.mjs)
  */
 import { execSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -16,13 +16,18 @@ import assert from 'node:assert/strict'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 // Compile into a project subfolder so bare imports (jspdf) resolve via node_modules
 const outDir = mkdtempSync(path.join(root, '.test-build-'))
-writeFileSync(path.join(outDir, 'package.json'), '{"type":"module"}')
+// Emit CommonJS so the libs' extensionless relative imports (e.g. './qr')
+// resolve natively in node, matching how the bundler resolves them.
+writeFileSync(path.join(outDir, 'package.json'), '{"type":"commonjs"}')
 
 const FILES = ['lib/rate-limit.ts', 'lib/print-pdf.ts', 'lib/certificate-pdf.ts', 'lib/device-claim.ts']
 execSync(
-  `"${path.join(root, 'node_modules/.bin/tsc')}" ${FILES.join(' ')} --target es2022 --module esnext --moduleResolution bundler --outDir "${outDir}"`,
+  `"${path.join(root, 'node_modules/.bin/tsc')}" ${FILES.join(' ')} --target es2022 --module commonjs --moduleResolution node --esModuleInterop --outDir "${outDir}"`,
   { cwd: root, stdio: 'inherit' },
 )
+// certificate-pdf imports the vendored (non-TS) QR module; tsc won't emit it.
+mkdirSync(path.join(outDir, 'vendor'), { recursive: true })
+copyFileSync(path.join(root, 'lib/vendor/qrcode-generator.js'), path.join(outDir, 'vendor/qrcode-generator.js'))
 
 const mod = (name) => import(pathToFileURL(path.join(outDir, name)).href)
 
@@ -157,7 +162,7 @@ test('certificate PDF renders with serial and saves', async () => {
     verifyUrl: 'https://example.com/verify',
   })
   assert.ok(lastPdf, 'save() was called')
-  assert.equal(lastPdf.pages, 1, 'certificate must be exactly one page')
+  assert.equal(lastPdf.pages, 2, 'certificate is two pages: award front + verification back')
   assert.ok(lastPdf.bytes > 5_000)
 })
 
@@ -168,5 +173,5 @@ test('certificate PDF shrinks very long names onto one page', async () => {
     skills: ['One'], hours: 4, score: null, serial: 'MW-AAAAA-BBBBB',
     verifyUrl: 'https://example.com/verify',
   })
-  assert.equal(lastPdf.pages, 1)
+  assert.equal(lastPdf.pages, 2)
 })

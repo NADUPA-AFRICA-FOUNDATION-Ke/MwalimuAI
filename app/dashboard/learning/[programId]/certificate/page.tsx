@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getProgramById } from '@/lib/learning-paths-data'
 import { getProgress, earnCertificate } from '@/lib/learning-progress'
 import { downloadCertificatePDF } from '@/lib/certificate-pdf'
+import { makeQR } from '@/lib/qr'
 import { useProfile } from '@/context/profile-context'
 import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/back-button'
-import { Award, Printer, Share2, CheckCircle2, Lock, ShieldCheck } from 'lucide-react'
+import { Award, Printer, Share2, CheckCircle2, Lock, ShieldCheck, RotateCw } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 
 export default function CertificatePage() {
@@ -21,6 +22,7 @@ export default function CertificatePage() {
   const [mounted, setMounted]   = useState(false)
   const [shared, setShared]         = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
+  const [flipped, setFlipped]       = useState(false)
   const certRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -44,6 +46,15 @@ export default function CertificatePage() {
   const teacherName = profile?.name ?? 'Teacher'
   const serial      = progress.certificateSerial ?? ''
   const postScore   = progress.postAssessment ? `${progress.postAssessment.score}/${progress.postAssessment.total}` : null
+
+  // Scan-to-verify QR (deep-links to /verify with the serial pre-filled).
+  const qrDataUrl = useMemo(() => {
+    if (!serial || typeof window === 'undefined') return ''
+    try {
+      const url = `${window.location.origin}/verify?serial=${encodeURIComponent(serial)}`
+      return makeQR(url, 'M').createDataURL(6, 8)
+    } catch { return '' }
+  }, [serial])
 
   const handlePrint = async () => {
     setIsPrinting(true)
@@ -104,6 +115,10 @@ export default function CertificatePage() {
             <h1 className="text-xl font-bold">Your Certificate</h1>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setFlipped(f => !f)} className="rounded-xl gap-2" aria-pressed={flipped}>
+              <RotateCw className="w-4 h-4" />
+              {flipped ? 'Front' : 'Flip'}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleShare} className="rounded-xl gap-2">
               <Share2 className="w-4 h-4" />
               {shared ? 'Copied!' : 'Share'}
@@ -115,9 +130,11 @@ export default function CertificatePage() {
         </div>
       </div>
 
-      {/* Certificate — print target */}
-      <div ref={certRef} className="certificate-container">
-        <div className="relative bg-white dark:bg-gray-50 rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 print:shadow-none print:rounded-none">
+      {/* Certificate — flips between the award (front) and verification (back) */}
+      <div ref={certRef} className="certificate-container cert-flip" data-flipped={flipped}>
+        <div className="cert-flip-inner">
+        {/* ── FRONT ─────────────────────────────────────────────── */}
+        <div className="cert-face relative bg-white dark:bg-gray-50 rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 print:shadow-none print:rounded-none">
           {/* Outer border */}
           <div className="absolute inset-3 rounded-2xl border-2 border-primary/20 pointer-events-none" />
           <div className="absolute inset-4 rounded-xl border border-primary/10 pointer-events-none" />
@@ -199,6 +216,64 @@ export default function CertificatePage() {
 
           {/* Bottom decoration */}
           <div className="h-1.5 bg-gradient-to-r from-accent via-primary to-accent" />
+        </div>
+
+        {/* ── BACK — verification ───────────────────────────────── */}
+        <div className="cert-face cert-face-back flex flex-col bg-white dark:bg-gray-50 rounded-3xl overflow-hidden shadow-2xl shadow-primary/10 print:shadow-none print:rounded-none">
+          <div className="absolute inset-3 rounded-2xl border-2 border-primary/20 pointer-events-none z-10" />
+          <div className="absolute inset-4 rounded-xl border border-primary/10 pointer-events-none z-10" />
+          <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary" />
+
+          <div className="flex-1 px-10 py-9 text-center relative flex flex-col">
+            {/* watermark */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+              <BrandMark className="w-72 h-72" alt="" />
+            </div>
+
+            {/* header */}
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <BrandMark className="w-10 h-10" />
+              <div className="text-left">
+                <p className="font-bold text-base text-gray-900 leading-tight">Mwalimu AI</p>
+                <p className="text-xs text-gray-500">Certificate Verification</p>
+              </div>
+            </div>
+
+            <div className="inline-flex self-center items-center gap-2 bg-primary/8 text-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-4">
+              <ShieldCheck className="w-3.5 h-3.5" /> Authenticity &amp; Verification
+            </div>
+
+            <p className="text-xs text-gray-500 max-w-sm mx-auto mb-5 leading-relaxed">
+              This certificate is registered in the Mwalimu AI credential registry and can be
+              independently verified by anyone. Scan the code or enter the number online.
+            </p>
+
+            {/* QR */}
+            <div className="mx-auto bg-white border border-primary/15 rounded-2xl p-3 shadow-sm">
+              {qrDataUrl
+                ? <img src={qrDataUrl} alt="Scan to verify this certificate" width={160} height={160} className="w-40 h-40" style={{ imageRendering: 'pixelated' }} />
+                : <div className="w-40 h-40 bg-gray-50 rounded" />}
+            </div>
+
+            <p className="text-[11px] font-semibold tracking-[0.15em] text-gray-400 uppercase mt-5">Scan to verify this certificate</p>
+            <p className="font-mono font-bold text-gray-800 tracking-wide mt-1">{serial || '—'}</p>
+            <p className="text-xs text-primary font-medium mt-1">mwalimu.ai/verify</p>
+
+            {/* issued-to summary */}
+            <div className="mt-auto pt-4 border-t border-gray-100 flex items-end justify-between text-left">
+              <div>
+                <div className="text-xs text-gray-400 mb-0.5">Issued to</div>
+                <div className="font-semibold text-sm text-gray-700">{teacherName}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-400 mb-0.5">Programme</div>
+                <div className="font-semibold text-sm text-gray-700">{program.title}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-1.5 bg-gradient-to-r from-accent via-primary to-accent" />
+        </div>
         </div>
       </div>
 
