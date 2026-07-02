@@ -33,6 +33,10 @@ skills-lock.json
 # vercel
 .vercel
 
+# editor / local tool configs
+.cursor/
+.mcp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
