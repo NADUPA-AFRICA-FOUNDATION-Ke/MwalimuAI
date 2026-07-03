@@ -27,6 +27,7 @@ export default function AssessmentPage() {
   const [current, setCurrent]   = useState(0)
   const [existing, setExisting] = useState<{ score: number; total: number; date: string } | null>(null)
   const [certificateEarned, setCertificateEarned] = useState(false)
+  const [retaking, setRetaking] = useState(false)
 
   useEffect(() => {
     if (!program) return
@@ -57,14 +58,21 @@ export default function AssessmentPage() {
   const pct = Math.round((score / questions.length) * 100)
   const q   = questions[current]
 
-  const handleRetake = () => {
-    clearAssessment(program.id, 'postAssessment')
+  const handleRetake = async () => {
+    setRetaking(true)
+    // Await the cloud clear before resetting the UI: clearAssessment's write
+    // is the one exception to this file's usual fire-and-forget cloud syncs,
+    // specifically so a concurrent loadProgressFromCloud (e.g. from a
+    // just-completed sign-in) can't read the old attempt back before the
+    // clear lands and silently resurrect it into the retake screen.
+    await clearAssessment(program.id, 'postAssessment')
     setExisting(null)
     setAnswers(Array(questions.length).fill(null))
     setCurrent(0)
     setSubmitted(false)
     setScore(0)
     setCertificateEarned(false)
+    setRetaking(false)
   }
 
   /* Already completed */
@@ -90,8 +98,8 @@ export default function AssessmentPage() {
               <Button variant={failedPost ? 'outline' : 'default'} className="rounded-xl">Back to Program</Button>
             </Link>
             {failedPost && (
-              <Button onClick={handleRetake} className="rounded-xl gap-2">
-                <RotateCw className="w-4 h-4" /> Retake Assessment
+              <Button onClick={handleRetake} disabled={retaking} className="rounded-xl gap-2">
+                <RotateCw className={`w-4 h-4 ${retaking ? 'animate-spin' : ''}`} /> {retaking ? 'Retaking…' : 'Retake Assessment'}
               </Button>
             )}
           </div>
@@ -145,7 +153,7 @@ export default function AssessmentPage() {
             <Link href={`/dashboard/learning/${program.id}`} className="flex-1">
               <Button variant="outline" className="w-full rounded-xl">Back to Program</Button>
             </Link>
-            {type === 'post' && pct >= 70 && (
+            {type === 'post' && certificateEarned && (
               <Link href={`/dashboard/learning/${program.id}/certificate`} className="flex-1">
                 <Button className="w-full rounded-xl gap-2"><Award className="w-4 h-4" /> View Certificate</Button>
               </Link>

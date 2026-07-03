@@ -6,11 +6,13 @@
  * issued under the current rule.
  *
  * Usage:
- *   node --env-file=.env.local scripts/audit-certificates.mjs            (report only)
- *   node --env-file=.env.local scripts/audit-certificates.mjs --revoke   (also clears
- *     certificate_earned_at/certificate_serial on ineligible learning_progress rows
- *     and deletes the matching certificates registry row, so the serial stops
- *     verifying and the account can re-earn it legitimately)
+ *   node --env-file=.env.local scripts/audit-certificates.mjs                    (report only)
+ *   node --env-file=.env.local scripts/audit-certificates.mjs --revoke           (prints the
+ *     exact rows that would be revoked, but does not mutate anything — requires --yes too)
+ *   node --env-file=.env.local scripts/audit-certificates.mjs --revoke --yes     (after
+ *     reviewing the plan above, actually clears certificate_earned_at/certificate_serial
+ *     on ineligible learning_progress rows and deletes the matching certificates registry
+ *     row, so the serial stops verifying and the account can re-earn it legitimately)
  */
 import { execSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -47,6 +49,7 @@ if (!supabaseUrl || !serviceKey) {
 }
 const admin = createClient(supabaseUrl, serviceKey)
 const shouldRevoke = process.argv.includes('--revoke')
+const confirmed = process.argv.includes('--yes')
 
 const { data: rows, error } = await admin
   .from('learning_progress')
@@ -55,7 +58,12 @@ const { data: rows, error } = await admin
 
 if (error) { console.error('Query failed:', error.message); process.exit(1) }
 
-const { data: profiles } = await admin.from('profiles').select('id, name')
+// Only fetch names for the users actually holding a certificate, not the
+// whole profiles table — this script only needs those for display.
+const relevantUserIds = [...new Set((rows ?? []).map(r => r.user_id))]
+const { data: profiles } = relevantUserIds.length
+  ? await admin.from('profiles').select('id, name').in('id', relevantUserIds)
+  : { data: [] }
 const nameByUser = Object.fromEntries((profiles ?? []).map(p => [p.id, p.name]))
 
 let eligibleCount = 0
@@ -81,7 +89,11 @@ for (const row of rows ?? []) {
     `INELIGIBLE  serial=${row.certificate_serial}  user=${nameByUser[row.user_id] ?? row.user_id}  program=${titleByProgram[row.program_id] ?? row.program_id}  earned_at=${row.certificate_earned_at}  — ${reasons.join(', ')}`,
   )
 
-  if (shouldRevoke) {
+  if (shouldRevoke && !confirmed) {
+    console.log(`  (would revoke — re-run with --revoke --yes to confirm)`)
+  }
+
+  if (shouldRevoke && confirmed) {
     const { error: updateError } = await admin
       .from('learning_progress')
       .update({ certificate_earned_at: null, certificate_serial: null })
@@ -101,4 +113,8 @@ for (const row of rows ?? []) {
 }
 
 console.log(`\n${eligibleCount} certificate(s) meet the current bar, ${ineligibleCount} do not (out of ${(rows ?? []).length} issued).`)
-if (shouldRevoke) console.log(`${ineligibleCount} ineligible certificate(s) revoked.`)
+if (shouldRevoke && !confirmed && ineligibleCount > 0) {
+  console.log(`Nothing was changed — re-run with --revoke --yes to actually revoke the ${ineligibleCount} certificate(s) listed above.`)
+} else if (shouldRevoke && confirmed) {
+  console.log(`${ineligibleCount} ineligible certificate(s) revoked.`)
+}

@@ -57,13 +57,33 @@ function write(data: AllProgress) {
 }
 
 // ── Supabase background sync ───────────────────────────────────────
-function cloudSync(programId: string, p: ProgramProgress) {
+// Returns the write's promise so callers that need to know the cloud write
+// actually landed (e.g. clearAssessment, before letting a retake proceed)
+// can await it; ordinary fire-and-forget callers just ignore the return.
+function cloudSync(programId: string, p: ProgramProgress): Promise<unknown> {
   if (!_userId) {
-    _pendingSyncs.push(() => cloudSync(programId, p))
-    return
+    _pendingSyncs.push(() => { void cloudSync(programId, p) })
+    return Promise.resolve()
   }
   const supabase = createClient()
-  trackWrite(supabase.from('learning_progress').upsert({
+
+  // Never trust p.certificateEarnedAt/certificateSerial at face value — this
+  // object comes from localStorage, and every write helper in this file
+  // (completeLesson, saveReflection, saveAssessment, ...) pushes the WHOLE
+  // cached object on every call. If a certificate was ever revoked (e.g. via
+  // scripts/audit-certificates.mjs) while a browser still had it cached
+  // locally, the very next unrelated write from that browser would otherwise
+  // silently re-upload the stale certificate fields and resurrect it. Re-derive
+  // eligibility from the current progress on every sync instead.
+  const program = PROGRAMS.find(pr => pr.id === programId)
+  const eligible = !!program && isProgramComplete(program, p)
+  if (!eligible && p.certificateSerial) {
+    // Local cache still holds a serial for a now-ineligible program — make
+    // sure it doesn't linger in the public verification registry either.
+    trackWrite(supabase.from('certificates').delete().eq('user_id', _userId).eq('program_id', programId))
+  }
+
+  return trackWrite(supabase.from('learning_progress').upsert({
     user_id:               _userId,
     program_id:            programId,
     completed_lessons:     p.completedLessons,
@@ -71,8 +91,8 @@ function cloudSync(programId: string, p: ProgramProgress) {
     pre_assessment:        p.preAssessment  ?? null,
     post_assessment:       p.postAssessment ?? null,
     assignment:            p.assignment     ?? null,
-    certificate_earned_at: p.certificateEarnedAt ?? null,
-    certificate_serial:    p.certificateSerial   ?? null,
+    certificate_earned_at: eligible ? (p.certificateEarnedAt ?? null) : null,
+    certificate_serial:    eligible ? (p.certificateSerial   ?? null) : null,
     cohort_joined:         p.cohortJoined   ?? false,
     updated_at:            new Date().toISOString(),
   }, { onConflict: 'user_id,program_id' }))
@@ -157,15 +177,19 @@ export function saveAssessment(
 }
 
 // Clears a stored attempt so the learner can retake it — used when a
-// post-assessment attempt scored below the certificate pass mark.
-export function clearAssessment(programId: string, type: 'preAssessment' | 'postAssessment') {
+// post-assessment attempt scored below the certificate pass mark. Awaits the
+// cloud write (unlike other write helpers here, which are fire-and-forget)
+// so a caller resetting the UI for a retake doesn't race a concurrent
+// loadProgressFromCloud that could otherwise re-read and restore the
+// just-cleared attempt before the clear has landed in Postgres.
+export async function clearAssessment(programId: string, type: 'preAssessment' | 'postAssessment'): Promise<void> {
   const all = read()
   const p   = all[programId]
   if (!p) return
   delete p[type]
   all[programId] = p
   write(all)
-  cloudSync(programId, p)
+  await cloudSync(programId, p)
 }
 
 export function saveAssignment(programId: string, text: string, feedback: string) {
@@ -209,11 +233,15 @@ function registerCertificate(serial: string, programId: string, teacherName: str
  * first call (also backfills serials for certificates earned before serials
  * existed). Idempotent: every call (re)registers the serial in the public
  * `certificates` table, backfilling teacher_name/program_title when provided.
- * Returns the serial.
+ * Returns the serial, or an empty string if the program isn't actually
+ * eligible — checked here too, not just by callers, so this can never be
+ * used to mint a certificate for a program that doesn't meet the bar.
  */
 export function earnCertificate(programId: string, teacherName = '', programTitle = ''): string {
   const all = read()
   const p   = all[programId] ?? { completedLessons: [], reflections: {} }
+  const program = PROGRAMS.find(pr => pr.id === programId)
+  if (!program || !isProgramComplete(program, p)) return p.certificateSerial ?? ''
   if (!p.certificateEarnedAt) {
     p.certificateEarnedAt = new Date().toLocaleDateString()
   }
@@ -240,8 +268,9 @@ export function syncCertificatesToRegistry(teacherName: string) {
   const all = read()
   for (const [programId, p] of Object.entries(all)) {
     if (!p.certificateSerial) continue
-    const title = PROGRAMS.find(pr => pr.id === programId)?.title ?? ''
-    registerCertificate(p.certificateSerial, programId, teacherName, title)
+    const program = PROGRAMS.find(pr => pr.id === programId)
+    if (!program || !isProgramComplete(program, p)) continue
+    registerCertificate(p.certificateSerial, programId, teacherName, program.title)
   }
 }
 
