@@ -42,7 +42,7 @@ Please generate a complete, practical CBC lesson plan for a Kenyan classroom.`
 }
 
 export default function LessonPlanPage() {
-  const { user } = useProfile()
+  const { lang, user } = useProfile()
   const [form, setForm] = useState({
     subject: '', grade: '', strand: '', subStrand: '', topic: '', duration: '40 minutes', level: 'Mixed ability',
   })
@@ -88,7 +88,7 @@ export default function LessonPlanPage() {
       const res = await authedFetch('/api/tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tool: 'lesson-plan', prompt: buildPrompt(form) }),
+        body: JSON.stringify({ tool: 'lesson-plan', prompt: buildPrompt(form), lang }),
       })
 
       if (!res.ok) {

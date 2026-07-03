@@ -30,8 +30,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  // Redirect verified users away from auth pages
-  if (user && user.email_confirmed_at && pathname.startsWith('/auth') && !pathname.includes('sign-up-success')) {
+  // Redirect verified users away from auth pages — except reset-password,
+  // which must stay reachable even with an active (recovery) session, or a
+  // password-reset link would bounce straight to /dashboard before the user
+  // ever sets a new password.
+  if (
+    user && user.email_confirmed_at && pathname.startsWith('/auth') &&
+    !pathname.includes('sign-up-success') && !pathname.includes('reset-password')
+  ) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

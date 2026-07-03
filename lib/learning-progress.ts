@@ -30,8 +30,19 @@ export type AllProgress = Record<string, ProgramProgress>
 // ── Module-level user ID — set by profile-context on auth ──────────
 let _userId: string | null = null
 
+// Cloud syncs that arrived before the auth event set _userId (a brief
+// window right after sign-in, since setLearningProgressUser is called from
+// a deferred handler) are queued here instead of silently dropped, and
+// flushed as soon as the user id lands.
+let _pendingSyncs: Array<() => void> = []
+
 export function setLearningProgressUser(userId: string | null) {
   _userId = userId
+  if (userId && _pendingSyncs.length > 0) {
+    const queued = _pendingSyncs
+    _pendingSyncs = []
+    queued.forEach(fn => fn())
+  }
 }
 
 // ── localStorage helpers ───────────────────────────────────────────
@@ -47,7 +58,10 @@ function write(data: AllProgress) {
 
 // ── Supabase background sync ───────────────────────────────────────
 function cloudSync(programId: string, p: ProgramProgress) {
-  if (!_userId) return
+  if (!_userId) {
+    _pendingSyncs.push(() => cloudSync(programId, p))
+    return
+  }
   const supabase = createClient()
   trackWrite(supabase.from('learning_progress').upsert({
     user_id:               _userId,

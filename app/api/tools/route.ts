@@ -262,7 +262,8 @@ Kanuni: "assessment" → "tathmini", "lesson plan" → "mpango wa somo", "compet
 
 `
     : ''
-  const system = langInstruction + base
+  const accuracyInstruction = '\n\nAccuracy: if you are not certain of a specific policy detail, circular number, statistic, or named source, say so plainly rather than inventing one.'
+  const system = langInstruction + base + accuracyInstruction
 
   const canUseGroq = process.env.GROQ_API_KEY && !groqOnCooldown()
 

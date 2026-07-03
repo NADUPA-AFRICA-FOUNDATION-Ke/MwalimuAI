@@ -43,7 +43,7 @@ Please write the complete document ready for use.`
 }
 
 export default function ParentCommsPage() {
-  const { user } = useProfile()
+  const { lang, user } = useProfile()
   const [form, setForm] = useState({
     type: 'letter', grade: '', studentName: '', topic: '',
     keyPoints: '', tone: 'Warm & Supportive', teacherName: '',
@@ -73,7 +73,7 @@ export default function ParentCommsPage() {
       const res = await authedFetch('/api/tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tool: 'parent-comms', prompt: buildPrompt(form) }),
+        body: JSON.stringify({ tool: 'parent-comms', prompt: buildPrompt(form), lang }),
       })
 
       if (!res.ok) {

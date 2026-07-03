@@ -46,7 +46,7 @@ Remember: 60–80 words, CBC-aligned, parent-friendly, positive and encouraging.
 }
 
 export default function ReportCardPage() {
-  const { user } = useProfile()
+  const { lang, user } = useProfile()
   const [form, setForm] = useState({
     grade: '', subject: '', performance: '', gender: 'They/Their',
     strengths: '', improvements: '', effort: 'Consistent',
@@ -76,7 +76,7 @@ export default function ReportCardPage() {
       const res = await authedFetch('/api/tools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tool: 'report-card', prompt: buildPrompt(form) }),
+        body: JSON.stringify({ tool: 'report-card', prompt: buildPrompt(form), lang }),
       })
 
       if (!res.ok) {

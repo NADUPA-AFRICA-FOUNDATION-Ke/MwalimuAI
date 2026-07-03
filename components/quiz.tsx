@@ -55,7 +55,7 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
 
   const currentQuestion = quiz.questions[currentQuestionIndex]
   const currentState = questionStates[currentQuestionIndex]
-  const passingScore = quiz.passingScore ?? 70
+  const passingScore = quiz.passingScore ?? 85
 
   const correctAnswers = questionStates.filter(s => s.isCorrect).length
   const answeredQuestions = questionStates.filter(s => s.isAnswered).length
@@ -441,7 +441,7 @@ export function parseQuizFromContent(content: string): Quiz | null {
     return {
       title,
       questions,
-      passingScore: 70
+      passingScore: 85
     }
   } catch {
     return null

@@ -93,7 +93,7 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
               style={{ background: avatarBg, fontSize: '10px', fontWeight: 800 }}>
               {initials}
             </div>
-            <span className="font-medium text-[13px] hidden md:block truncate max-w-[110px] text-foreground">
+            <span className="font-medium text-[13px] hidden md:block truncate max-w-[150px] text-foreground">
               {displayName}
             </span>
           </div>

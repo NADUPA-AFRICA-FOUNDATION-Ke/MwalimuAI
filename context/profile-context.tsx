@@ -4,6 +4,7 @@ import {
   createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode,
 } from 'react'
 import { type User, type Session } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { syncActivityFromSupabase, syncToolsUsedFromSupabase, syncCommunityPostsFromSupabase } from '@/lib/streak'
 import { setLearningProgressUser, loadProgressFromCloud, syncCertificatesToRegistry } from '@/lib/learning-progress'
@@ -417,8 +418,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(p))
 
     if (user) {
-      // supabase never throws — errors come back as { error }, not exceptions.
-      const { error } = await supabase.from('profiles').upsert({
+      const upsertRow = {
         id:        user.id,
         name:      p.name,
         school:    p.school,
@@ -429,10 +429,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         lang,
         completed: p.completed,
         updated_at: new Date().toISOString(),
-      })
+      }
+      // supabase never throws — errors come back as { error }, not exceptions.
+      let { error } = await supabase.from('profiles').upsert(upsertRow)
+      if (error) {
+        // Losing this write is high-stakes (it's what marks onboarding as
+        // complete) — retry once before giving up, since most failures here
+        // are transient network blips right after a fresh sign-in.
+        ;({ error } = await supabase.from('profiles').upsert(upsertRow))
+      }
       if (error) {
         console.error('[Profile] Cloud save failed:', error.message)
-        // Profile is already in localStorage; cloud will re-sync on next login.
+        toast.error("Couldn't save your profile to the cloud", {
+          description: 'Saved on this device — it will sync automatically once the connection is back.',
+        })
       }
     }
   }, [user, lang, supabase])

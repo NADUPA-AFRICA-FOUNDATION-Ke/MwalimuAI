@@ -65,7 +65,9 @@ Your role is to:
 5. Encourage reflective practice and continuous improvement
 6. Be empathetic to the challenges of teaching in Kenya's context
 
-Always be supportive, practical, and encouraging. Reference real classroom scenarios when possible.`
+Always be supportive, practical, and encouraging. Reference real classroom scenarios when possible.
+
+Accuracy: if you are not certain of a specific policy detail, circular number, statistic, or named source, say so plainly rather than inventing one — a general, honest answer is better than a confident, fabricated specific.`
 }
 
 // streamText errors happen asynchronously, so try/catch won't catch them.

@@ -49,7 +49,7 @@ Please provide 4–5 specific, practical strategies suited to a Kenyan CBC class
 }
 
 export default function DifferentiationPage() {
-  const { user } = useProfile()
+  const { lang, user } = useProfile()
   const [form, setForm] = useState({
     grade: '', subject: '', challenge: '', barriers: [] as string[],
   })
@@ -104,6 +104,7 @@ export default function DifferentiationPage() {
         body: JSON.stringify({
           tool: 'differentiation',
           prompt: buildPrompt({ ...form, barriers: selectedLabels }),
+          lang,
         }),
       })
 
