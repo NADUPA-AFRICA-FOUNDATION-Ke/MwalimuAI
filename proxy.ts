@@ -1,7 +1,37 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// A nonce/'strict-dynamic' CSP (Next's usual documented pattern) doesn't work
+// for this app: most routes are statically prerendered (fixed HTML shared
+// across every request), so they can never carry a per-request nonce, and
+// Next's own inline hydration + theme-flash scripts render on every page
+// (static or dynamic) with no nonce attribute at all — verified by building
+// and inspecting the actual output. 'unsafe-inline' is the tradeoff that
+// keeps every page working; script-src 'self' still blocks the main real
+// risk (loading an externally-hosted attacker script).
+function buildCsp(): string {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const supabaseWs  = supabaseUrl.replace(/^https:/, 'wss:')
+  return [
+    `default-src 'self'`,
+    `script-src 'self' 'unsafe-inline'`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' data: blob: https://images.unsplash.com`,
+    `font-src 'self'`,
+    `connect-src 'self' ${supabaseUrl} ${supabaseWs}`,
+    `worker-src 'self'`,
+    `manifest-src 'self'`,
+    `object-src 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+    `frame-ancestors 'none'`,
+    `upgrade-insecure-requests`,
+  ].join('; ')
+}
+
 export async function proxy(request: NextRequest) {
+  const csp = buildCsp()
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -41,6 +71,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  supabaseResponse.headers.set('Content-Security-Policy', csp)
   return supabaseResponse
 }
 
