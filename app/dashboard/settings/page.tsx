@@ -24,6 +24,7 @@ import {
 import { getLowBandwidth, setLowBandwidth } from '@/lib/accessibility'
 import { useProfile } from '@/context/profile-context'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/site-url'
 import { toast } from 'sonner'
 import { Wifi, WifiOff, Globe, Download, KeyRound, Trash2, AlertCircle, Check } from 'lucide-react'
 
@@ -111,7 +112,7 @@ export default function SettingsPage() {
     try {
       const supabase = createClient()
       await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${getSiteUrl()}/auth/reset-password`,
       })
       toast.success(`Password reset email sent to ${email}`)
     } catch {

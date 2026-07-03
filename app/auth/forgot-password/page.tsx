@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/site-url'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -25,7 +26,7 @@ export default function Page() {
     try {
       const supabase = createClient()
       await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+        redirectTo: `${getSiteUrl()}/auth/callback?next=/auth/reset-password`,
       })
       // Always show success — don't reveal whether the email exists
       setSent(true)

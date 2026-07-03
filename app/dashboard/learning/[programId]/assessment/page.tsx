@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getProgramById } from '@/lib/learning-paths-data'
-import { getProgress, saveAssessment, earnCertificate, isProgramComplete } from '@/lib/learning-progress'
+import { getProgress, saveAssessment, earnCertificate, isProgramComplete, clearAssessment } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { BackButton } from '@/components/back-button'
-import { CheckCircle2, XCircle, ChevronRight, ClipboardList, Award } from 'lucide-react'
+import { CheckCircle2, XCircle, ChevronRight, ClipboardList, Award, RotateCw } from 'lucide-react'
 
 export default function AssessmentPage() {
   const params = useParams<{ programId: string }>()
@@ -26,6 +26,7 @@ export default function AssessmentPage() {
   const [score, setScore]       = useState(0)
   const [current, setCurrent]   = useState(0)
   const [existing, setExisting] = useState<{ score: number; total: number; date: string } | null>(null)
+  const [certificateEarned, setCertificateEarned] = useState(false)
 
   useEffect(() => {
     if (!program) return
@@ -45,7 +46,9 @@ export default function AssessmentPage() {
     if (type === 'post') {
       const p = getProgress(program.id)
       const prog = { ...p, postAssessment: { score: s, total: questions.length, date: new Date().toLocaleDateString(), answers: answers as number[] } }
-      if (isProgramComplete(program, prog)) {
+      const eligible = isProgramComplete(program, prog)
+      setCertificateEarned(eligible)
+      if (eligible) {
         earnCertificate(program.id, profile?.name ?? 'Teacher', program.title)
       }
     }
@@ -54,9 +57,20 @@ export default function AssessmentPage() {
   const pct = Math.round((score / questions.length) * 100)
   const q   = questions[current]
 
+  const handleRetake = () => {
+    clearAssessment(program.id, 'postAssessment')
+    setExisting(null)
+    setAnswers(Array(questions.length).fill(null))
+    setCurrent(0)
+    setSubmitted(false)
+    setScore(0)
+    setCertificateEarned(false)
+  }
+
   /* Already completed */
   if (existing) {
     const exPct = Math.round((existing.score / existing.total) * 100)
+    const failedPost = type === 'post' && exPct < 85
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
@@ -68,9 +82,19 @@ export default function AssessmentPage() {
           <p className="text-muted-foreground text-sm mb-4">Completed on {existing.date}</p>
           <div className="text-4xl font-bold gradient-text mb-1">{existing.score}/{existing.total}</div>
           <p className="text-muted-foreground text-sm mb-6">{exPct}% correct</p>
-          <Link href={`/dashboard/learning/${program.id}`}>
-            <Button className="rounded-xl">Back to Program</Button>
-          </Link>
+          {failedPost && (
+            <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">You need 85% or higher to earn the certificate — review the material and try again.</p>
+          )}
+          <div className="flex gap-2 justify-center">
+            <Link href={`/dashboard/learning/${program.id}`}>
+              <Button variant={failedPost ? 'outline' : 'default'} className="rounded-xl">Back to Program</Button>
+            </Link>
+            {failedPost && (
+              <Button onClick={handleRetake} className="rounded-xl gap-2">
+                <RotateCw className="w-4 h-4" /> Retake Assessment
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -83,13 +107,21 @@ export default function AssessmentPage() {
         <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
         <div className="glass rounded-2xl p-8">
           <div className="text-center mb-8">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${pct >= 70 ? 'bg-primary/10' : 'bg-accent/10'}`}>
-              {pct >= 70 ? <Award className="w-8 h-8 text-primary" /> : <ClipboardList className="w-8 h-8 text-accent" />}
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${pct >= 85 ? 'bg-primary/10' : 'bg-accent/10'}`}>
+              {pct >= 85 ? <Award className="w-8 h-8 text-primary" /> : <ClipboardList className="w-8 h-8 text-accent" />}
             </div>
             <h1 className="text-2xl font-bold mb-1">{type === 'pre' ? 'Pre' : 'Post'}-Assessment Results</h1>
             <div className="text-4xl font-bold gradient-text mt-3">{score}/{questions.length}</div>
             <p className="text-muted-foreground text-sm mt-1">{pct}% correct</p>
-            {type === 'post' && pct >= 70 && <p className="text-primary font-semibold text-sm mt-2">Great work — check your certificate!</p>}
+            {type === 'post' && certificateEarned && <p className="text-primary font-semibold text-sm mt-2">Great work — check your certificate!</p>}
+            {type === 'post' && !certificateEarned && pct >= 85 && (
+              <p className="text-muted-foreground text-sm mt-2">
+                You passed — finish every lesson and write at least 6 reflections to unlock your certificate.
+              </p>
+            )}
+            {type === 'post' && pct < 85 && (
+              <p className="text-muted-foreground text-sm mt-2">You need 85% or higher to pass. Review the material and try again.</p>
+            )}
           </div>
           <div className="space-y-4">
             {questions.map((q, i) => {

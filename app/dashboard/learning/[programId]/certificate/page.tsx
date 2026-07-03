@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getProgramById } from '@/lib/learning-paths-data'
-import { getProgress, earnCertificate } from '@/lib/learning-progress'
+import { getProgress, earnCertificate, isProgramComplete, type ProgramProgress } from '@/lib/learning-progress'
 import { downloadCertificatePDF } from '@/lib/certificate-pdf'
 import { makeQR } from '@/lib/qr'
 import { useProfile } from '@/context/profile-context'
@@ -12,13 +12,14 @@ import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/back-button'
 import { Award, Printer, Share2, CheckCircle2, Lock, ShieldCheck, RotateCw } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
+import { getSiteUrl } from '@/lib/site-url'
 
 export default function CertificatePage() {
   const params  = useParams<{ programId: string }>()
   const { profile, syncReady } = useProfile()
   const program = getProgramById(params.programId)
 
-  const [progress, setProgress] = useState({ completedLessons: [] as string[], reflections: {} as Record<string, string>, certificateEarnedAt: undefined as string | undefined, certificateSerial: undefined as string | undefined, postAssessment: undefined as { score: number; total: number } | undefined })
+  const [progress, setProgress] = useState<ProgramProgress>({ completedLessons: [], reflections: {} })
   const [mounted, setMounted]   = useState(false)
   const [shared, setShared]         = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
@@ -31,18 +32,20 @@ export default function CertificatePage() {
     // Assign the earned date and a verifiable serial on first unlock, and
     // (re)register the public verification row so it always carries the
     // teacher name and program title — backfilling rows first created on the
-    // assessment screen without them. earnCertificate is idempotent.
-    if (p.postAssessment) {
+    // assessment screen without them. earnCertificate is idempotent. Gated on
+    // full eligibility (all lessons read, enough reflections, post-assessment
+    // passed) — not merely having attempted the post-assessment.
+    if (isProgramComplete(program, p)) {
       earnCertificate(program.id, profile?.name ?? 'Teacher', program.title)
     }
-    setProgress(getProgress(program.id) as typeof progress)
+    setProgress(getProgress(program.id))
     setMounted(true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program, syncReady, profile?.name])
 
   if (!program) return <div className="p-8 text-muted-foreground">Program not found.</div>
 
-  const isUnlocked = mounted && !!progress.postAssessment
+  const isUnlocked = mounted && isProgramComplete(program, progress)
   const teacherName = profile?.name ?? 'Teacher'
   const serial      = progress.certificateSerial ?? ''
   const postScore   = progress.postAssessment ? `${progress.postAssessment.score}/${progress.postAssessment.total}` : null
@@ -51,7 +54,7 @@ export default function CertificatePage() {
   const qrDataUrl = useMemo(() => {
     if (!serial || typeof window === 'undefined') return ''
     try {
-      const url = `${window.location.origin}/verify?serial=${encodeURIComponent(serial)}`
+      const url = `${getSiteUrl()}/verify?serial=${encodeURIComponent(serial)}`
       return makeQR(url, 'M').createDataURL(6, 8)
     } catch { return '' }
   }, [serial])
@@ -68,7 +71,7 @@ export default function CertificatePage() {
         hours:         program.hours,
         score:         postScore,
         serial,
-        verifyUrl:     `${window.location.origin}/verify`,
+        verifyUrl:     `${getSiteUrl()}/verify`,
       })
     } finally {
       setIsPrinting(false)
@@ -94,7 +97,7 @@ export default function CertificatePage() {
           <Lock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <h1 className="text-xl font-bold mb-2">Certificate Locked</h1>
           <p className="text-muted-foreground text-sm mb-6 max-w-xs mx-auto">
-            Complete all lessons and take the post-assessment to earn your certificate.
+            Read every lesson, write at least 6 reflections, and score 85% or higher on the post-assessment to earn your certificate.
           </p>
           <Link href={`/dashboard/learning/${program.id}`}>
             <Button className="rounded-xl">Back to Program</Button>

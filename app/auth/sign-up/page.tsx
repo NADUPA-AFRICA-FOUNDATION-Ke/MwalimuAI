@@ -10,6 +10,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft, Check } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/site-url'
 
 const DARK = 'oklch(0.22 0.08 163)'
 
@@ -44,7 +45,7 @@ export default function SignUpPage() {
       const { error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { emailRedirectTo: `${getSiteUrl()}/auth/callback` },
       })
       if (authError) { setError(mapError(authError.message)); return }
       router.push('/auth/sign-up-success')

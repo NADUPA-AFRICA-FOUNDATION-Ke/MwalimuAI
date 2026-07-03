@@ -156,6 +156,18 @@ export function saveAssessment(
   cloudSync(programId, p)
 }
 
+// Clears a stored attempt so the learner can retake it — used when a
+// post-assessment attempt scored below the certificate pass mark.
+export function clearAssessment(programId: string, type: 'preAssessment' | 'postAssessment') {
+  const all = read()
+  const p   = all[programId]
+  if (!p) return
+  delete p[type]
+  all[programId] = p
+  write(all)
+  cloudSync(programId, p)
+}
+
 export function saveAssignment(programId: string, text: string, feedback: string) {
   const all = read()
   const p   = all[programId] ?? { completedLessons: [], reflections: {} }
@@ -252,9 +264,19 @@ export function getProgramCompletionPct(program: Program, progress: ProgramProgr
   return Math.round((progress.completedLessons.length / total) * 100)
 }
 
+// Certificate eligibility bar: every lesson read, a meaningful number of
+// reflections written, and the post-assessment passed at the program's
+// required standard — not merely attempted.
+const MIN_REFLECTIONS_FOR_CERTIFICATE = 6
+const CERTIFICATE_PASS_RATIO = 0.85
+
 export function isProgramComplete(program: Program, progress: ProgramProgress): boolean {
   const total = program.modules.reduce((s, m) => s + m.lessons.length, 0)
-  return progress.completedLessons.length >= total && !!progress.postAssessment
+  const allLessonsRead    = total > 0 && progress.completedLessons.length >= total
+  const enoughReflections = Object.keys(progress.reflections).length >= MIN_REFLECTIONS_FOR_CERTIFICATE
+  const passed = !!progress.postAssessment && progress.postAssessment.total > 0
+    && progress.postAssessment.score / progress.postAssessment.total >= CERTIFICATE_PASS_RATIO
+  return allLessonsRead && enoughReflections && passed
 }
 
 /* ── Discussion helpers (localStorage) ──────────────────────────── */

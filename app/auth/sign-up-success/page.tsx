@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/site-url'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
@@ -33,7 +34,7 @@ export default function Page() {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: userEmail,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: { emailRedirectTo: `${getSiteUrl()}/auth/callback` },
       })
       if (error) throw error
       setResendState('sent')

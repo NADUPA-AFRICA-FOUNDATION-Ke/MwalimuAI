@@ -340,7 +340,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
               <h3 className="font-semibold text-sm">Certificate</h3>
             </div>
             <p className="text-xs text-muted-foreground mb-3">
-              {complete ? 'You\'ve earned your certificate!' : 'Complete all lessons + post-assessment to unlock.'}
+              {complete ? 'You\'ve earned your certificate!' : 'Read every lesson, write 6+ reflections, and score 85%+ on the post-assessment to unlock.'}
             </p>
             {complete && (
               <Link href={`/dashboard/learning/${program.id}/certificate`}>
