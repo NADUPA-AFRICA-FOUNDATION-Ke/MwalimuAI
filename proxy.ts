@@ -1,20 +1,23 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// A nonce/'strict-dynamic' CSP (Next's usual documented pattern) doesn't work
-// for this app: most routes are statically prerendered (fixed HTML shared
-// across every request), so they can never carry a per-request nonce, and
-// Next's own inline hydration + theme-flash scripts render on every page
-// (static or dynamic) with no nonce attribute at all — verified by building
-// and inspecting the actual output. 'unsafe-inline' is the tradeoff that
-// keeps every page working; script-src 'self' still blocks the main real
-// risk (loading an externally-hosted attacker script).
-function buildCsp(): string {
+// Nonce-based CSP. Every route renders dynamically (app/layout.tsx reads
+// headers() to get the nonce, which forces this) so Next can apply a fresh
+// per-request nonce to its own inline hydration scripts, and next-themes'
+// flash-prevention script picks it up via the ThemeProvider `nonce` prop
+// (components/providers.tsx) — verified by building and inspecting the
+// actual rendered HTML: every inline <script> carries a matching nonce.
+// 'strict-dynamic' extends that trust to scripts those scripts load (e.g.
+// code-split chunk loaders) without needing a static script-src allowlist.
+// style-src keeps 'unsafe-inline' — nonces don't cover inline style=""
+// attributes (only <style> elements), and this app uses inline style props
+// extensively for gradients/dynamic theming.
+function buildCsp(nonce: string): string {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const supabaseWs  = supabaseUrl.replace(/^https:/, 'wss:')
   return [
     `default-src 'self'`,
-    `script-src 'self' 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob: https://images.unsplash.com`,
     `font-src 'self'`,
@@ -30,9 +33,14 @@ function buildCsp(): string {
 }
 
 export async function proxy(request: NextRequest) {
-  const csp = buildCsp()
+  const nonce = crypto.randomUUID()
+  const csp = buildCsp(nonce)
 
-  let supabaseResponse = NextResponse.next({ request })
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-nonce', nonce)
+  requestHeaders.set('Content-Security-Policy', csp)
+
+  let supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,7 +50,7 @@ export async function proxy(request: NextRequest) {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = NextResponse.next({ request: { headers: requestHeaders } })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )

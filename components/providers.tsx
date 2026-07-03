@@ -12,13 +12,14 @@ const AccessibilityWidget = dynamic(
   { ssr: false }
 )
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
     <ThemeProvider
       attribute="class"
       defaultTheme="light"
       enableSystem={false}
       disableTransitionOnChange
+      nonce={nonce}
     >
       <ProfileProvider>
         {children}

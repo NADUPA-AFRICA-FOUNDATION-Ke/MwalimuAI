@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { headers } from 'next/headers'
 import { Providers } from '@/components/providers'
 import { GradientBackground } from '@/components/gradient-background'
 import { SWRegister } from '@/components/sw-register'
@@ -36,11 +37,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Reading headers() forces this (and every route under it) to render
+  // dynamically per-request, which is required for Next to apply a
+  // per-request CSP nonce to its own inline scripts.
+  const nonce = (await headers()).get('x-nonce') ?? undefined
   return (
     <html lang="en" suppressHydrationWarning className={`bg-background ${geist.variable} ${geistMono.variable}`}>
       <style href="mwalimu-layout" precedence="default">{`
@@ -79,7 +84,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         <GradientBackground />
-        <Providers>
+        <Providers nonce={nonce}>
           {children}
           {process.env.NODE_ENV === 'production' && <Analytics />}
         </Providers>
