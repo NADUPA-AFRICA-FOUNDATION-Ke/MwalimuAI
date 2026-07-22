@@ -102,14 +102,8 @@ export default function DashboardPage() {
   ]
   const motivationalMsg = MOTIVATION_MAP.find(m => streak.current <= m.max)?.msg ?? ''
 
-  const streakEmoji =
-    streak.current >= 100 ? '👑' :
-    streak.current >= 60  ? '🔥' :
-    streak.current >= 30  ? '⭐' :
-    streak.current >= 14  ? '💪' :
-    streak.current >= 7   ? '🏆' :
-    streak.current >= 3   ? '🌿' :
-    streak.current >= 1   ? '🌱' : '📚'
+  const streakEmoji  = streak.current >= 100 ? '👑' : streak.current >= 60 ? '🔥' : streak.current >= 30 ? '⭐' : streak.current >= 14 ? '💪' : streak.current >= 7 ? '🏆' : streak.current >= 3 ? '🌿' : streak.current >= 1 ? '🌱' : '📚'
+  const streakEmojiLabel = streak.current >= 100 ? 'Crown' : streak.current >= 60 ? 'Fire' : streak.current >= 30 ? 'Star' : streak.current >= 14 ? 'Muscle' : streak.current >= 7 ? 'Trophy' : streak.current >= 3 ? 'Leaf' : streak.current >= 1 ? 'Seedling' : 'Books'
 
   return (
     <div className="space-y-7">
@@ -316,7 +310,7 @@ export default function DashboardPage() {
                 title={m.flavour}
                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent/10 text-accent rounded-full text-[11px] font-semibold select-none"
               >
-                {m.emoji} {m.name}
+                <span aria-hidden="true">{m.emoji}</span> {m.name}
               </span>
             ))}
           </div>
@@ -327,7 +321,7 @@ export default function DashboardPage() {
           {/* Header: emoji + count + motivation */}
           <div className="flex items-start justify-between gap-4 mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center text-xl select-none" aria-hidden="true">
+              <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center text-xl select-none" role="img" aria-label={`${streakEmojiLabel}: ${streak.current}-day streak`}>
                 {streakEmoji}
               </div>
               <div>
@@ -387,7 +381,7 @@ export default function DashboardPage() {
           <div className="rounded-xl bg-muted/40 p-3.5">
             <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-2.5">
-                <span className="text-xl select-none" aria-hidden="true">{nextMilestone.emoji}</span>
+                <span className="text-xl select-none" role="img" aria-label={`${nextMilestone.name} milestone`}>{nextMilestone.emoji}</span>
                 <div>
                   <p className="text-xs font-bold tracking-tight">{nextMilestone.name}</p>
                   <p className="text-[10px] text-muted-foreground">{nextMilestone.days}-day milestone</p>

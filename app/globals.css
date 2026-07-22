@@ -45,6 +45,9 @@
   --sidebar-border:         oklch(0.90  0.012 165);
   --sidebar-ring:           oklch(0.54  0.14  163);
 
+  /* ── Hero background ──────────────────────────── */
+  --hero-bg: oklch(0.22 0.08 163);
+
   /* ── Shadow scale ─────────────────────────────── */
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
@@ -339,6 +342,40 @@
   box-shadow: 0 6px 24px oklch(0.54 0.14 163 / 0.35), 0 2px 8px oklch(0.54 0.14 163 / 0.20);
 }
 
+/* ── Hero background (CSS var driven) ──────────────────── */
+.hero-bg {
+  background: var(--hero-bg);
+}
+.hero-bg-radial {
+  background: radial-gradient(ellipse at 50% 0%, oklch(0.54 0.14 163 / 0.30) 0%, transparent 65%);
+}
+.hero-bg-border {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.hero-bg-fade {
+  background: linear-gradient(to bottom, var(--hero-bg), white);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg-radial { animation: none !important; }
+}
+
+/* Section scroll animation classes — works with prefers-reduced-motion */
+.animate-section-hidden {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.animate-section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-section-hidden {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Hero background ────────────────────────────────────── */
 .hero-gradient-bg {
   background: linear-gradient(
@@ -473,7 +510,8 @@ html[data-a11y-spacing] .leading-relaxed {
   .animate-float, .animate-float-slow,
   .animate-shimmer, .animate-ping-soft,
   .animate-hero-underline, .animate-spin-slow,
-  .stagger-1, .stagger-2, .stagger-3, .stagger-4 {
+  .stagger-1, .stagger-2, .stagger-3, .stagger-4,
+  .animate-section-visible, .animate-section-hidden {
     animation: none !important;
     transition: none !important;
   }

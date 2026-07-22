@@ -12,7 +12,7 @@ import { BrandMark } from '@/components/brand-mark'
 import { createClient } from '@/lib/supabase/client'
 import { FORCED_LOGOUT_FLAG } from '@/context/profile-context'
 
-const DARK = 'oklch(0.22 0.08 163)'
+const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
   if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials'))
@@ -88,7 +88,7 @@ export default function LoginPage() {
           <p className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
             Every lesson<br />counts.<br />
-            <span style={{ color: 'oklch(0.74 0.17 62)' }}>Make it great.</span>
+            <span style={{ color: 'var(--accent)' }}>Make it great.</span>
           </h2>
           <p className="text-white/50 text-[15px] leading-relaxed max-w-xs">
             Your AI coach, KICD-aligned modules, and a community of educators are waiting for you.

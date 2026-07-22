@@ -12,7 +12,7 @@ import { BrandMark } from '@/components/brand-mark'
 import { createClient } from '@/lib/supabase/client'
 import { getSiteUrl } from '@/lib/site-url'
 
-const DARK = 'oklch(0.22 0.08 163)'
+const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
   if (msg.includes('already registered') || msg.includes('already exists'))
@@ -89,7 +89,7 @@ export default function SignUpPage() {
           <p className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-5">Free for every teacher</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
             Join Kenya&apos;s largest<br />CBC teacher<br />
-            <span style={{ color: 'oklch(0.74 0.17 62)' }}>community.</span>
+            <span style={{ color: 'var(--accent)' }}>community.</span>
           </h2>
           <ul className="space-y-3.5">
             {[
