@@ -1,7 +1,7 @@
 // Mwalimu AI — Service Worker
 // Strategy: cache-first for immutable assets, network-first for pages.
 // Increment CACHE_VERSION whenever a breaking schema change needs a clean slate.
-const CACHE_VERSION = '1'
+const CACHE_VERSION = '2'
 const STATIC_CACHE  = `mwalimu-static-v${CACHE_VERSION}`
 const PAGES_CACHE   = `mwalimu-pages-v${CACHE_VERSION}`
 const ALL_CACHES    = [STATIC_CACHE, PAGES_CACHE]
@@ -83,16 +83,34 @@ async function cacheFirst(request, cacheName) {
   }
 }
 
+// On slow connections a plain network-first strategy hangs until the request
+// dies, so repeat visitors never benefit from the cache. If we hold a cached
+// copy, race the network against a short timeout and serve the cached copy
+// when the network loses; the fetch keeps running and refreshes the cache in
+// the background for next time. With nothing cached, wait as long as it takes.
+const NETWORK_TIMEOUT_MS = 4000
+
 async function networkFirst(request, cacheName) {
-  try {
-    const response = await fetch(request)
+  const cached = await caches.match(request)
+
+  const networkFetch = fetch(request).then(async response => {
     if (response.ok) {
       const cache = await caches.open(cacheName)
       cache.put(request, response.clone())
     }
     return response
+  })
+
+  try {
+    if (cached) {
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('network timeout')), NETWORK_TIMEOUT_MS)
+      )
+      return await Promise.race([networkFetch, timeout])
+    }
+    return await networkFetch
   } catch {
-    const cached = await caches.match(request)
+    networkFetch.catch(() => {}) // background refresh may still fail; ignore
     if (cached) return cached
 
     // For navigation, try to return the cached dashboard shell as fallback

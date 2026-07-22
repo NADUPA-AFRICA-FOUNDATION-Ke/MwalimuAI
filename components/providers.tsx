@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic'
 import { ThemeProvider } from '@/components/theme-provider'
-import { ProfileProvider } from '@/context/profile-context'
 import { Toaster } from '@/components/ui/sonner'
 
 // Accessibility widget is a non-critical floating panel — defer it so it
@@ -12,20 +11,21 @@ const AccessibilityWidget = dynamic(
   { ssr: false }
 )
 
-export function Providers({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
       defaultTheme="light"
       enableSystem={false}
       disableTransitionOnChange
-      nonce={nonce}
     >
-      <ProfileProvider>
-        {children}
-        <AccessibilityWidget />
-        <Toaster />
-      </ProfileProvider>
+      {/* ProfileProvider (Supabase auth + cloud sync, ~350 KB of JS) is NOT
+          mounted here — marketing pages must not pay for it. It wraps only
+          the routes that consume it: /dashboard (its layout), /onboarding,
+          and /pricing (their layouts). */}
+      {children}
+      <AccessibilityWidget />
+      <Toaster />
     </ThemeProvider>
   )
 }

@@ -1,3 +1,30 @@
+// Static CSP (no nonce): 'unsafe-inline' in script-src lets Next's inline
+// bootstrap scripts run on statically prerendered pages, so marketing pages
+// stay cacheable on the CDN. A nonce would force every route to render
+// dynamically per-request — measured 0.7–2.7s TTFB from iad1 vs ~50ms from
+// the CDN edge. The app has no raw-HTML injection path (React escaping;
+// react-markdown without rehype-raw), so the practical XSS exposure of
+// 'unsafe-inline' here is minimal. Dev additionally needs 'unsafe-eval'
+// for React dev tooling and Turbopack HMR.
+const isDev = process.env.NODE_ENV === 'development'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://*.supabase.co'
+const supabaseWs = supabaseUrl.replace(/^https:/, 'wss:')
+const csp = [
+  `default-src 'self'`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  `style-src 'self' 'unsafe-inline'`,
+  `img-src 'self' data: blob: https://images.unsplash.com`,
+  `font-src 'self'`,
+  `connect-src 'self' ${supabaseUrl} ${supabaseWs}`,
+  `worker-src 'self'`,
+  `manifest-src 'self'`,
+  `object-src 'none'`,
+  `base-uri 'self'`,
+  `form-action 'self'`,
+  `frame-ancestors 'none'`,
+  `upgrade-insecure-requests`,
+].join('; ')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -8,6 +35,7 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
+          { key: 'Content-Security-Policy', value: csp },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

@@ -6,13 +6,23 @@ import { DashboardHeader } from '@/components/dashboard-header'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { OfflineIndicator } from '@/components/offline-indicator'
-import { useProfile } from '@/context/profile-context'
+import { useProfile, ProfileProvider } from '@/context/profile-context'
 import { createClient } from '@/lib/supabase/client'
 import { trackWrite } from '@/lib/write-queue'
 
 const COLLAPSE_KEY = 'mwalimu_sidebar_collapsed'
 
+// ProfileProvider lives here (not in the root layout) so marketing pages
+// don't ship the Supabase client + sync machinery in their JS bundle.
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ProfileProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </ProfileProvider>
+  )
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
   // Mobile: overlay drawer open/closed
   const [sidebarOpen, setSidebarOpen]         = useState(false)
   // Desktop: icon-only (collapsed) vs expanded
