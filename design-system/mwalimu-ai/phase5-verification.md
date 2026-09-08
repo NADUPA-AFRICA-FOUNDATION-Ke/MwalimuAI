@@ -2,7 +2,7 @@
 
 ## Verification status
 
-The current feature-branch code passes the available static, build, and HTTP checks. Browser-based verification and deployment of this branch remain blocked by environment/tooling and workflow constraints documented below.
+The current feature-branch code passes the available static, build, and HTTP checks. Browser-based verification remains blocked by environment/tooling constraints documented below. After the Phase 5 production request was approved, the reviewed feature branch was deployed to the existing Vercel project.
 
 ## Actual checks
 
@@ -46,7 +46,7 @@ Rendered local markup was checked for the updated homepage form ID (`homepage-em
 
 `https://mwalimu-ai-nu.vercel.app` returned HTTP 200 for the homepage, auth pages, Privacy Policy, Terms, `robots.txt`, and `sitemap.xml`. Production headers include CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`, and `Referrer-Policy`.
 
-The deployed HTML does not contain the current local markers `homepage-email` or `preview-tab-0`, confirming that Vercel is serving an older build than this feature branch. No deployment was performed because the agreed workflow requires feature-branch review/merge before production publication.
+Deployment `dpl_LmpiqwF48523MKmBoUsCzwrg1HHu` reached `Ready` and was aliased to `https://mwalimu-ai-nu.vercel.app`. The deployed HTML contains the current markers `homepage-email` and `preview-tab-0`, confirming the live alias reflects this branch. The deployment was made explicitly from the reviewed feature branch; no commit was made to the default branch.
 
 ## Browser and accessibility scanner limitation
 
