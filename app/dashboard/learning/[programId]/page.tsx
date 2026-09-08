@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getProgramById, getTotalLessons, TRACKS } from '@/lib/learning-paths-data'
+import { getModuleGuide } from '@/lib/curriculum-guidance'
 import {
   getProgress, getProgramCompletionPct, isProgramComplete,
   isLessonComplete, joinCohort, type ProgramProgress,
 } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
+import { ModuleImplementationGuide } from '@/components/module-implementation-guide'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/back-button'
@@ -18,19 +20,10 @@ import {
   BookOpen, Clock, GraduationCap, FileText, Zap, Download,
 } from 'lucide-react'
 
-const SIMULATED_COHORT = [
-  { name: 'Mary Wanjiku',   county: 'Kiambu',  pct: 78 },
-  { name: 'James Obuya',    county: 'Kisumu',  pct: 55 },
-  { name: 'Faith Kemunto',  county: 'Nyamira', pct: 100 },
-  { name: 'Peter Mwangi',   county: 'Murang\'a', pct: 33 },
-  { name: 'Sarah Akinyi',   county: 'Nairobi', pct: 90 },
-  { name: 'Daniel Mutuku',  county: 'Machakos', pct: 22 },
-]
-
 export default function ProgramPage() {
   const params = useParams<{ programId: string }>()
   const router  = useRouter()
-  const { profile, syncReady } = useProfile()
+  const { syncReady } = useProfile()
   const program = getProgramById(params.programId)
 
   const [progress, setProgress]   = useState<ProgramProgress>({ completedLessons: [], reflections: {} })
@@ -259,6 +252,9 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
                 {isOpen && (
                   <div className="border-t border-border/40">
                     <p className="px-5 py-3 text-xs text-muted-foreground border-b border-border/40">{mod.description}</p>
+                    {getModuleGuide(program.id, mod.id) && (
+                      <ModuleImplementationGuide guide={getModuleGuide(program.id, mod.id)!} />
+                    )}
                     {mod.lessons.map((lesson, li) => {
                       const lessonDone = mounted && isLessonComplete(progress, mod.id, lesson.id)
                       return (
@@ -353,21 +349,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
             </div>
             {cohortJoined ? (
               <>
-                <p className="text-xs text-muted-foreground mb-3">Learning alongside {SIMULATED_COHORT.length} teachers across Kenya.</p>
-                <div className="space-y-2">
-                  {[...(profile?.name ? [{ name: profile.name, county: profile.county || 'Kenya', pct }] : []), ...SIMULATED_COHORT].slice(0, 5).map((m, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-primary/10 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                        {m.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate">{m.name}</p>
-                        <p className="text-xs text-muted-foreground">{m.county}</p>
-                      </div>
-                      <span className="text-xs font-bold text-primary">{m.pct}%</span>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-xs text-muted-foreground">Your cohort preference is saved to your account. Use the discussion and practical tasks to compare approaches with colleagues when a cohort space is available.</p>
               </>
             ) : (
               <>

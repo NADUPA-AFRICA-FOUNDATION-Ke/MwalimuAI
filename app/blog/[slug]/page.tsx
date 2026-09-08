@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { BackButton } from '@/components/back-button'
 import { getBlogPost, getAllBlogPosts } from '@/lib/blog-data'
-import { renderInline } from '@/lib/render-md'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Calendar, Clock, User, ArrowRight } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 
@@ -113,49 +113,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </p>
 
           {/* Content */}
-          <div className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-ul:my-4 prose-li:my-1">
-            {post.content.split('\n').map((paragraph, index) => {
-              const trimmed = paragraph.trim()
-              if (!trimmed) return null
-
-              if (trimmed.startsWith('## ')) {
-                return (
-                  <h2 key={index} className="text-2xl font-bold mt-8 mb-4 text-foreground">
-                    {renderInline(trimmed.slice(3))}
-                  </h2>
-                )
-              }
-
-              if (trimmed.startsWith('### ')) {
-                return (
-                  <h3 key={index} className="text-xl font-semibold mt-6 mb-3 text-foreground">
-                    {renderInline(trimmed.slice(4))}
-                  </h3>
-                )
-              }
-
-              if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
-                return (
-                  <p key={index} className="font-semibold text-foreground my-4">
-                    {trimmed.slice(2, -2)}
-                  </p>
-                )
-              }
-
-              if (trimmed.startsWith('- ')) {
-                return (
-                  <li key={index} className="text-muted-foreground ml-6 my-1">
-                    {renderInline(trimmed.slice(2))}
-                  </li>
-                )
-              }
-
-              return (
-                <p key={index} className="text-muted-foreground my-4 leading-relaxed">
-                  {renderInline(trimmed)}
-                </p>
-              )
-            })}
+          <div className="max-w-none">
+            <MarkdownRenderer content={post.content} article />
           </div>
 
           {/* CTA */}

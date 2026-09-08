@@ -48,8 +48,8 @@ export default function LearningPage() {
         </div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Professional Development Programs</h1>
         <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-          Curated CBC professional development programs aligned with KICD, CEMASTEA, and KEMI frameworks.
-          Each program includes lessons, practical assignments, assessments, and a shareable completion certificate.
+          Structured professional development for teachers working with Kenya’s competency-based curriculum and education system.
+          Each available program combines lessons, classroom application, practical assignments and assessments.
         </p>
       </div>
 

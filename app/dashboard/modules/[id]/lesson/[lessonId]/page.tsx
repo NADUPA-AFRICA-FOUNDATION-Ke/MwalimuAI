@@ -24,6 +24,7 @@ import { QuizComponent, parseQuizFromContent } from '@/components/quiz'
 import { getProgress, completeLesson, uncompleteLesson, isLessonComplete } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
 import { recordActivity } from '@/lib/streak'
+import { renderInline } from '@/lib/render-md'
 
 const lessonTypeIcons = {
   video: PlayCircle,
@@ -124,7 +125,7 @@ export default function LessonPage() {
         elements.push(
           <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-1 mb-4 ml-4">
             {currentList.map((item, i) => (
-              <li key={i}>{item}</li>
+              <li key={i}>{renderInline(item)}</li>
             ))}
           </ul>
         )
@@ -141,7 +142,7 @@ export default function LessonPage() {
                 <tr className="bg-muted">
                   {currentTable[0].map((cell, i) => (
                     <th key={i} className="border border-border px-3 py-2 text-left font-semibold">
-                      {cell}
+                      {renderInline(cell)}
                     </th>
                   ))}
                 </tr>
@@ -151,7 +152,7 @@ export default function LessonPage() {
                   <tr key={ri}>
                     {row.map((cell, ci) => (
                       <td key={ci} className="border border-border px-3 py-2">
-                        {cell}
+                        {renderInline(cell)}
                       </td>
                     ))}
                   </tr>
@@ -191,7 +192,7 @@ export default function LessonPage() {
         flushList()
         elements.push(
           <h1 key={index} className="text-2xl font-bold mt-6 mb-4">
-            {trimmedLine.slice(2)}
+            {renderInline(trimmedLine.slice(2))}
           </h1>
         )
         return
@@ -200,7 +201,7 @@ export default function LessonPage() {
         flushList()
         elements.push(
           <h2 key={index} className="text-xl font-semibold mt-6 mb-3">
-            {trimmedLine.slice(3)}
+            {renderInline(trimmedLine.slice(3))}
           </h2>
         )
         return
@@ -209,7 +210,7 @@ export default function LessonPage() {
         flushList()
         elements.push(
           <h3 key={index} className="text-lg font-semibold mt-4 mb-2">
-            {trimmedLine.slice(4)}
+            {renderInline(trimmedLine.slice(4))}
           </h3>
         )
         return
@@ -232,20 +233,15 @@ export default function LessonPage() {
         return
       }
 
-      // Bold text patterns
-      let processedLine = trimmedLine
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        .replace(/❌/g, '<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold">✕</span>')
-        .replace(/✅/g, '<span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500/15 text-green-600 text-[10px] font-bold">✓</span>')
-
       // Paragraph
       flushList()
       elements.push(
         <p 
           key={index} 
           className="mb-3 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: processedLine }}
-        />
+        >
+          {renderInline(trimmedLine.replace(/❌/g, '✕').replace(/✅/g, '✓'))}
+        </p>
       )
     })
 

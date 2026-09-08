@@ -64,7 +64,7 @@ const cbcFoundations: Program = {
   tagline: 'Understand CBC from the ground up',
   description: 'Master the core principles of Kenya\'s Competency-Based Curriculum. This program covers the CBC framework, curriculum design, and how to translate policy into everyday classroom practice.',
   track: 'core',
-  kicdAlignment: 'KICD CBC PD Level 1 — Core Framework',
+  kicdAlignment: 'BECF and current KICD curriculum designs',
   hours: 5,
   lessons: 9,
   accent: 'primary',
@@ -81,24 +81,22 @@ const cbcFoundations: Program = {
           duration: '15 min',
           videoTitle: 'Introduction to the Competency-Based Curriculum',
           videoPoints: [
-            'Why Kenya moved from 8-4-4 to CBC',
-            'The KICD mandate and development process',
-            'How CBC serves 21st-century learners',
-            'Real classroom transformation stories',
+            'How the BECF describes Kenya’s curriculum reform',
+            'The difference between a curriculum framework and a grade design',
+            'How knowledge, skills, values and attitudes appear in classroom evidence',
+            'How to move from a topic list to an observable learner performance',
           ],
           reading: `## Two learners, one question
 
 Wanjiru can recite the stages of the water cycle without pausing for breath. Baraka cannot recite them as fluently, but when the school's rain tank ran dry in February, he explained to his classmates why the county was seeding clouds, and what that had to do with evaporation. Under an examination that asks "List the stages of the water cycle," Wanjiru wins. Under almost any real situation either child will ever face, Baraka is the one who has learned.
 
-The Competency-Based Curriculum exists because Kenya decided, as policy, that Baraka's kind of learning is the goal. A competency is not a softer alternative to knowledge. It is **knowledge, skills, and values working together in a real situation**. Baraka knows the water cycle; what makes him competent is that the knowledge is connected, usable, and his own.
+The Basic Education Curriculum Framework (BECF) describes the reform vision as an **engaged, empowered and ethical citizen**. A competency is not a softer alternative to knowledge. It is **knowledge, skills, values and attitudes working together in a real situation**. Baraka knows the water cycle; what makes the evidence stronger is that he connects the knowledge to an explanation and a decision.
 
 ## Why the reform happened
 
-CBC did not appear from nowhere. Three pressures converged:
+The reform is described in the BECF as a move towards nurturing every learner’s potential. The framework sets out a national vision, mission, values, core competencies, curriculum structure, learning outcomes, learning experiences and assessment principles. The grade and learning-area curriculum designs then translate that framework into specific outcomes, suggested experiences, inquiry questions, values, Pertinent and Contemporary Issues (PCIs), resources and assessment ideas.
 
-1. **Evidence from classrooms.** National assessments repeatedly showed learners passing examinations while unable to apply basic literacy and numeracy in unfamiliar contexts. The system was certifying recall, not capability.
-2. **Evidence from the labour market.** Employers and tertiary institutions reported graduates strong on certificates and weak on problem solving, communication, and initiative, the very things work actually demands.
-3. **A national vision.** The Basic Education Curriculum Framework (KICD, 2017) commits to nurturing every learner as an *engaged, empowered and ethical citizen*. Read that phrase slowly. None of those three words can be achieved by memorisation.
+That distinction matters for a teacher: the framework explains the architecture; the current design for your grade and learning area is the document you use to select the exact outcome and sequence.
 
 The structural change from 8-4-4 toward a competency-based structure (with early years, middle school, and senior school pathways) is the visible part. The invisible part is the one that lives or dies in your classroom: the shift in what counts as evidence of learning.
 
@@ -517,7 +515,7 @@ const assessmentForLearning: Program = {
   tagline: 'Move from testing to teaching through assessment',
   description: 'Master CBC\'s competency-based assessment system. From designing rubrics and tracking performance levels to portfolio assessment and parent reporting, this program transforms how you understand what your learners know and can do.',
   track: 'core',
-  kicdAlignment: 'KICD CBC PD Level 2 — Assessment Competency',
+  kicdAlignment: 'BECF and current KNEC CBA resources',
   hours: 6,
   lessons: 9,
   accent: 'accent',
@@ -554,7 +552,7 @@ const assessmentForLearning: Program = {
             'Avoiding grade inflation and deflation',
             'Communicating levels to learners and parents',
           ],
-          reading: `CBC uses four performance levels: Exceeds Expectations (EE), Meets Expectations (ME), Approaching Expectations (AE), and Below Expectations (BE). These replace percentage marks as the primary way of communicating learner progress. Each level describes what the learner can do relative to the SLO, not relative to other learners.\n\nEE means the learner has gone beyond the SLO — they show deeper understanding, make connections to other contexts, or demonstrate independent application. ME means the learner has achieved the SLO as stated. AE means the learner is working towards it and needs some support. BE means the learner has not yet demonstrated the expected competency and needs significant intervention. Your teaching response differs significantly for each level.`,
+          reading: `KNEC assessment resources use four broad performance levels in competency-based assessment: Exceeds Expectation (EE), Meets Expectation (ME), Approaches Expectation (AE), and Below Expectation (BE). In current KJSEA reporting, each broad level is further divided into two actual performance levels (EE1/EE2, ME1/ME2, AE1/AE2 and BE1/BE2) with score ranges. Do not copy those national score bands into a classroom rubric unless the applicable KNEC guidance says to do so.\n\nFor daily classroom assessment, describe what the learner can demonstrate against the specific learning outcome and its criteria. EE indicates performance beyond the stated outcome; ME indicates the outcome is demonstrated; AE indicates partial or supported demonstration; BE indicates that the learner has not yet demonstrated the expected performance. The level is useful only when it leads to a teaching response: extend, practise, scaffold or reteach.`,
           reflectionPrompt: 'For a recent lesson, describe one learner at each of the four performance levels and what evidence led you to that judgement.',
           reflectionPlaceholder: 'EE: [Learner description] Evidence: ...\nME: ...\nAE: ...\nBE: ...',
         },
@@ -726,7 +724,7 @@ const inclusiveEducation: Program = {
   tagline: 'Every learner belongs, every learner succeeds',
   description: 'Build an inclusive classroom that meets every learner where they are. This program covers differentiation strategies, Universal Design for Learning, and practical approaches grounded in CBC\'s every-learner-succeeds philosophy.',
   track: 'core',
-  kicdAlignment: 'KICD CBC PD Level 2 — Inclusive Pedagogy',
+  kicdAlignment: 'BECF and inclusive education guidance',
   hours: 5,
   lessons: 9,
   accent: 'primary',
@@ -858,9 +856,9 @@ const stemIntegration: Program = {
   title: 'STEM Integration',
   shortTitle: 'STEM',
   tagline: 'Science, Technology, Engineering and Mathematics in CBC',
-  description: 'Bring STEM education to life in your CBC classroom. This CEMASTEA-aligned program covers inquiry-based learning, the 5E model, cross-curricular STEM links, and practical project-based learning with low-cost materials.',
+  description: 'Bring STEM education to life in your competency-based classroom. This program covers inquiry-based learning, the 5E model, cross-curricular STEM links, and practical project-based learning with low-cost materials.',
   track: 'stem',
-  kicdAlignment: 'CEMASTEA-aligned STEM Teacher PD Framework',
+  kicdAlignment: 'KICD learning-design principles for STEM practice',
   hours: 6,
   lessons: 9,
   accent: 'accent',
@@ -874,8 +872,8 @@ const stemIntegration: Program = {
         {
           id: 'l1', title: 'What is STEM Education?', duration: '15 min',
           videoTitle: 'STEM Education in Africa: Context and Opportunity',
-          videoPoints: ['STEM as integrated, not just separate subjects', 'Why Kenya needs STEM thinking from primary level', 'CEMASTEA\'s role in STEM teacher development', 'What STEM looks like in a Kenyan classroom'],
-          reading: `STEM education — Science, Technology, Engineering, and Mathematics — is more than teaching these subjects separately. It is an integrated approach where learners apply concepts from multiple disciplines to solve real problems. In a STEM lesson, a learner might apply mathematics to measure, science to hypothesise, engineering to design, and technology to build — all in service of a single challenge.\n\nKenya recognised STEM\'s importance to national development early. CEMASTEA (Centre for Mathematics, Science and Technology Education in Africa) has worked for decades to build STEM teaching capacity. CBC provides the curriculum context: its emphasis on Critical Thinking, Problem Solving, and Creativity maps perfectly onto STEM\'s inquiry-based approach.`,
+          videoPoints: ['STEM as integrated, not just separate subjects', 'How current KICD designs create opportunities for inquiry and application', 'Designing low-resource investigations safely', 'What STEM looks like in a Kenyan classroom'],
+          reading: `STEM education — Science, Technology, Engineering, and Mathematics — is more than teaching these subjects separately. It is an integrated approach where learners apply concepts from multiple disciplines to investigate or solve a real problem. In a STEM lesson, a learner might apply mathematics to measure, science to hypothesise, engineering to design, and technology to represent or communicate — all in service of a selected learning outcome.\n\nThe curriculum connection must be made from the current KICD design for the grade and learning area. Start with the exact outcome, then identify the inquiry, measurement, design or explanation that will produce evidence. Do not label a lesson STEM simply because it uses a device or a practical material.`,
           reflectionPrompt: 'Identify one topic you currently teach in Science or Mathematics. How could it be approached as a STEM challenge rather than a traditional lesson?',
           reflectionPlaceholder: 'Topic: ...\nAs a STEM challenge, learners could: ...\nThis would connect to these subjects: ...',
         },
@@ -952,8 +950,8 @@ const stemIntegration: Program = {
         {
           id: 'l3', title: 'Showcasing and Celebrating Learner Work', duration: '15 min',
           videoTitle: 'STEM Fairs and Exhibitions: Making Learning Public',
-          videoPoints: ['The value of authentic audiences for learner motivation', 'Organising a simple classroom STEM fair', 'Linking STEM projects to community challenges', 'Connecting with CEMASTEA and STEM competitions'],
-          reading: `When learners share their STEM projects with an audience — parents, other classes, community members — motivation and quality both increase. An authentic audience gives purpose to the work. Organising even a small classroom STEM fair (where each group sets up their project and explains it to visiting learners) dramatically increases learner engagement and communication competency development.\n\nCEMASTEA and various NGOs run STEM competitions for Kenyan schools that provide external motivation and the chance to present work nationally. While competitions are not the primary goal, connecting classroom projects to real-world challenges (school water management, local environmental issues, community health) grounds STEM learning in the competencies CBC most values: citizenship, critical thinking, and problem-solving in service of others.`,
+          videoPoints: ['The value of an authentic audience', 'Organising a simple classroom STEM showcase', 'Linking projects to a local problem without inventing curriculum requirements', 'Assessing process, explanation and revision'],
+          reading: `When learners share a STEM project with an audience — another class, families or a school community group — they must explain their decisions and respond to questions. That creates useful evidence of communication and reasoning. An audience is a design choice, not a claim that every project must become a competition.\n\nA simple showcase can work: each group displays a prototype or model, posts the selected outcome and criteria, explains one test, and records one question from a visitor. Keep the task linked to the current learning-area design and use a safe, accessible format for learners who cannot present in the same way.`,
           reflectionPrompt: 'How could you create a public audience for a learner STEM project this term? Who could you invite? How would you prepare learners to present?',
           reflectionPlaceholder: 'Audience: ...\nFormat: ...\nPreparation: ...\nDate I could do this: ...',
         },
@@ -966,7 +964,6 @@ const stemIntegration: Program = {
     { id: 'q3', question: 'A "fair test" in science means:', options: ['A test that all learners find easy', 'Changing one variable at a time while keeping others the same', 'Testing learners fairly without bias', 'A test that is graded fairly'], correct: 1, explanation: 'A fair test changes only one variable (independent variable) while controlling all others, making results valid.' },
     { id: 'q4', question: 'The "driving question" in PBL should be:', options: ['Closed — with one correct answer', 'Open-ended and connected to real-world problems', 'From the textbook', 'Decided only by the teacher'], correct: 1, explanation: 'A PBL driving question is open-ended, genuinely interesting, and connected to learners\' real world.' },
     { id: 'q5', question: 'Running a STEM project requires expensive equipment:', options: ['True — STEM needs labs and technology', 'False — many powerful investigations use everyday materials', 'Only partly — some technology is always required', 'Depends on the school budget'], correct: 1, explanation: 'False — bottle tops, cardboard, water, soil, and local materials support many powerful STEM investigations.' },
-    { id: 'q6', question: 'CEMASTEA is:', options: ['A science textbook publisher', 'The Centre for Mathematics, Science and Technology Education in Africa', 'A ministry department', 'A learner competition organiser only'], correct: 1, explanation: 'CEMASTEA = Centre for Mathematics, Science and Technology Education in Africa — a regional STEM teacher development institution.' },
   ],
   postAssessment: [
     { id: 'q1', question: 'STEM integration in CBC connects best with which competencies?', options: ['Only digital literacy', 'Critical Thinking, Problem Solving, and Creativity', 'Only self-efficacy', 'Only communication'], correct: 1, explanation: 'STEM naturally develops Critical Thinking, Problem Solving, and Creativity — all core CBC competencies.' },
@@ -994,7 +991,7 @@ const languageTeaching: Program = {
   tagline: 'English & Kiswahili pedagogy in the CBC context',
   description: 'Effective strategies for teaching English and Kiswahili as both subjects and languages of instruction in the CBC era. Covers literacy development, multilingual classrooms, and reading competency.',
   track: 'languages',
-  kicdAlignment: 'KICD Languages Strand — CBC PD Level 2',
+  kicdAlignment: 'Current KICD language curriculum designs',
   hours: 5,
   lessons: 9,
   accent: 'primary',
@@ -1012,9 +1009,9 @@ const schoolLeadership: Program = {
   title: 'School Leadership & Management',
   shortTitle: 'Leadership',
   tagline: 'Lead CBC implementation from the front office',
-  description: 'KEMI-aligned professional development for school heads and deputy heads. Covers CBC change management, instructional leadership, staff coaching, and performance management in the CBC era.',
+  description: 'Professional development for school heads and deputy heads. Covers change management, instructional leadership, staff coaching, and performance management in a competency-based education context.',
   track: 'leadership',
-  kicdAlignment: 'KEMI Leadership Development Framework',
+  kicdAlignment: 'School leadership practice — source review pending',
   hours: 8,
   lessons: 12,
   accent: 'accent',
@@ -1034,7 +1031,7 @@ const humanitiesTrack: Program = {
   tagline: 'History, geography, citizenship in the CBC context',
   description: 'Teaching Social Studies, Religious Education, and Creative Arts with CBC competency-based approaches. Covers inquiry learning in the humanities and connecting to learners\' lived experiences.',
   track: 'humanities',
-  kicdAlignment: 'KICD Humanities Strand — CBC PD Level 2',
+  kicdAlignment: 'Current KICD humanities and social-studies designs',
   hours: 5,
   lessons: 9,
   accent: 'primary',
@@ -1055,7 +1052,7 @@ const teacherWellbeing: Program = {
   tagline: 'Sustain your passion for teaching',
   description: 'Build evidence-based habits to manage stress, prevent burnout, and sustain a fulfilling teaching career. Practical strategies designed for the realities of Kenyan CBC classrooms.',
   track: 'wellbeing',
-  kicdAlignment: 'TSC Teacher PD — Professional Practice & Wellbeing',
+  kicdAlignment: 'Professional practice and teacher wellbeing',
   hours: 4,
   lessons: 9,
   accent: 'accent',
@@ -1455,7 +1452,7 @@ const AI_LESSON_META: { keyPoints: string[]; reflectionPrompt: string; reflectio
     reflectionPlaceholder: 'Topic: ...\nDid the four bugs hold up? ...\nWhat I corrected in the output: ...',
   },
   {
-    keyPoints: ['CSL is a core subject for ALL Senior School learners', 'NotebookLM synthesises news, NGO reports, government data, and textbooks', 'Upload your real local documents for authentic research'],
+    keyPoints: ['Use the applicable Senior School learning-area design for any CSL task', 'A source-grounded notebook can organise local documents and learner questions', 'Upload real local documents and verify every curriculum-specific claim'],
     reflectionPrompt: 'Identify one local document (a chief\'s report, committee minutes, facility data) you could upload for a CSL project. What authentic research question could learners investigate from it?',
     reflectionPlaceholder: 'Local document: ...\nThe CSL project theme: ...\nThe learner research question: ...',
   },
@@ -1466,7 +1463,7 @@ const AI_LESSON_META: { keyPoints: string[]; reflectionPrompt: string; reflectio
   },
   // M5
   {
-    keyPoints: ['CBA shifts from "what does the learner know?" to "what can they do?"', 'Strong performance tasks have a real context, a real audience, and a product', 'Full KNEC rubrics span eight sub-levels (EE1 to BE2)'],
+    keyPoints: ['CBA asks what learners can demonstrate with what they know', 'Strong performance tasks have a defined context, evidence and criteria', 'Use EE1 to BE2 only where the applicable current KNEC framework requires those national sub-levels'],
     reflectionPrompt: 'Generate one performance task, then test it against the three qualities (authentic context, audience beyond you, a tangible product). Which quality is weakest, and how would you strengthen it?',
     reflectionPlaceholder: 'The task: ...\nAuthentic context? ...\nAudience beyond me? ...\nA product? ...\nThe weakest quality and my fix: ...',
   },
@@ -1544,9 +1541,9 @@ const aiEmpoweredEducator: Program = {
   title: 'The AI-Empowered Educator',
   shortTitle: 'AI for CBC',
   tagline: 'Master Gemini, NotebookLM & Google Classroom for CBC',
-  description: 'A practical, tool-specific course on using Google\'s AI tools to deliver CBC well, from Pre-Primary to Senior School. Learn to ground AI in authentic KICD documents, generate KNEC-aligned lesson plans and rubrics, and run digital assessment, all with copy-ready prompt templates you can use the same day.',
+  description: 'A practical, tool-specific course on using Google\'s AI tools to support teaching from Pre-Primary to Senior School. Learn to ground drafts in the current KICD and KNEC documents, verify curriculum details, and adapt resources for real classrooms with copy-ready prompt templates.',
   track: 'core',
-  kicdAlignment: 'Kenya National AI Strategy 2025-2030 · KICD & KNEC aligned',
+  kicdAlignment: 'Responsible digital practice with source verification',
   hours: AI_MODULES.reduce((s, m) => s + m.hours, 0),
   lessons: AI_MODULES.reduce((s, m) => s + m.sections.length, 0),
   accent: 'accent',
@@ -1573,7 +1570,7 @@ const aiEmpoweredEducator: Program = {
   preAssessment: [
     { id: 'q1', question: 'A teacher asks Gemini (with no documents attached) for the Grade 6 Integrated Science Learning Outcomes and pastes the answer straight into a scheme of work. What is the main risk?', options: ['Gemini is too slow for this', 'Gemini may produce plausible but incorrect curriculum details (hallucination)', 'Gemini cannot write in English', 'The answer will be too short'], correct: 1, explanation: 'Ungrounded AI can generate confident, wrong curriculum information. The course\'s core safeguard is grounding curriculum work in NotebookLM with the official KICD documents as the only sources.' },
     { id: 'q2', question: 'Which Google tool is, by design, unable to draw on information outside the files you upload, making it the most reliable for KICD curriculum work?', options: ['Gemini', 'Google Classroom', 'NotebookLM', 'Google Search'], correct: 2, explanation: 'NotebookLM answers only from your uploaded sources. That property is exactly what prevents curriculum hallucination.' },
-    { id: 'q3', question: 'KNEC\'s Competency-Based Assessment uses four performance levels. Which list is correct, strongest to weakest?', options: ['A, B, C, D', 'EE, ME, AE, BE', 'Distinction, Credit, Pass, Fail', '1, 2, 3, 4'], correct: 1, explanation: 'Exceeding (EE), Meeting (ME), Approaching (AE), and Below (BE) Expectations, expanded into an eight-point scale from EE1 (8) to BE2 (1).' },
+    { id: 'q3', question: 'Which list names the four broad performance levels used in current KNEC competency-based assessment resources?', options: ['A, B, C, D', 'EE, ME, AE, BE', 'Distinction, Credit, Pass, Fail', '1, 2, 3, 4'], correct: 1, explanation: 'The broad levels are Exceeds Expectation (EE), Meets Expectation (ME), Approaches Expectation (AE), and Below Expectation (BE). Current KJSEA regulations further show actual levels within those broad levels; use those national details only where applicable.' },
     { id: 'q4', question: 'In this course\'s philosophy, what is the teacher\'s role relative to any AI output?', options: ['Trust it and deliver it directly to save time', 'Review and edit every output before it reaches learners', 'Only use AI for marking, never for planning', 'Avoid AI entirely in CBC'], correct: 1, explanation: 'AI serves the teacher; it never replaces professional judgement. Every prompt, activity, and rubric must be reviewed and edited before reaching learners.' },
     { id: 'q5', question: 'To align Google Classroom with CBC rather than 8-4-4 thinking, you should organise it around:', options: ['One class for the whole grade, Topics for subjects', 'Learning Areas as classes, Strands as Topics', 'One class per term', 'Topics named after textbook chapters'], correct: 1, explanation: 'Mapping the platform to KICD\'s hierarchy (Learning Area, Strand, Sub-Strand) makes your Gradebook directly mappable to KNEC\'s CBA records.' },
     { id: 'q6', question: 'Honestly, how confident are you right now using Gemini, NotebookLM, or Google Classroom to prepare CBC materials?', options: ['Very confident, I use them weekly', 'Somewhat, I have tried one of them', 'Rarely, I have heard of them but not used them for teaching', 'Not at all'], correct: 3, explanation: 'There is no wrong answer here. This question simply marks your starting point so you can see how far you have come by the post-assessment.' },
@@ -1589,7 +1586,7 @@ const aiEmpoweredEducator: Program = {
   assignment: {
     title: 'Build and Ship One Real AI-Assisted CBC Resource',
     context: 'You have seen 15 walkthroughs and copied many prompts. Now produce one genuine, classroom-ready artifact using these tools, and reflect on the human judgement it required.',
-    task: 'Choose ONE: (a) a complete KICD-grounded lesson plan, (b) a full eight-level KNEC rubric for a performance task, or (c) a Home Learning Mission with a parent observation guide. Generate a first version with the relevant prompt, then EDIT it for your real class. Submit (350-550 words): (1) which artifact and tool you chose and why; (2) the prompt you used, including your local context; (3) the three most important edits you made to the AI\'s output and why each was necessary; (4) one limitation of the AI you noticed that a teacher must always watch for.',
+    task: 'Choose ONE: (a) a lesson-plan draft grounded in the applicable KICD design, (b) an observable rubric for a performance task, or (c) a Home Learning Mission with a parent observation guide. Generate a first version with the relevant prompt, then EDIT it for your real class. Submit (350-550 words): (1) which artifact and tool you chose and why; (2) the prompt you used, including your local context; (3) the three most important edits you made to the AI\'s output and why each was necessary; (4) one limitation of the AI you noticed that a teacher must always watch for.',
     hints: [
       'Pick the artifact you will actually use this week, not a hypothetical one',
       'Ground anything curriculum-specific in NotebookLM, do not trust ungrounded recall',
@@ -1606,7 +1603,7 @@ const aiEmpoweredEducator: Program = {
   },
   certificate: {
     subtitle: 'The AI-Empowered Educator Program',
-    skills: ['Grounding AI in KICD documents (NotebookLM)', 'CBC lesson planning with Gemini', 'KNEC-aligned digital assessment', 'Google Classroom for CBC workflows', 'Responsible, teacher-led AI practice'],
+    skills: ['Grounding AI drafts in KICD documents', 'Lesson planning with source verification', 'Evidence-based assessment design', 'Google Classroom workflows', 'Responsible, teacher-led AI practice'],
   },
 }
 

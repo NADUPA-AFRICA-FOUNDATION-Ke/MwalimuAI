@@ -766,17 +766,17 @@ After completing these activities, reflect on:
         content: `
 # What is Formative Assessment?
 
-Formative assessment is assessment FOR learning — it happens during the learning process, not at the end of it. In Kenya's CBC framework, formative assessment is embedded in the Classroom-Based Assessment (CBA) mandate: teachers are the primary assessors of their own learners, using evidence gathered in class to make instructional decisions and report on competency development.
+Formative assessment is assessment FOR learning — it happens during the learning process, not only at the end of it. KNEC describes competency-based assessment as a process of collecting and documenting what a learner knows and can do before, during and after learning, against specified competencies and criteria. In practice, the teacher uses classroom evidence to make an instructional decision and follows the current reporting and submission guidance for the relevant level.
 
 ## Formative vs Summative Assessment
 
 The distinction matters practically. **Summative assessment** — KNEC examinations, end-of-term tests, and annual reports — tells us what a learner achieved by a particular point in time. It looks backward. **Formative assessment** looks forward: it tells you and the learner what to do next.
 
-In CBC terms, summative assessment produces the EE, ME, AE, or BE rating entered in the report. Formative assessment is the daily practice that makes those ratings accurate and meaningful rather than guesswork.
+In classroom practice, a teacher may use descriptors such as EE, ME, AE and BE where the applicable design or school guidance calls for them. Current KJSEA reporting further divides the four broad levels into actual performance levels with national score ranges. These national reporting rules should not be copied into every classroom task; the daily purpose of formative assessment is to produce evidence and a next step.
 
 ## Why the CBA Mandate Matters
 
-Before CBC, most assessment in Kenya was external and high-stakes: CPE, KCSE. CBA transfers assessment authority to classroom teachers, which is both an opportunity and a responsibility. Your observations, rubric scores, and anecdotal notes are the official evidence of learner progress. This makes rigorous formative practice not an optional extra but a professional obligation.
+The transition to competency-based assessment asks teachers to collect richer classroom evidence alongside the national assessments and reporting processes that apply at each level. Your observations, work samples, questioning and rubric notes are useful only when they are specific, traceable to an outcome and used responsibly within the school’s current record-keeping process.
 
 ## Three Core Purposes of Formative Assessment
 
@@ -1584,17 +1584,17 @@ d) Ask learners to use their personal phones instead
   {
     id: 6,
     title: 'Junior Secondary CBC',
-    description: 'Navigate the Junior Secondary School curriculum introduced in 2023 — new subjects, integrated learning areas, and the JSS assessment framework.',
+    description: 'Navigate the current Grade 7–9 Junior School curriculum designs, classroom assessment and the transition conversation towards Senior School.',
     category: 'curriculum',
     difficulty: 'intermediate',
     duration: 55,
     progress: 0,
     icon: 'JSS',
     objectives: [
-      'Understand the JSS curriculum structure and its 12 learning areas',
+      'Use the current KICD Grade 7–9 learning-area designs instead of a fixed generic subject list',
       'Explain the purpose of Pre-Vocational and Technical Education in JSS',
       'Design learner-centred activities for JSS integrated topics',
-      'Apply the JSS assessment framework including project work',
+      'Use classroom evidence and current KNEC guidance when planning assessment',
       'Navigate the transition from Upper Primary to Junior Secondary',
     ],
     prerequisites: ['CBC Fundamentals'],
@@ -1612,11 +1612,11 @@ Junior Secondary School (JSS) represents the fourth level of Kenya's CBC pathway
 
 ## Why JSS Was Created
 
-Under 8-4-4, the transition point at Class 8 was dominated by the CPE (Certificate of Primary Education), a high-stakes examination that determined secondary school placement. This created enormous academic pressure on young learners and directed curriculum delivery toward exam preparation rather than competency development. JSS was designed to:
+Under the former 8-4-4 structure, the transition from primary to secondary school was strongly associated with the KCPE (Kenya Certificate of Primary Education) examination and Form 1 placement. Junior School is part of the competency-based structure described in the BECF, with a broad programme before Senior School pathway decisions. JSS is intended to:
 
 - Extend the learner-centred, competency-based approach from primary school into the early secondary years
 - Introduce vocational and pre-technical education before learners specialise in Senior Secondary
-- Reduce the high-stakes gate-keeping that characterised the CPE-to-Form 1 transition
+- Support a more continuous learning journey than the former KCPE-to-Form 1 transition
 - Ensure learners experience a broad curriculum before choosing a Senior Secondary pathway
 
 ## The CBC Pathway Position of JSS
@@ -1628,49 +1628,44 @@ JSS sits between Upper Primary (Grades 4–6) and Senior Secondary (Grades 10–
 
 ## Administrative Context for Teachers
 
-JSS teachers in 2023 were drawn from two sources: former Form 1–3 teachers redeployed to Grade 7, and primary teachers who followed their cohort into JSS. Both groups faced a curriculum that was genuinely new — not simply a renamed version of what they had taught before. Ongoing KICD and TSC professional development for JSS remains a priority, and Mwalimu AI's JSS module is designed to supplement that support.
+Teachers working in Junior School need to plan from the current grade and learning-area designs, not from a renamed Form 1–3 syllabus. Use this module as a practice aid and verify any implementation, staffing or assessment question against current KICD, Ministry of Education and KNEC communication.
         `,
       },
       {
         id: 2,
-        title: 'The 12 JSS Learning Areas',
+        title: 'Reading the Current Junior School Designs',
         duration: 11,
         type: 'reading',
         completed: false,
         content: `
-# The 12 JSS Learning Areas
+# Reading the Current Junior School Designs
 
-Junior Secondary School has 12 prescribed learning areas. This is a wider curriculum than 8-4-4 Form 1–3, reflecting CBC's emphasis on holistic development before specialisation.
+Junior School covers Grades 7, 8 and 9. Do not use a remembered list of subjects as a substitute for the current design. KICD publishes separate grade pages and learning-area designs; the current Grade 7 and Grade 9 pages list learning-area designs including Agriculture, languages, Creative Arts, Religious Education, Integrated Science, Mathematics, Pre-Technical Studies and Social Studies, with additional language options. The exact learning areas available to a learner depend on the current official design and the school programme.
 
-## The 12 Learning Areas
+## A source-first planning routine
 
-1. **Mathematics**: Builds on Upper Primary numeracy with greater abstraction, algebra, geometry, and data handling. The emphasis remains on mathematical reasoning and problem-solving rather than procedural computation alone.
+1. Open the KICD page for the grade you teach and the specific learning-area design.
+2. Record the exact Learning Area, Strand, Sub-Strand and Specific Learning Outcome (SLO) wording you will use.
+3. Read the suggested learning experiences, key inquiry questions, values, Pertinent and Contemporary Issues (PCIs), resources and suggested assessment in that design.
+4. Adapt the experience to your learners and resources without changing the official outcome or inventing a strand.
 
-2. **English**: Develops reading, writing, listening, and speaking competencies at greater depth. Includes literary analysis, extended writing, and formal presentation skills.
+## What integration means in practice
 
-3. **Kiswahili / Kenya Sign Language**: Kiswahili continues as a core language learning area. Schools with learners who use Kenya Sign Language as their primary language may offer KSL.
+Integration does not mean merging every subject into one lesson or assigning a project without traceable outcomes. It means identifying a genuine connection and keeping the evidence for each learning area visible. For a school-water investigation, for example, Integrated Science might supply an observation and explanation, Mathematics might supply measurement and representation, and Social Studies might supply a community-use perspective. Each teacher still checks the relevant design and assesses the outcome they selected.
 
-4. **Integrated Science**: A deliberate departure from 8-4-4's separate Biology, Chemistry, and Physics in Form 1. JSS teaches science as an integrated discipline — processes, energy, matter, and the living world — building conceptual connections across domains.
+## A useful teacher record
 
-5. **Social Studies**: Integrates elements of History and Government, Geography, and Civics from 8-4-4. Focuses on Kenya's place in East Africa and the wider world, citizenship, and environmental responsibility.
+| Field | What to record |
+| --- | --- |
+| Source | KICD grade, learning area and page or section |
+| Intended learning | Exact SLO and observable verb |
+| Experience | What learners will investigate, make, explain or decide |
+| Evidence | Individual work, observation, explanation or performance |
+| Response | Reteach, practise, extend or refer for support |
 
-6. **Religious Education**: Available as Christian Religious Education (CRE), Islamic Religious Education (IRE), or Hindu Religious Education (HRE), reflecting the learner's tradition.
+>> KEY: The KICD website is the starting point for the current design. If a staffroom list, textbook or AI response conflicts with it, pause and verify against the applicable official document before teaching or advising a parent.
 
-7. **Business Studies**: A new addition at this level. Introduces concepts of enterprise, financial literacy, and economic thinking relevant to Kenya's Vision 2030 goals.
-
-8. **Agriculture and Nutrition**: Combines agricultural science with food and nutrition. Contextualised to Kenyan farming systems and food security, with emphasis on practical work and environmental sustainability.
-
-9. **Creative Arts and Sports**: Integrates visual arts, performing arts, and physical education. Emphasises creativity, expression, and physical wellbeing as CBC core values, not peripheral activities.
-
-10. **Computer Science**: Distinct from the Digital Literacy component of earlier levels. Introduces programming logic, computational thinking, and applied ICT skills.
-
-11. **Home Science**: Practical skills for home management, textiles, and nutrition. Historically gendered in Kenya — CBC explicitly frames it as a competency area for all genders.
-
-12. **Pre-Technical and Pre-Vocational Studies**: The most distinctive JSS learning area. Covered in detail in Lesson 3.
-
-## Integration Across Learning Areas
-
-JSS curriculum design encourages thematic integration — the same topic approached from the perspective of multiple learning areas. For example, a unit on "Water in Kenya" might involve Integrated Science (water chemistry and ecology), Social Studies (water as a geopolitical resource), Agriculture and Nutrition (irrigation and food production), and Computer Science (water data analysis). Planning cross-curricular units is more demanding but produces richer, more meaningful learning.
+>> TRY: Open the design for one learning area you teach. Build the five-field record above for one SLO, then ask a colleague to check that your activity and evidence still match the wording.
         `,
       },
       {
@@ -1682,31 +1677,22 @@ JSS curriculum design encourages thematic integration — the same topic approac
         content: `
 # Pre-Vocational and Technical Education in JSS
 
-Pre-Technical and Pre-Vocational Studies is arguably the most innovative element of the JSS curriculum. It is also the area where schools and teachers have faced the greatest implementation challenges, particularly in terms of materials, space, and teacher expertise.
+Pre-Technical Studies is one of the practical learning areas listed on the current Junior School curriculum-design pages. Implementation still requires teachers to read the applicable grade design carefully and plan safe, achievable experiences with the materials and space actually available.
 
 ## Purpose and Philosophy
 
-The inclusion of pre-vocational education at JSS level reflects a deliberate policy choice: Kenya needs a workforce that values technical and practical skills as much as academic credentials. The 8-4-4 system's terminal examination at Form 4 (KCSE) effectively devalued anything that was not examinable in written form, pushing learners, parents, and teachers to treat practical and technical subjects as secondary.
+The BECF places practical learning, competencies and pathways within the wider curriculum reform. This does not mean that a teacher should invent a fixed vocational sequence or promise a career outcome. Use the current Pre-Technical Studies design for the grade, and keep the purpose of each practical activity visible through its learning outcome and evidence.
 
-CBC inverts this logic. Pre-vocational education is a core, assessed learning area for all JSS learners — not an optional or remedial stream. The goal is exploration and exposure, not the production of finished craftspeople or technicians. By the end of Grade 9, learners should have encountered enough vocational domains to make an informed choice about their Senior Secondary pathway.
+## How to plan practical work safely
 
-## What Pre-Technical Studies Covers
+Do not treat the following as an official list of strands. Treat them as planning questions and verify the exact content in the current design:
 
-The JSS Pre-Technical Studies curriculum introduces learners to five broad domains:
+- What material, tool or process does the selected outcome require learners to identify, use, explain or evaluate?
+- What can be demonstrated safely with the school’s actual resources, and what needs a teacher demonstration or a non-tool alternative?
+- How will every learner contribute evidence, including learners who cannot access the same physical task?
+- What are the stop conditions, supervision arrangements and non-digital or low-resource fallback?
 
-**1. Wood Technology**: Basic tool use, wood identification, joint-making, and a simple project (a stool, box, or display stand). Develops spatial reasoning, precision, and patience.
-
-**2. Metal Technology**: Properties of metals, basic cutting and shaping, simple metalwork projects. Safety education is a major component.
-
-**3. Electricity and Electronics**: Electrical safety, circuit construction, simple electronic components. Introduction to renewable energy (solar, wind) in the Kenyan context.
-
-**4. Building and Construction**: Materials, basic masonry, technical drawing. Connects to Kenya's construction industry and housing needs.
-
-**5. Textile Technology**: Fabric identification, basic sewing and embroidery, garment care. Explicitly taught to all learners regardless of gender.
-
-## Implementation Challenges
-
-Many JSS schools — especially converted primary schools — lack workshops, tools, and specialist teachers. The Ministry of Education's phased rollout includes a school infrastructure improvement programme, but progress has been uneven. In schools without workshops, the curriculum encourages use of locally available materials (bamboo, sisal, clay) and improvised workspaces. Teacher retraining through the TSC and KICD continues as a priority.
+For each practical lesson, prepare a short risk check, a teacher demonstration, a learner task, an observation criterion and a clean-up routine. If a required resource is unavailable, change the experience while preserving the intended outcome, or record the limitation for discussion with the school.
         `,
       },
       {
@@ -1718,17 +1704,17 @@ Many JSS schools — especially converted primary schools — lack workshops, to
         content: `
 # JSS Assessment and Project Work
 
-Assessment in JSS follows the same CBA framework as primary school, with one important addition: project-based assessment becomes more prominent and formally structured.
+Assessment in Junior School should be planned from the applicable KICD learning-area design and current KNEC guidance. A project is one possible source of evidence, not a substitute for choosing a method that matches the intended performance.
 
 ## The JSS Assessment Framework
 
-JSS retains the four-level CBC performance scale (EE, ME, AE, BE) for all Classroom-Based Assessments. Teachers conduct continuous CBA throughout each term and record performance against the SLOs for each learning area. This is the same evidence-gathering process as primary school, but the SLOs are more complex and the competencies more abstract.
+Teachers collect evidence against the specific learning outcomes for each learning area. Use observation, questioning, practical performance, work samples, oral explanation, portfolios and other tools identified in the relevant guidance. Describe performance with observable criteria and document the instructional response; do not present a classroom rubric as a national KNEC score table unless the applicable KNEC document requires that format.
 
-At the end of Grade 9, learners sit the Kenya Junior School Education Assessment (KJSEA) administered by KNEC. The KJSEA replaced the old KCPE at the primary level (which now occurs at Grade 6 as the Kenya Primary School Education Assessment, KPSEA) and is the gateway assessment for Senior Secondary placement.
+At the end of Grade 9, KNEC administers the Kenya Junior School Education Assessment (KJSEA). KJSEA is distinct from the Kenya Primary School Education Assessment (KPSEA) at Grade 6 and from the former KCPE. Current KNEC regulations report KJSEA performance through four broad levels with two actual performance levels within each. Consult the current regulations and circulars for national assessment details.
 
 ## The Role of Project Work in JSS CBA
 
-Projects are a central assessment modality in JSS, particularly in Pre-Technical Studies, Agriculture and Nutrition, Computer Science, and Creative Arts. A project provides evidence of competencies that cannot be demonstrated in a written test: sustained effort over time, practical skill, collaboration, problem-solving under real constraints, and self-directed learning.
+Projects can provide useful evidence in practical and inquiry-based learning when they are explicitly linked to selected outcomes. They can show sustained effort, practical skill, collaboration and revision, but a project should not be treated as automatically better than observation, questioning, a work sample or another suitable method.
 
 ## Planning Effective JSS Projects
 
@@ -1736,15 +1722,15 @@ A strong JSS project has four elements:
 
 **1. Clear SLO alignment**: Every project should be traceable to one or more SLOs. Before designing the project, identify which SLOs it will assess and write the rubric before learners begin.
 
-**2. Authentic context**: Projects grounded in real community needs produce better learning and more motivated learners. A Grade 8 Agriculture and Nutrition project on improving school garden yield is more educationally powerful than a theoretical essay on plant nutrition.
+**2. Authentic context**: A Grade 8 investigation into improving a school garden can create a meaningful context when it is linked to outcomes in the relevant design. The context is useful because it gives learners a reason to measure, explain, test or recommend — not because every project is automatically better than written work.
 
 **3. Staged milestones**: Break the project into checkpoints — plan, draft/prototype, review, final product. Assess at each stage. This prevents the "all-nighter before submission" pattern that produces low-quality work.
 
-**4. Learner reflection**: Require a short written or oral reflection on what went well, what was difficult, and what the learner would do differently. This reflection is itself assessable evidence of the Learning to Learn competency.
+**4. Learner reflection**: Invite a short written or oral reflection on what went well, what was difficult, and what the learner would do differently. Treat it as evidence only when it is linked to a selected outcome or competency criterion.
 
-## Recording Project Assessment in CBA
+## Recording Project Evidence
 
-Use an analytic rubric with 3–4 criteria specific to the project. Record your rubric scores in the CBA class register alongside your routine observation and exit ticket evidence. When completing the term report, the project score contributes to — but does not solely determine — the CBA performance level you assign.
+Use an analytic rubric with criteria specific to the selected outcome. Keep the brief, milestone evidence, observation notes, learner product and feedback together so another teacher can understand the judgement. Follow the school’s current record-keeping and KNEC submission instructions; do not assume that one project score determines a learner’s reported performance.
         `,
       },
       {
@@ -1756,11 +1742,11 @@ Use an analytic rubric with 3–4 criteria specific to the project. Record your 
         content: `
 # Supporting the Grade 7 Transition
 
-The transition from Upper Primary (Grade 6) to Junior Secondary (Grade 7) is a significant developmental and academic shift. Learners move from a school environment they have known for six or more years into a new institution with new teachers, a wider curriculum, and higher expectations of independence. Research consistently shows that learners who struggle to adjust in the first term of secondary school are at elevated risk of disengagement and dropout.
+The transition from Upper Primary (Grade 6) to Junior School (Grade 7) can bring a new environment, new teachers, a wider curriculum and higher expectations of independence. The first term is an opportunity to learn what support learners need as they adjust to new routines.
 
 ## What Makes the CBC Transition Different
 
-Under 8-4-4, the CPE examination created a hard break between primary and secondary school, with secondary school teachers often receiving learners they knew nothing about. CBC's design attempts to create more continuity — through the CBA records that should (in principle) follow each learner from Grade 6 to Grade 7 — but in practice, this information transfer is inconsistent.
+The former KCPE-to-Form 1 transition created a clear institutional break. In the competency-based structure, teachers should use available transition information alongside a fresh, low-stakes diagnostic task. Do not assume that a record or a new assessment tells the whole story about a learner.
 
 ## Activities for Supporting Transition
 
@@ -1774,7 +1760,7 @@ In JSS, learners are old enough to participate in establishing classroom norms. 
 
 **Activity 3: Parent Orientation on JSS**
 
-Many parents of Grade 7 learners are confused by JSS — they do not understand why it exists, what the KJSEA is, or how CBA relates to their child's progression. A single 60-minute orientation session early in Term 1 can dramatically improve parent engagement and reduce parent-driven pressure on learners to perform as they did under 8-4-4. Prepare a one-page summary of: the JSS structure, what your learning area covers, how CBA works, and how parents can support learning at home.
+Parents may have questions about Junior School, KJSEA, classroom assessment and progression. Prepare a short, source-linked summary of the JSS structure, what your learning area covers, how evidence is gathered and how families can support learning at home. Mark any current placement or assessment detail that needs confirmation from the school or an official circular.
 
 ## Reflection Questions for Teachers
 

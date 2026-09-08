@@ -16,11 +16,12 @@
   --color-on-brand: #FFFFFF;
   --color-brand-hover: #045E48;
   --color-brand-soft: #DDF5EB;
-  /* #B35F00 is a readable orange for text and solid accent surfaces. */
-  --brand-accent: #B35F00;
-  --color-accent-bright: #F5A623;
-  --color-accent-text: #B35F00;
-  --color-accent-soft: #FFF1D4;
+  /* A richer burnt orange keeps the original warmth while giving primary
+     calls to action more energy and a clearer visual hierarchy. */
+  --brand-accent: #C2410C;
+  --color-accent-bright: #F59E0B;
+  --color-accent-text: #9A3412;
+  --color-accent-soft: #FFF1E6;
   --color-success: #0B6B43;
   --color-on-success: #FFFFFF;
   --color-danger: #B42318;

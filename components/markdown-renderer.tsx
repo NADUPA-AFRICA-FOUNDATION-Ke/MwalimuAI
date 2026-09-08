@@ -7,42 +7,43 @@ import type { Components } from 'react-markdown'
 interface Props {
   content: string
   compact?: boolean
+  article?: boolean
   className?: string
 }
 
-const makeComponents = (compact: boolean): Components => ({
+const makeComponents = (compact: boolean, article: boolean): Components => ({
   h1: ({ children }) => (
-    <h1 className={`font-bold text-foreground ${compact ? 'text-base mt-3 mb-1.5 first:mt-0' : 'text-lg mt-6 mb-2.5 first:mt-0 pb-2 border-b border-border/40'}`}>
+    <h1 className={`font-bold text-foreground ${article ? 'text-3xl mt-8 mb-4 first:mt-0' : compact ? 'text-base mt-3 mb-1.5 first:mt-0' : 'text-lg mt-6 mb-2.5 first:mt-0 pb-2 border-b border-border/40'}`}>
       {children}
     </h1>
   ),
   h2: ({ children }) => (
-    <h2 className={`font-semibold text-foreground ${compact ? 'text-sm mt-2.5 mb-1 first:mt-0' : 'text-base mt-5 mb-2 first:mt-0'}`}>
+    <h2 className={`font-semibold text-foreground ${article ? 'text-2xl mt-8 mb-4 first:mt-0' : compact ? 'text-sm mt-2.5 mb-1 first:mt-0' : 'text-base mt-5 mb-2 first:mt-0'}`}>
       {children}
     </h2>
   ),
   h3: ({ children }) => (
-    <h3 className={`font-semibold text-foreground ${compact ? 'text-sm mt-2 mb-1 first:mt-0' : 'text-sm mt-4 mb-1.5 first:mt-0'}`}>
+    <h3 className={`font-semibold text-foreground ${article ? 'text-xl mt-6 mb-3 first:mt-0' : compact ? 'text-sm mt-2 mb-1 first:mt-0' : 'text-sm mt-4 mb-1.5 first:mt-0'}`}>
       {children}
     </h3>
   ),
   p: ({ children }) => (
-    <p className={`text-sm leading-relaxed text-foreground ${compact ? 'mb-1.5 last:mb-0' : 'mb-3 last:mb-0'}`}>
+    <p className={`${article ? 'text-base md:text-lg text-muted-foreground leading-relaxed' : 'text-sm text-foreground'} ${compact ? 'mb-1.5 last:mb-0' : article ? 'mb-4 last:mb-0' : 'mb-3 last:mb-0'}`}>
       {children}
     </p>
   ),
   ul: ({ children }) => (
-    <ul className={`text-sm list-disc ${compact ? 'ml-4 mb-1.5 space-y-0.5 last:mb-0' : 'ml-5 mb-3 space-y-1 last:mb-0'}`}>
+    <ul className={`${article ? 'text-base md:text-lg' : 'text-sm'} list-disc ${compact ? 'ml-4 mb-1.5 space-y-0.5 last:mb-0' : article ? 'ml-6 mb-5 space-y-2 last:mb-0' : 'ml-5 mb-3 space-y-1 last:mb-0'}`}>
       {children}
     </ul>
   ),
   ol: ({ children }) => (
-    <ol className={`text-sm list-decimal ${compact ? 'ml-4 mb-1.5 space-y-0.5 last:mb-0' : 'ml-5 mb-3 space-y-1 last:mb-0'}`}>
+    <ol className={`${article ? 'text-base md:text-lg' : 'text-sm'} list-decimal ${compact ? 'ml-4 mb-1.5 space-y-0.5 last:mb-0' : article ? 'ml-6 mb-5 space-y-2 last:mb-0' : 'ml-5 mb-3 space-y-1 last:mb-0'}`}>
       {children}
     </ol>
   ),
   li: ({ children }) => (
-    <li className="text-sm leading-relaxed text-foreground">{children}</li>
+    <li className={`${article ? 'text-base md:text-lg text-muted-foreground' : 'text-sm text-foreground'} leading-relaxed`}>{children}</li>
   ),
   strong: ({ children }) => (
     <strong className="font-semibold text-foreground">{children}</strong>
@@ -92,10 +93,10 @@ const makeComponents = (compact: boolean): Components => ({
   ),
 })
 
-export function MarkdownRenderer({ content, compact = false, className = '' }: Props) {
+export function MarkdownRenderer({ content, compact = false, article = false, className = '' }: Props) {
   return (
     <div className={className}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={makeComponents(compact)}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={makeComponents(compact, article)}>
         {content}
       </ReactMarkdown>
     </div>

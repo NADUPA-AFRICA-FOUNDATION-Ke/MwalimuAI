@@ -75,7 +75,7 @@ export const AI_MODULES: AiModule[] = [
     outcomes: [
       'Rebuild Google Classroom\'s architecture to reflect CBC\'s Learning Area, Strand, Sub-Strand hierarchy rather than the 8-4-4 textbook-chapter model.',
       'Create a NotebookLM "KICD Vault" that prevents AI hallucination by grounding every output in uploaded Kenyan curriculum documents.',
-      'Generate a reusable, KICD-compliant weekly lesson plan template using Gemini, including Values, Cross-Cutting Issues, Key Inquiry Questions, and a four-tier KNEC rubric.',
+      'Generate a reusable lesson-plan draft with fields found in many KICD curriculum designs, then verify every curriculum-specific detail against the current design before use.',
       'Apply the "Batch and Cache" strategy for teachers with intermittent connectivity, so a low-data day never disrupts your workflow.',
     ],
     sections: [
@@ -84,7 +84,7 @@ export const AI_MODULES: AiModule[] = [
         title: 'Re-Architecting Classroom Around CBC Learning Areas',
         scenario: 'Mwalimu Ochieng teaches Grade 7 at a public school in Kisumu sub-county. His Google Classroom has one class called "Grade 7" with assignments titled "Homework 1" and "Homework 2". When his Head Teacher asked him to show CBA evidence during the SQA visit, he spent two panicked hours searching his own Classroom. Here is the fix.',
         content: 'The default Google Classroom structure (Class, Assignment, Topic) quietly reproduces 8-4-4 thinking. To align it to CBC you map the platform to KICD\'s hierarchy: Learning Area, Strand, Sub-Strand, Learning Outcome.\n\n## Google Classroom blueprint\nCopy this structure for every Learning Area.\n\n**Stream**\n- Weekly learning highlights, posted every Friday\n- Parent home-learning missions, posted every Monday\n- SBA submission reminders, posted 48 hours before each deadline\n\n**Classwork**\n- A "Core Competencies Portfolio" topic: your running cross-cutting evidence tracker\n- Strand 1 (for example, Foundations of Technical Literacy): KICD notes as a Material, a weekly CBA-aligned formative task, and the SBA KNEC tool upload\n- Strand 2 (for example, Materials Science): a project-upload assignment\n- Strand 3 (for example, Structure and Forces): a peer-review group-work evidence task\n\n**People**\n- Add parents as Guardians, not as Students',
-        tip: 'Name every assignment with this Kenyan-specific convention: [Grade]-[Sub-Strand Code]-[Term]-[Week]-[Type]. For example "Gr7-SafetyPPE-T2-W3-SBA". When the KNEC inspector visits, your Gradebook becomes an instantly auditable CBA record, with no panicking.',
+        tip: 'Use a consistent convention such as [Grade]-[Sub-Strand Code]-[Term]-[Week]-[Type], but copy the actual code and wording from the current design. For example, "Gr7-[verified-code]-T2-W3-SBA" makes classroom evidence easier to retrieve; it does not replace the school or KNEC record-keeping process.',
         promptTitle: 'Google Classroom CBC Setup Generator',
         prompt: `Role: You are a Senior KICD Curriculum Specialist helping a Kenyan teacher re-architect their Google Classroom from scratch.
 
@@ -133,7 +133,7 @@ Click the Studio panel, then Audio Overview. This generates a podcast-style summ
         tool: 'Gemini',
         title: 'The CBC Weekly Lesson Plan Engine',
         scenario: 'Madam Akinyi in Kisii teaches four Learning Areas across three grades. She used to spend her entire Sunday writing lesson plans. After learning this prompt template, her Sunday prep dropped to 45 minutes. The secret is not just using Gemini, it is giving Gemini the specific KICD fields it needs to produce a plan that passes an SQA inspection.',
-        content: 'A KICD lesson plan needs particular fields: Learning Outcomes, Key Inquiry Questions, Core Competencies, Values and Cross-Cutting Issues, the organisation of learning, resources, and a KNEC-aligned assessment. Gemini will produce all of this faithfully, but only when your prompt names those fields. Generic prompts produce generic plans; the template below carries the structure for you.',
+        content: 'Many KICD curriculum designs provide fields such as Learning Outcomes, Key Inquiry Questions, Core Competencies, Values, Pertinent and Contemporary Issues, organisation of learning, resources and suggested assessment. Use the current design for the exact learning area and grade; a tool can draft the structure, but it cannot make an unverified plan official. Generic prompts produce generic plans, so the template below carries the planning questions for you.',
         tip: 'Add your school\'s actual constraints to every prompt. "No electricity, 58 learners, only hand tools available, near a seasonal river" transforms Gemini\'s output from theoretical to something you can teach on Monday morning. Specific Kenyan context produces usable lessons.',
         promptTitle: 'KICD-Aligned CBC Lesson Plan Generator',
         prompt: `Role: You are a Senior Instructional Designer certified by KICD, specialising in Kenya's Competency-Based Curriculum, with deep knowledge of low-resource Kenyan schools.
@@ -191,7 +191,7 @@ Generate the lesson plan under exactly these KICD headers:
     deliverable: {
       title: 'Module 1 Deliverable: Your CBC Digital Classroom Blueprint',
       items: [
-        'Google Classroom fully restructured: one class per Learning Area, Topics mapped to Strands, CBC-convention naming on all assignments.',
+        'A reviewed digital classroom structure with classes and Topics mapped to the current learning-area design, plus a consistent naming convention for assignments.',
         'A NotebookLM "KICD Vault" with this term\'s Curriculum Designs uploaded, the three verification tests passed, and an Audio Overview downloaded to your device.',
         'One complete Gemini-generated weekly lesson plan, reviewed, edited, and marked "KICD-Verified", ready to deliver on Monday.',
         'A personal "Batch and Cache" schedule: the specific days and times you will download content, and a naming convention for offline storage.',
@@ -290,7 +290,7 @@ HOW TO SHARE WITH US:
 Option A (easiest): Take a photo of the pattern and WhatsApp it to [Teacher Phone Number]. We will upload it for you.
 Option B: Open the Google Classroom app, tap this assignment, press "Add Attachment", and upload your photo.
 
-Why it matters: this photo becomes part of your learner's Formative Digital Portfolio, official evidence for their CBC record. Every photo counts.
+Why it matters: a dated, consent-aware photo can support a learner portfolio when it is linked to an outcome and stored through the school’s approved process. A photo by itself is not official evidence.
 
 Deadline: [Day, Date] before school begins.
 
@@ -360,20 +360,20 @@ Click Studio, then Audio Overview, and select the "Brief" format. Suggested topi
     icon: 'boxes',
     accent: '#7c3aed',
     competencies: ['CT', 'CI', 'CC', 'DL', 'L2L'],
-    context: 'In one school\'s feeder primary, the Agriculture & Nutrition teacher and the Pre-Technical Education teacher have not discussed their subjects in three years. Their learners study "soil" in Agriculture and "materials" in Pre-Tech, and never make the connection the KICD intended both subjects to reinforce.\n\nNotebookLM changes this. Upload both curriculum designs at once, ask it to find the overlaps, and within five minutes you have a 3-week cross-disciplinary project that hits competencies in both areas. Meanwhile the Grade 8 learners are building a Zero-Energy Cool Chamber from old plastic bottles, wet sand, and charcoal, and genuinely learning to think.',
-    overview: 'Grades 4 to 9 are CBC\'s most complex assessment terrain. Upper Primary introduces KNEC\'s School-Based Assessments from Grade 4. Junior Secondary adds specialist subjects and culminates in the Kenya Junior Secondary Education Assessment, where KNEC\'s 60% and school-based 40% together determine pathway placement. This module builds the full AI-assisted project-based learning and SBA management system.',
+    context: 'In a school near a seasonal river, the Agriculture teacher and the Pre-Technical Studies teacher have not discussed how their selected outcomes could connect. Learners study soil in one lesson and materials in another, but do not yet use the ideas together.\n\nA source-grounded workflow can help the teachers compare the current designs, then they decide whether a local project is a genuine connection. Grade 8 learners might investigate a low-cost garden or storage problem using materials available at school, provided the selected outcomes, safety limits and evidence are clear.',
+    overview: 'Grades 4 to 9 require careful alignment between the current KICD designs, classroom evidence and any KNEC school-based or national assessment process that applies. Junior School culminates in the Kenya Junior School Education Assessment at Grade 9. This module builds an AI-assisted project and evidence-management workflow while keeping the official source and the teacher’s judgement in control.',
     outcomes: [
-      'Use NotebookLM to analyse several KICD Curriculum Designs at once and find genuine cross-cutting PBL opportunities across Agriculture & Nutrition, Pre-Technical Education, and Integrated Science.',
-      'Deploy a multi-disciplinary PBL matrix, including the "Smart Kitchen Garden System" and "Zero-Energy Cool Chamber" case studies, adapted to local contexts.',
-      'Build KNEC-aligned rubrics focused on the critical-thinking process, not just the final product, in Google Classroom\'s native rubric tool.',
-      'Manage the full SBA cycle digitally, from KNEC tool download to evidence collection and Gradebook export, in a system that survives an SQA inspection.',
+      'Use a source-grounded workflow to compare selected KICD Curriculum Designs and identify a genuine project connection across learning areas.',
+      'Build a multi-disciplinary project matrix with a local problem, selected outcomes, constraints, milestones and evidence.',
+      'Build observable rubrics focused on the critical-thinking process as well as the final product, then check the wording against the applicable KNEC and KICD guidance before use.',
+      'Organise the applicable school-based assessment cycle digitally, from source checking and tool handling to evidence collection and a documented school-approved record process.',
     ],
     sections: [
       {
         tool: 'NotebookLM',
         title: 'The Cross-Curriculum PBL Generator',
         scenario: 'Mwalimu Kamau wants Grade 7 learners to build something real, something that solves a problem their community actually has. He uploads the KICD designs for Agriculture & Nutrition, Pre-Technical Education, and Integrated Science to NotebookLM and asks it to find the overlaps. Within minutes he has the "Smart Kitchen Garden System": soil science from Agriculture, vertical structure design from Pre-Tech, and plant growth conditions from Science. Three teachers, one project, twelve competencies.',
-        content: 'NotebookLM\'s power for PBL is that it can synthesise documents from different subjects simultaneously and surface genuine conceptual connections a single-subject lesson book would never reveal. Anchor every project in a real community problem; when the project addresses something the learners\' families face, motivation becomes intrinsic.\n\n## A multi-disciplinary PBL matrix\nThe kind of output NotebookLM produces from combined KICD documents:\n\n| Learning areas | Project (Kenyan context) | Core competencies | Value focus |\n| --- | --- | --- | --- |\n| Agriculture + Pre-Tech | Smart Kitchen Garden: vertical gardens from repurposed plastics, moisture watched with basic tools | Critical Thinking, Digital Literacy | Sustainability, Hard Work, Innovation |\n| Agriculture + Science + Math | Zero-Energy Cool Chamber: food preservation from wet sand, charcoal, clay pots | Problem-Solving, Scientific Inquiry, Data Interpretation | Responsibility, Environmental Stewardship |\n| Business Studies + Math | School Tuck Shop Audit: learners analyse pricing, profit margins, and the health impact of school snacks | Critical Thinking, Communication, Citizenship | Integrity, Responsibility, Honesty |',
+        content: 'A source-grounded tool can help compare documents from different learning areas, but the teacher must verify every proposed connection against the current KICD designs. Anchor each project in a real problem, define the selected outcomes and keep each learning area’s evidence visible.\n\n## A multi-disciplinary PBL matrix\nUse this as a planning template rather than an official curriculum map:\n\n| Learning areas | Local problem | Observable evidence | Values or PCI to verify |\n| --- | --- | --- | --- |\n| [Learning area 1] + [Learning area 2] | [Problem learners can investigate] | [What each learner will make, explain, measure or decide] | [Select from the applicable design] |\n| [Learning area 1] + [Learning area 3] | [Problem and user] | [Product, explanation and revision record] | [Select from the applicable design] |\n| [Learning area 2] + [Learning area 3] | [Problem and constraint] | [Data, recommendation and reflection] | [Select from the applicable design] |',
         tip: 'The best Kenyan PBL projects are built around real community problems: water scarcity in Kitui, soil erosion in Murang\'a, food preservation without electricity in Kilifi, plastic waste in Kisumu. When the project addresses a problem the learners\' families face, you never have to chase any learner to finish it.',
         promptTitle: 'NotebookLM Cross-Curriculum PBL Generator',
         prompt: `Upload the KICD Curriculum Designs for Agriculture & Nutrition, Pre-Technical Education, and one more Learning Area.
@@ -472,7 +472,7 @@ For each version: list zero-cost materials, estimated marking time, and one oral
     deliverable: {
       title: 'Module 3 Deliverable: The SBA-Ready Digital Classroom',
       items: [
-        'One complete 3-week PBL unit from NotebookLM, covering at least 3 Learning Areas with an integrated KNEC-aligned matrix, adapted to your county and school.',
+        'One complete 3-week project unit grounded in the selected KICD designs, covering connected learning areas with a source-checked evidence matrix, adapted to your county and school.',
         'A 5-dimension Critical Thinking rubric deployed in Google Classroom\'s native rubric tool, with a 3-entry Comment Bank saved for SBA feedback.',
         'Three differentiated formative tasks (support / standard / extension) for one Sub-Strand, all in specifically Kenyan business or community contexts.',
         'A private SBA Management Classroom with Term 1 and Term 2 cycles organised as Topics, and a documented Gradebook export procedure.',
@@ -494,10 +494,10 @@ For each version: list zero-cost materials, estimated marking time, and one oral
     accent: '#2563eb',
     competencies: ['CT', 'CI', 'DL', 'L2L', 'CC', 'CZ'],
     context: 'January 2026. Kenya\'s first CBC cohort walks through the gates of Senior School. These learners are entering a system that, for the first time in Kenyan history, is designed around their individual talents rather than a single exam score.\n\nTheir teachers are navigating three pathways at once: debugging Python for the Applied Tech track, synthesising county development plans for Community Service Learning, and building longitudinal dance portfolios for Performing Arts. No teacher was trained for all of this, but every teacher has Gemini, NotebookLM, and Google Classroom, and this module shows exactly how to use each for a specific pathway.',
-    overview: 'Senior School introduces pathway specialisation: STEM (Pure, Applied, and Technology & Engineering), Social Sciences (Humanities & Business Studies), and Arts & Sports Science (Performing Arts, Visual Arts, Sports & Recreation). This module gives a pathway-specific AI toolkit grounded in the KICD Senior School designs and the real conditions of Kenya\'s first Grade 10 cohort.',
+    overview: 'Senior School pathway work needs current source checking. The Ministry of Education identifies three pathways — STEM, Social Sciences, and Arts and Sports — while current KICD Grade 10 designs are organised into areas including Applied Sciences, Arts & Sports, Humanities, Languages, Pure Sciences, Religious Education and Technical Studies. This module helps teachers prepare source-checked, pathway-specific resources without turning a subject combination into a guaranteed career outcome.',
     outcomes: [
       'STEM: design Kenyan-contextualised debugging exercises, modelling tasks, and applied-science investigation protocols with Gemini.',
-      'Social Sciences: build a NotebookLM notebook from Vision 2030, County Integrated Development Plans, and KICD CSL frameworks to synthesise authentic local case studies.',
+      'Social Sciences: build a source-checked notebook from the applicable KICD design and relevant local documents to support authentic case studies.',
       'Arts & Sports: configure Google Classroom as a longitudinal portfolio hub tracking performance, design evolution, and sports-science logs over three years.',
       'All pathways: use the 5-step NotebookLM study-guide workflow to turn dense pathway guidelines into learner-facing resources.',
     ],
@@ -540,7 +540,7 @@ PART B, APPLIED SCIENCES INVESTIGATION:
         pathway: 'Social Sciences Pathway',
         title: 'CSL Policy Synthesiser: From Government Documents to Student Research',
         scenario: 'Madam Wanjiru teaches Community Service Learning at a Girls\' Senior School in Kirinyaga. Her Grade 11 learners must do a CSL project on land use and food security. Instead of sending them to Google (where they find Wikipedia and American research), she builds a NotebookLM notebook from the Kirinyaga County Integrated Development Plan, the Vision 2030 Agriculture chapter, and the KICD CSL design. Every answer is grounded in actual Kenyan policy, and cites the exact page.',
-        content: 'CSL is a core subject for all Senior School learners. NotebookLM synthesises varied documents, news, NGO reports, government data, textbooks, into coherent, citable study resources. Upload Vision 2030, your county\'s CIDP (free on the county government website), and the KICD CSL design; NotebookLM connects national vision to county priorities to specific curriculum outcomes in a way that would take a human researcher days.',
+        content: 'For a Community Service Learning task, begin with the applicable Grade 10 design and the school’s current programme. A source-grounded tool can help organise varied documents, local data and learner questions into a study resource, but it cannot decide whether a proposed activity is an official requirement. Upload the relevant design and local documents, ask for page references, and verify the final task, safety arrangements and evidence yourself.',
         tip: 'For any CSL project, upload your school\'s and county\'s real documents: the CIDP, the chief\'s reports, committee minutes, facility data. NotebookLM synthesising genuine local data is the authentic research process CBC intends, far better than generic web sources.',
         promptTitle: 'NotebookLM Social Sciences CSL Study-Guide Workflow',
         prompt: `Upload: the KICD Senior School CSL Curriculum Design, the relevant Kenya Vision 2030 chapter, your County Integrated Development Plan (CIDP), and local newspaper articles on the CSL theme.
@@ -562,13 +562,13 @@ STEP 5, DEPLOY TO GOOGLE CLASSROOM:
       },
       {
         tool: 'Google Classroom',
-        pathway: 'Arts & Sports Science Pathway',
-        title: 'Building the Longitudinal Digital Portfolio: 3 Years of Evidence',
+        pathway: 'Arts & Sports Pathway',
+        title: 'Building a Longitudinal Digital Portfolio',
         scenario: 'For a learner in the Performing Arts track in Mombasa, every term is a portfolio entry: a video of their drumming, a scan of their choreography notes, a reflection on what changed between their Grade 10 and Grade 11 renditions of the same piece. Google Classroom becomes the three-year artistic journal that proves competency development over time, far more meaningful than any single exam.',
-        content: 'Performance, creative production, and physical development resist written tests; CBC\'s portfolio model is the answer, and Google Classroom with Drive provides the infrastructure. Create a class per subject, assignment types for each entry kind (performance recording, design journal, sports-science log, peer assessment, self-reflection), and let the submission history become the auditable KNEC portfolio.',
+        content: 'Performance, creative production and physical development may require evidence beyond a written response. A portfolio can organise dated work samples, process notes, teacher observations, peer feedback and learner reflection when the applicable design and school process call for them. Use the school-approved storage and consent process; a digital submission history is not automatically a KNEC record.',
         tip: 'For Sports Science, create a recurring weekly assignment, "Week [X] Sports Performance Log", where learners submit a Doc with four entries: training activity, duration, a measurable metric (distance, repetitions, time), and a one-paragraph reflection. Over 36 months this becomes irrefutable longitudinal evidence, the kind university programmes and coaches actually want.',
         promptTitle: 'Gemini Arts & Sports Portfolio Rubric Generator',
-        prompt: `PATHWAY: Arts & Sports Science
+        prompt: `PATHWAY: Arts & Sports
 TRACK: [Performing Arts / Visual Arts / Sports & Recreation]
 SUBJECT: [e.g., Theatre & Film / Fine Arts / Sports Science]
 GRADE: [10, 11, or 12]
@@ -624,11 +624,11 @@ PART E, LONGITUDINAL TRACKER: design a recurring Google Classroom assignment str
     icon: 'clipboard',
     accent: '#0c9a7b',
     competencies: ['CT', 'DL', 'L2L', 'SE', 'CC'],
-    context: 'For 50 years the Kenyan exam asked: "Define soil erosion and name three types." The top learner was whoever memorised the textbook definition most accurately. The learner who spent every weekend helping their father build terraces on the family shamba, who actually understood erosion through their hands and back, received the same mark as one who had never left Nairobi.\n\nCBC says: never again. The performance task instead says: "You are an agricultural consultant called to a farm in hilly Murang\'a. The farmer is losing crops to runoff. Design a soil conservation plan using local materials, justify your layout from slope data, and pitch your solution to the farmer\'s family in two minutes." Now the Murang\'a shamba child scores EE. This module is about designing more of those moments, at scale and sustainably.',
-    overview: 'KNEC\'s Competency-Based Assessment Framework uses four descriptors, EE, ME, AE, BE, subdivided into an eight-point scale from EE1 (8) to BE2 (1). It explicitly rejects ranking. The teacher\'s challenge is designing tasks that genuinely distinguish EE from ME through observed competency, not harder factual recall. This module builds that design capacity, powered by AI.',
+    context: 'A Grade 9 class is studying soil and runoff. The teacher wants more than a definition-recall exercise, but also wants to avoid pretending that every learner has the same home experience or that one project proves competence. The class therefore investigates a school-site problem, uses a source-checked outcome, and explains its evidence to an agreed audience.\n\nThe task is intentionally bounded: the teacher sets safety rules, materials and criteria; learners choose and test a design; each learner keeps an individual evidence trail. This module is about designing those moments carefully and sustainably.',
+    overview: 'KNEC resources describe four broad performance levels — EE, ME, AE and BE — and current KJSEA regulations show two actual performance levels within each broad level for national reporting. This module focuses on the teacher’s design work: selecting the outcome, defining evidence, writing observable criteria, and using feedback and revision. Use national KNEC formats only where the applicable current guidance requires them.',
     outcomes: [
       'Design multi-dimensional performance tasks grounded in real Kenyan community scenarios, with authentic audiences, real constraints, and tangible outputs.',
-      'Generate four-tier KNEC rubrics across all eight sub-levels (EE1 to BE2) with behavioural, observable descriptors any teacher can apply consistently.',
+      'Draft observable rubric descriptors using the four broad performance levels, and use EE1 to BE2 only when the applicable KNEC national framework explicitly requires those sub-levels.',
       'Implement Google Classroom\'s rubric tool, Comment Bank, and "Return and Resubmit" workflow for personalised feedback at scale without burning out.',
       'Build a NotebookLM "CBA Assessment Bank" that compounds in value as more assessments are added, enabling school-wide collaborative development.',
     ],
@@ -750,7 +750,7 @@ AUDIO OVERVIEW: Click Studio, Audio Overview, "Brief". Topic: "Key principles of
     deliverable: {
       title: 'Module 5 Deliverable: The CBA Mastery Portfolio',
       items: [
-        'Three complete performance tasks (Lower Primary, Upper Primary/Junior Secondary, Senior School), each with an 8-sub-level KNEC rubric (EE1 to BE2), in authentic Kenyan scenarios.',
+        'Three complete performance tasks (Lower Primary, Upper Primary/Junior School, Senior School), each with an observable rubric and a note explaining which current source must be checked before use.',
         'A Google Classroom with native rubrics on live assignments, a 10-entry Comment Bank saved, and at least 5 demonstrated feedback examples including the "Return and Resubmit" workflow.',
         'A NotebookLM "CBA Assessment Bank" with at least 10 uploaded tasks and a completed 5-audit review for at least 3 of them.',
         'A personal AI-ethics reflection (about 500 words): which CBC value does AI-assisted assessment strengthen, what risks must the teacher guard against, and what is the teacher\'s irreplaceable role in an AI-powered CBA system.',

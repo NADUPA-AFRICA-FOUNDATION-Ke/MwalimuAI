@@ -29,6 +29,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { getModuleById, type Lesson } from '@/lib/modules-data'
+import { getLegacyModuleGuide } from '@/lib/curriculum-guidance'
+import { ModuleImplementationGuide } from '@/components/module-implementation-guide'
 import { getProgress, completeLesson, uncompleteLesson } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
 import { recordActivity } from '@/lib/streak'
@@ -206,6 +208,12 @@ export default function ModuleDetailPage() {
           ))}
         </ul>
       </Card>
+
+      {getLegacyModuleGuide(moduleData.id) && (
+        <Card className="overflow-hidden">
+          <ModuleImplementationGuide guide={getLegacyModuleGuide(moduleData.id)!} />
+        </Card>
+      )}
 
       {/* Prerequisites */}
       {moduleData.prerequisites.length > 0 && (
