@@ -57,12 +57,12 @@ export default function FeaturesPage() {
             Mwalimu AI brings together learning modules, AI coaching, teacher tools, community discussions, and progress tracking.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild size="lg" className="text-[15px] px-8 py-6 rounded-2xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-105 active:scale-[0.98] transition-all duration-200 border-0">
+            <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
               <Link href="/auth/sign-up">
                 Create an account <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-[15px] px-6 py-6 rounded-2xl">
+            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-[14px] px-5 py-3 rounded-xl">
               <Link href="/pricing">
                 View pricing
               </Link>
@@ -121,7 +121,7 @@ export default function FeaturesPage() {
           <p className="text-white/80 text-base leading-relaxed mb-8 max-w-lg mx-auto">
             Create an account to explore the platform.
           </p>
-          <Button asChild size="lg" className="text-[15px] px-10 py-6 rounded-2xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-105 active:scale-[0.98] transition-all duration-200 border-0">
+          <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
             <Link href="/auth/sign-up">
               Create an account <ArrowRight className="w-5 h-5 ml-2" />
             </Link>

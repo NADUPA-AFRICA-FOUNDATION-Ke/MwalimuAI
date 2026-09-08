@@ -79,7 +79,7 @@ export default function LandingPage() {
               className="flex-1 h-12 rounded-xl px-4 text-[14px] font-medium text-foreground placeholder:text-gray-400 bg-white border-0 outline-none focus:ring-2 focus:ring-accent"
             />
             <button type="submit"
-              className="h-12 px-6 rounded-xl font-semibold text-[14px] text-white whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+              className="h-11 px-5 rounded-xl font-semibold text-[13px] text-white whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               style={{ background: 'var(--primary)' }}>
               Create account →
             </button>

@@ -471,7 +471,7 @@ export function CTASection() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button asChild size="lg"
-              className="text-[15px] px-10 py-6 rounded-2xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-105 active:scale-[0.98] transition-all duration-200 border-0">
+              className="text-[14px] px-6 py-3 rounded-xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
             <Link href="/auth/sign-up">
               Create an account
               <ArrowRight className="w-5 h-5 ml-2" />
