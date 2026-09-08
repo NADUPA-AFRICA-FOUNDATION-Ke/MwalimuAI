@@ -1,7 +1,7 @@
 // Low-bandwidth mode + audio lesson helpers
 
-import { createClient } from '@/lib/supabase/client'
-import { trackWrite } from '@/lib/write-queue'
+import { api } from '@/convex/_generated/api'
+import { getConvexClient } from '@/lib/convex/client'
 
 const LBW_KEY = 'mwalimu_low_bandwidth'
 
@@ -9,6 +9,13 @@ let _userId: string | null = null
 
 export function setAccessibilityUser(userId: string | null) {
   _userId = userId
+  if (!userId) return
+  const client = getConvexClient()
+  void client?.query(api.profiles.me, {}).then(profile => {
+    if (_userId !== userId || typeof profile?.lowBandwidth !== 'boolean') return
+    localStorage.setItem(LBW_KEY, profile.lowBandwidth ? 'true' : 'false')
+    window.dispatchEvent(new Event('mwalimu-lbw-change'))
+  }).catch(() => {})
 }
 
 export function getLowBandwidth(): boolean {
@@ -22,10 +29,9 @@ export function setLowBandwidth(on: boolean): void {
   // Dispatch a storage event so other tabs can react
   window.dispatchEvent(new Event('mwalimu-lbw-change'))
   if (_userId) {
-    const supabase = createClient()
-    trackWrite(supabase
-      .from('profiles')
-      .upsert({ id: _userId, low_bandwidth: on, updated_at: new Date().toISOString() }))
+    const client = getConvexClient()
+    void client?.mutation(api.profiles.upsert, { lowBandwidth: on })
+      .catch(err => console.error('[mwalimu] low-bandwidth preference sync failed:', err))
   }
 }
 

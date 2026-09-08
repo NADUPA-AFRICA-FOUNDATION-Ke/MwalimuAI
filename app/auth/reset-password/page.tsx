@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -13,13 +14,23 @@ import { BrandMark } from '@/components/brand-mark'
 import Link from 'next/link'
 
 function mapError(msg: string): string {
-  if (msg.includes('least 6')) return 'Password must be at least 6 characters.'
+  if (msg.includes('Invalid password') || msg.includes('least 8')) return 'Password must be at least 8 characters.'
+  if (msg.includes('Invalid code') || msg.includes('Expired')) return 'This password reset link has expired or already been used.'
   if (msg.includes('same as') || msg.includes('different')) return 'New password must be different from your current password.'
   return 'Could not update password. Please try again.'
 }
 
 export default function ResetPasswordPage() {
+  return (
+    <ConvexNativeAuthBoundary handleCode={false}>
+      <ResetPasswordContent />
+    </ConvexNativeAuthBoundary>
+  )
+}
+
+function ResetPasswordContent() {
   const router = useRouter()
+  const { signIn } = useAuthActions()
   const [password,       setPassword]       = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword,   setShowPassword]   = useState(false)
@@ -27,31 +38,37 @@ export default function ResetPasswordPage() {
   const [error,          setError]          = useState<string | null>(null)
   const [done,           setDone]           = useState(false)
   const [noSession,      setNoSession]      = useState(false)
+  const [resetCode,      setResetCode]      = useState('')
+  const [email,          setEmail]          = useState('')
 
   useEffect(() => {
-    // Confirm there is an active session (set by the /auth/callback route).
-    // If not, the reset link was expired or already used.
-    const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setNoSession(true)
-    })
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code') ?? ''
+    const resetEmail = params.get('email') ?? localStorage.getItem('mwalimu_password_reset_email') ?? ''
+    setResetCode(code)
+    setEmail(resetEmail)
+    setNoSession(!code || !resetEmail)
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
     if (password !== confirmPassword) { setError('Passwords do not match.'); return }
 
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      const { error: updateError } = await supabase.auth.updateUser({ password })
-      if (updateError) { setError(mapError(updateError.message)); return }
+      await signIn('password', {
+        flow: 'reset-verification',
+        email,
+        code: resetCode,
+        newPassword: password,
+      })
+      try { localStorage.removeItem('mwalimu_password_reset_email') } catch {}
       setDone(true)
       setTimeout(() => router.push('/dashboard'), 2000)
-    } catch {
-      setError('Could not update password. Please try again.')
+    } catch (updateError) {
+      setError(mapError(updateError instanceof Error ? updateError.message : ''))
     } finally {
       setIsLoading(false)
     }
@@ -90,12 +107,8 @@ export default function ResetPasswordPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3">
-                  <Link href="/auth/forgot-password">
-                    <Button className="w-full">Request a new link</Button>
-                  </Link>
-                  <Link href="/auth/login">
-                    <Button variant="outline" className="w-full">Back to sign in</Button>
-                  </Link>
+                  <Button asChild className="w-full"><Link href="/auth/forgot-password">Request a new link</Link></Button>
+                  <Button asChild variant="outline" className="w-full"><Link href="/auth/login">Back to sign in</Link></Button>
                 </CardContent>
               </>
             ) : done ? (
@@ -128,8 +141,10 @@ export default function ResetPasswordPage() {
                           id="password"
                           type={showPassword ? 'text' : 'password'}
                           autoComplete="new-password"
-                          placeholder="Min. 6 characters"
+                          placeholder="Min. 8 characters"
                           required
+                          aria-invalid={!!error}
+                          aria-describedby={error ? 'reset-password-error' : undefined}
                           value={password}
                           onChange={e => setPassword(e.target.value)}
                           className="pr-10"
@@ -152,13 +167,15 @@ export default function ResetPasswordPage() {
                         type={showPassword ? 'text' : 'password'}
                         autoComplete="new-password"
                         required
+                        aria-invalid={!!error}
+                        aria-describedby={error ? 'reset-password-error' : undefined}
                         value={confirmPassword}
                         onChange={e => setConfirmPassword(e.target.value)}
                       />
                     </div>
 
                     {error && (
-                      <p role="alert" className="text-sm text-destructive rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2">
+                      <p id="reset-password-error" role="alert" aria-live="assertive" className="text-sm text-destructive rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2">
                         {error}
                       </p>
                     )}

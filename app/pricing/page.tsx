@@ -27,7 +27,7 @@ const plans = [
     name: 'Free',
     price: 'KES 0',
     period: 'forever',
-    description: 'Start your CBC professional development at no cost.',
+    description: 'Explore the platform without a paid subscription.',
     icon: BookOpen,
     features: [
       'Access to 3 learning modules',
@@ -46,7 +46,7 @@ const plans = [
     name: 'Professional',
     price: 'KES 500',
     period: 'per month',
-    description: 'Full platform access for educators committed to CBC mastery.',
+    description: 'Additional access for individual educators.',
     icon: Sparkles,
     features: [
       'All learning modules',
@@ -67,7 +67,7 @@ const plans = [
     name: 'School',
     price: 'KES 3,000',
     period: 'per month',
-    description: 'Train your whole staff. One plan, up to 20 teachers.',
+    description: 'A plan for schools organizing access for a staff group.',
     icon: Building2,
     features: [
       'Everything in Professional',
@@ -88,27 +88,27 @@ const plans = [
 const faqs = [
   {
     q: 'Can I switch plans at any time?',
-    a: 'Yes. Upgrade or downgrade whenever you want. Changes take effect at the start of your next billing cycle with no penalties.',
+    a: 'Review the plan options and choose the account action shown for the plan you want.',
   },
   {
-    q: 'What payment methods are accepted?',
-    a: 'We accept M-Pesa, Visa, Mastercard, and local bank transfers through our secure Stripe-powered checkout.',
+    q: 'How are paid plans checked out?',
+    a: 'Paid checkout is handled through Stripe. The checkout screen shows the payment and account steps available to you.',
   },
   {
-    q: 'Is the content aligned with KICD standards?',
-    a: 'Every module is designed to the Kenya Institute of Curriculum Development CBC framework and reviewed on a regular basis.',
+    q: 'Where can I compare plan contents?',
+    a: 'The plan cards on this page list the current features and access levels for each plan.',
   },
   {
-    q: 'What happens after the free tier?',
-    a: 'There are no automatic charges. You stay on the Free plan until you decide to upgrade. No credit card required to start.',
+    q: 'What happens after I choose a plan?',
+    a: 'Follow the account and checkout instructions shown for the selected plan. Contact support if you need help.',
   },
   {
-    q: 'Does the School plan include onboarding support?',
-    a: 'Yes. Every School subscription includes a dedicated onboarding session and priority support throughout your first 30 days.',
+    q: 'Can a school ask about team access?',
+    a: 'Yes. Use the contact form to describe your school or team and how you want to use the platform.',
   },
   {
-    q: 'Can teachers access content offline?',
-    a: 'Offline access is available on Professional and School plans. Downloaded content stays available for 30 days without a connection.',
+    q: 'Does the platform support offline use?',
+    a: 'Some saved content may be available offline. The AI Coach still needs an internet connection for live responses.',
   },
 ]
 
@@ -132,12 +132,12 @@ function PricingCard({
           : 'hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary/5'
       )}
     >
-      {/* Most popular badge */}
+      {/* Highlighted plan */}
       {plan.highlighted && (
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
           <div className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-semibold shadow-lg shadow-primary/30 whitespace-nowrap">
             <Sparkles className="w-3 h-3" />
-            Most popular
+            Professional plan
           </div>
         </div>
       )}
@@ -199,17 +199,15 @@ function PricingCard({
           )}
         </Button>
       ) : plan.ctaHref ? (
-        <Link href={plan.ctaHref} className="block">
-          <Button
+        <Button asChild
             className={cn(
               'w-full rounded-xl font-semibold transition-all',
               plan.highlighted ? 'shadow-lg shadow-primary/25' : 'hover:border-primary/40 hover:bg-primary/4'
             )}
             variant={plan.highlighted ? 'default' : 'outline'}
           >
-            {plan.cta}
+            <Link href={plan.ctaHref}>{plan.cta}</Link>
           </Button>
-        </Link>
       ) : null}
     </div>
   )
@@ -289,16 +287,12 @@ function PricingContent() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link href="/auth/login" className="hidden md:block">
-              <Button variant="ghost" size="sm" className="font-medium hover:text-primary hover:bg-primary/8 rounded-xl transition-all">
-                Log in
-              </Button>
-            </Link>
-            <Link href="/auth/sign-up" className="hidden md:block">
-              <Button size="sm" className="font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200 px-5">
-                Get started
-              </Button>
-            </Link>
+            <Button asChild variant="ghost" size="sm" className="hidden md:block font-medium hover:text-primary hover:bg-primary/8 rounded-xl transition-all">
+              <Link href="/auth/login">Log in</Link>
+            </Button>
+            <Button asChild size="sm" className="hidden md:block font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200 px-5">
+              <Link href="/auth/sign-up">Get started</Link>
+            </Button>
             <button
               onClick={() => setMenuOpen(v => !v)}
               className="md:hidden p-2 hover:bg-muted rounded-xl transition-colors"
@@ -328,38 +322,32 @@ function PricingContent() {
               </Link>
             ))}
             <div className="flex gap-2 pt-3 mt-1 border-t border-border/50">
-              <Link href="/auth/login" className="flex-1" onClick={() => setMenuOpen(false)}>
-                <Button variant="outline" className="w-full rounded-xl">Log in</Button>
-              </Link>
-              <Link href="/auth/sign-up" className="flex-1" onClick={() => setMenuOpen(false)}>
-                <Button className="w-full rounded-xl">Get started</Button>
-              </Link>
+              <Button asChild variant="outline" className="flex-1 w-full rounded-xl">
+                <Link href="/auth/login" onClick={() => setMenuOpen(false)}>Log in</Link>
+              </Button>
+              <Button asChild className="flex-1 w-full rounded-xl">
+                <Link href="/auth/sign-up" onClick={() => setMenuOpen(false)}>Get started</Link>
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden mesh-bg">
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-10 left-16 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-blob" />
-          <div className="absolute top-20 right-20 w-80 h-80 bg-accent/8 rounded-full blur-3xl animate-blob animation-delay-3000" />
-          <div className="absolute bottom-0 left-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-blob animation-delay-6000" />
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 md:px-8 pt-20 pb-32 text-center">
+      <section className="relative overflow-hidden bg-[var(--surface-subtle)] border-b border-border/70" aria-labelledby="pricing-heading">
+        <div className="max-w-4xl mx-auto px-4 md:px-8 pt-20 pb-20 text-center">
           <div className="inline-flex items-center gap-2.5 glass-subtle border-primary/25 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-8 animate-fade-in-up">
             <Zap className="w-3.5 h-3.5" />
             Simple, transparent pricing
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] tracking-tight mb-5 animate-fade-in animation-delay-100">
-            Invest in your teaching.{' '}
-            <span className="gradient-text">Start free.</span>
+          <h1 id="pricing-heading" className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] tracking-tight mb-5 animate-fade-in animation-delay-100">
+            Plans for individual teachers<br />
+            <span className="text-primary">and school teams.</span>
           </h1>
 
           <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
-            Every plan includes CBC-aligned content. Upgrade when you&apos;re ready for the full experience.
+            Review the current access options, then choose the plan that fits how you want to use Mwalimu AI.
           </p>
         </div>
       </section>
@@ -367,16 +355,17 @@ function PricingContent() {
       {/* ── Error banner ── */}
       {error && (
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6">
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0" />
+          <div role="alert" aria-live="assertive" className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            <AlertCircle className="w-5 h-5 shrink-0" aria-hidden="true" />
             <p>{error}</p>
           </div>
         </div>
       )}
 
       {/* ── Pricing cards ── */}
-      <section className="max-w-6xl mx-auto px-4 md:px-8 pb-10 -mt-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 items-start">
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-16" aria-labelledby="plans-heading">
+        <h2 id="plans-heading" className="sr-only">Available plans</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {plans.map((plan) => (
             <PricingCard
               key={plan.id}
@@ -388,14 +377,14 @@ function PricingContent() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Payments processed securely by Stripe. Cancel anytime. No hidden fees.
+          Paid checkout is handled through Stripe.
         </p>
       </section>
 
       {/* ── FAQ ── */}
-      <section className="max-w-5xl mx-auto px-4 md:px-8 pt-24 pb-24">
+      <section className="max-w-5xl mx-auto px-4 md:px-8 pb-24" aria-labelledby="pricing-faq-heading">
         <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">Common questions</h2>
+          <h2 id="pricing-faq-heading" className="text-2xl md:text-3xl font-bold tracking-tight mb-3">Common questions</h2>
           <p className="text-muted-foreground">Everything you need to know before signing up.</p>
         </div>
 
@@ -414,17 +403,15 @@ function PricingContent() {
         <div className="text-center mt-10">
           <p className="text-sm text-muted-foreground mb-4">Still have questions?</p>
           <div className="flex gap-3 justify-center">
-            <Link href="/faq">
-              <Button variant="outline" className="rounded-xl font-medium hover:border-primary/40 hover:bg-primary/4 transition-all">
-                Browse FAQ
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button className="rounded-xl font-medium shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">
+            <Button asChild variant="outline" className="rounded-xl font-medium hover:border-primary/40 hover:bg-primary/4 transition-all">
+              <Link href="/faq">Browse FAQ</Link>
+            </Button>
+            <Button asChild className="rounded-xl font-medium shadow-lg shadow-primary/25 hover:-translate-y-0.5 transition-all">
+              <Link href="/contact">
                 Contact us
                 <ArrowRight className="w-4 h-4 ml-1.5" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

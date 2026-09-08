@@ -12,7 +12,6 @@ import {
 } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
 import { recordActivity } from '@/lib/streak'
-import { createClient } from '@/lib/supabase/client'
 import { getLowBandwidth, speak, stopSpeaking, canSpeak } from '@/lib/accessibility'
 import { renderReading, stripMd } from '@/lib/render-md'
 import { Button } from '@/components/ui/button'
@@ -63,32 +62,6 @@ export default function LessonPage() {
     setDiscussions(localDiscs)
     setLowBandwidthState(getLowBandwidth())
 
-    // Background: load teacher-posted discussions from Supabase and merge in
-    const supabase = createClient()
-    supabase
-      .from('lesson_discussions')
-      .select('id, user_id, author, content, created_at, is_seed')
-      .eq('program_id', program.id)
-      .eq('module_id', mod.id)
-      .eq('lesson_id', lesson.id)
-      .eq('is_seed', false)
-      .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        if (!data || data.length === 0) return
-        setDiscussions(prev => {
-          const existingIds = new Set(prev.map(d => d.id))
-          const remote: DiscussionPost[] = data
-            .filter(r => !existingIds.has(r.id as string))
-            .map(r => ({
-              id:        r.id as string,
-              author:    r.author as string,
-              content:   r.content as string,
-              timestamp: new Date(r.created_at as string).toLocaleDateString(),
-              isOwn:     r.user_id === user?.id,
-            }))
-          return remote.length > 0 ? [...prev, ...remote] : prev
-        })
-      }, () => {})
     // Write current lesson to localStorage so AI Coach can pick it up
     try {
       localStorage.setItem(LESSON_CONTEXT_KEY, JSON.stringify({
@@ -181,11 +154,11 @@ export default function LessonPage() {
             <Clock className="w-3.5 h-3.5" /> {lesson.duration}
           </div>
         </div>
-        <Link href="/dashboard/ai-coach">
-          <Button variant="outline" size="sm" className="rounded-xl gap-1.5 text-xs shrink-0">
+        <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5 text-xs shrink-0">
+          <Link href="/dashboard/ai-coach">
             <Sparkles className="w-3.5 h-3.5 text-primary" /> Ask AI Coach
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       {/* Tab navigation */}
@@ -236,16 +209,16 @@ export default function LessonPage() {
 
             {/* Video placeholder — hidden in low-bandwidth mode */}
             {!lowBandwidth && (
-              <div className="relative bg-gray-900 dark:bg-gray-950 rounded-xl overflow-hidden aspect-video flex items-center justify-center mb-5 group cursor-pointer" onClick={() => setTab('reading')}>
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/10" />
-                <div className="relative z-10 text-center">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-white/30 transition-colors">
+              <button type="button" aria-label="Continue to lesson reading" className="relative w-full bg-gray-900 dark:bg-gray-950 rounded-xl overflow-hidden aspect-video flex items-center justify-center mb-5 group cursor-pointer" onClick={() => setTab('reading')}>
+                <span className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/10" />
+                <span className="relative z-10 text-center">
+                  <span className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-white/30 transition-colors">
                     <Play className="w-7 h-7 text-white fill-white ml-0.5" />
-                  </div>
-                  <p className="text-white font-semibold text-sm mb-1">{lesson.videoTitle}</p>
-                  <p className="text-white/60 text-xs">{lesson.duration} · Click to continue to reading</p>
-                </div>
-              </div>
+                  </span>
+                  <span className="block text-white font-semibold text-sm mb-1">{lesson.videoTitle}</span>
+                  <span className="block text-white/60 text-xs">{lesson.duration} · Click to continue to reading</span>
+                </span>
+              </button>
             )}
             {lowBandwidth && (
               <div className="bg-muted/30 rounded-xl p-3 mb-5 flex items-center gap-2 text-xs text-muted-foreground">
@@ -326,7 +299,7 @@ export default function LessonPage() {
             <div className="flex items-center gap-2 mt-5 pt-5 border-t border-border/40">
               <Lightbulb className="w-4 h-4 text-accent shrink-0" />
               <p className="text-xs text-muted-foreground">
-                Take your time with this reading. When you're ready, move to the Reflection tab to apply what you've learned.
+                Take your time with this reading. When you&apos;re ready, move to the Reflection tab to apply what you&apos;ve learned.
               </p>
             </div>
             <Button className="mt-4 rounded-xl gap-2" onClick={() => setTab('reflect')}>
@@ -404,17 +377,17 @@ export default function LessonPage() {
       <div className="flex items-center justify-between mt-5 gap-3">
         <div>
           {prevLesson ? (
-            <Link href={`/dashboard/learning/${program.id}/${prevLesson.moduleId}/${prevLesson.lessonId}`}>
-              <Button variant="outline" size="sm" className="rounded-xl gap-1.5">
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Link href={`/dashboard/learning/${program.id}/${prevLesson.moduleId}/${prevLesson.lessonId}`}>
                 <ChevronLeft className="w-4 h-4" /> Previous
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           ) : (
-            <Link href={`/dashboard/learning/${program.id}`}>
-              <Button variant="outline" size="sm" className="rounded-xl gap-1.5">
+            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+              <Link href={`/dashboard/learning/${program.id}`}>
                 <ChevronLeft className="w-4 h-4" /> Program Overview
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </div>
 

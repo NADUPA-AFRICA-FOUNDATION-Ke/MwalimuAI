@@ -41,3 +41,6 @@ skills-lock.json
 *.tsbuildinfo
 next-env.d.ts
 .test-build-*
+
+# Local migration exports contain user data and must never be committed.
+migration-data/

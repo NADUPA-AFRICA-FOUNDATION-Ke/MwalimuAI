@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useMutation, useQuery } from 'convex/react'
+import { makeFunctionReference } from 'convex/server'
 import { Bell, X, BookOpen, Award, MessageSquare, Megaphone, Check, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
-import { trackWrite } from '@/lib/write-queue'
+import { api } from '@/convex/_generated/api'
 import { useProfile } from '@/context/profile-context'
 
 type NotificationType = 'course' | 'achievement' | 'community' | 'announcement'
@@ -55,6 +56,8 @@ interface NotifState {
   dismissed: string[]  // IDs the user has deleted
 }
 
+const updateNotificationPreferences = makeFunctionReference<'mutation', { notificationsState: NotifState }, unknown>('profiles:updatePreferences')
+
 function loadState(): NotifState {
   if (typeof window === 'undefined') return { read: [], dismissed: [] }
   try {
@@ -96,19 +99,32 @@ export function NotificationCenter() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { user } = useProfile()
+  const cloudProfile = useQuery(api.profiles.me, user ? {} : 'skip')
+  const updatePreferences = useMutation(updateNotificationPreferences)
 
   // Load persisted state once on mount
   useEffect(() => {
     setNotifications(buildNotifications(loadState()))
   }, [])
 
+  // Merge remote state with any actions taken while offline. This keeps
+  // dismissals/read markers monotonic and retains localStorage as fallback.
+  useEffect(() => {
+    if (!cloudProfile?.notificationsState) return
+    const local = loadState()
+    const merged: NotifState = {
+      read: [...new Set([...cloudProfile.notificationsState.read, ...local.read])],
+      dismissed: [...new Set([...cloudProfile.notificationsState.dismissed, ...local.dismissed])],
+    }
+    saveState(merged)
+    setNotifications(buildNotifications(merged))
+  }, [cloudProfile?.notificationsState])
+
   const persistToCloud = useCallback((state: NotifState) => {
     if (!user) return
-    const supabase = createClient()
-    trackWrite(supabase
-      .from('profiles')
-      .upsert({ id: user.id, notifications_state: state, updated_at: new Date().toISOString() }))
-  }, [user])
+    void updatePreferences({ notificationsState: state })
+      .catch(err => console.error('[mwalimu] notification state sync failed:', err))
+  }, [updatePreferences, user])
 
   const unreadCount = notifications.filter(n => !n.read).length
 
@@ -177,8 +193,9 @@ export function NotificationCenter() {
     <div className="relative" ref={dropdownRef}>
       {/* Bell Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-muted rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        className="relative min-w-11 min-h-11 inline-flex items-center justify-center hover:bg-muted rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -205,15 +222,17 @@ export function NotificationCenter() {
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button
+                  type="button"
                   onClick={markAllAsRead}
-                  className="text-xs text-primary hover:underline font-medium focus-visible:ring-2 focus-visible:ring-ring rounded px-0.5"
+                  className="min-h-11 text-xs text-primary hover:underline font-medium focus-visible:ring-2 focus-visible:ring-ring rounded px-2"
                 >
                   Mark all read
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-muted rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-ring"
+                className="min-w-11 min-h-11 inline-flex items-center justify-center hover:bg-muted rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="Close notifications"
               >
                 <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -269,16 +288,18 @@ export function NotificationCenter() {
                       <div className="flex items-center gap-1 pr-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                         {!notification.read && (
                           <button
+                            type="button"
                             onClick={() => markAsRead(notification.id)}
-                            className="p-1.5 hover:bg-background rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-ring"
+                            className="min-w-11 min-h-11 inline-flex items-center justify-center hover:bg-background rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-ring"
                             aria-label="Mark as read"
                           >
                             <Check className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
                           </button>
                         )}
                         <button
+                          type="button"
                           onClick={() => deleteNotification(notification.id)}
-                          className="p-1.5 hover:bg-background rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-ring"
+                          className="min-w-11 min-h-11 inline-flex items-center justify-center hover:bg-background rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-ring"
                           aria-label="Delete notification"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
@@ -294,8 +315,9 @@ export function NotificationCenter() {
           {notifications.length > 0 && (
             <div className="px-4 py-3 border-t border-border bg-muted/30 flex items-center justify-between">
               <button
+                type="button"
                 onClick={clearAll}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-ring rounded px-0.5"
+                className="min-h-11 text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:ring-2 focus-visible:ring-ring rounded px-2"
               >
                 Clear all
               </button>
@@ -303,6 +325,7 @@ export function NotificationCenter() {
                 variant="ghost"
                 size="sm"
                 className="text-xs h-7"
+                type="button"
                 onClick={() => { setIsOpen(false); router.push('/dashboard/settings') }}
               >
                 Notification settings

@@ -55,9 +55,10 @@ export default function LearningPage() {
 
       {/* Track filter */}
       <div className="flex flex-wrap gap-2 mb-7">
-        <button
-          onClick={() => setActiveTrack('all')}
-          className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-150 ${
+          <button
+            type="button"
+            onClick={() => setActiveTrack('all')}
+            className={`min-h-11 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-150 ${
             activeTrack === 'all'
               ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
               : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/40'
@@ -69,9 +70,10 @@ export default function LearningPage() {
           const Icon = TRACK_ICONS[track.id]
           return (
             <button
+              type="button"
               key={track.id}
               onClick={() => setActiveTrack(track.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-150 ${
+              className={`min-h-11 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-150 ${
                 activeTrack === track.id
                   ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
                   : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/40'
@@ -152,15 +154,13 @@ export default function LearningPage() {
 
                 {/* CTA */}
                 {isAvailable ? (
-                  <Link href={`/dashboard/learning/${program.id}`}>
-                    <div className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  <Link href={`/dashboard/learning/${program.id}`} className={`flex items-center justify-between min-h-11 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                       program.accent === 'primary'
                         ? 'bg-primary/8 text-primary hover:bg-primary/15'
                         : 'bg-accent/8 text-accent hover:bg-accent/15'
                     }`}>
                       <span>{pct === 0 ? 'Start Program' : pct === 100 ? 'Review Program' : 'Continue Learning'}</span>
                       <ChevronRight className="w-4 h-4" />
-                    </div>
                   </Link>
                 ) : (
                   <div className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium bg-muted/50 text-muted-foreground cursor-not-allowed">

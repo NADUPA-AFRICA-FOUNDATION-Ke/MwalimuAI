@@ -200,7 +200,7 @@ export default function DifferentiationPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="challenge" className="text-sm font-medium">Describe the Learner's Challenge *</Label>
+            <Label htmlFor="challenge" className="text-sm font-medium">Describe the Learner&apos;s Challenge *</Label>
             <Textarea
               id="challenge"
               placeholder="e.g. This learner struggles to follow written instructions, often seems confused during reading activities, and takes much longer than peers to complete written tasks. They are very engaged during oral discussions..."

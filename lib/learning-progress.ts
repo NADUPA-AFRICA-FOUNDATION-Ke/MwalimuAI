@@ -1,7 +1,7 @@
 import type { Program } from './learning-paths-data'
 import { PROGRAMS } from './learning-paths-data'
-import { createClient } from '@/lib/supabase/client'
-import { trackWrite } from '@/lib/write-queue'
+import { makeFunctionReference } from 'convex/server'
+import { getConvexClient } from '@/lib/convex/client'
 
 const KEY      = 'mwalimu_learning_progress'
 const DISC_KEY = 'mwalimu_discussions'
@@ -36,6 +36,14 @@ let _userId: string | null = null
 // flushed as soon as the user id lands.
 let _pendingSyncs: Array<() => void> = []
 
+const listProgress = makeFunctionReference<'query', Record<string, never>, Array<ProgramProgress & { programId: string }>>('learningProgress:mine')
+const saveProgress = makeFunctionReference<'mutation', { programId: string; progress: ProgramProgress }, unknown>('learningProgress:save')
+const saveCertificate = makeFunctionReference<'mutation', { serial: string; programId: string; teacherName: string; programTitle: string }, unknown>('certificates:upsertMine')
+const removeCertificate = makeFunctionReference<'mutation', { programId: string }, unknown>('certificates:removeMine')
+const createDiscussion = makeFunctionReference<'mutation', {
+  clientId: string; programId: string; moduleId: string; lessonId: string; author: string; content: string
+}, unknown>('lessonDiscussions:create')
+
 export function setLearningProgressUser(userId: string | null) {
   _userId = userId
   if (userId && _pendingSyncs.length > 0) {
@@ -65,7 +73,8 @@ function cloudSync(programId: string, p: ProgramProgress): Promise<unknown> {
     _pendingSyncs.push(() => { void cloudSync(programId, p) })
     return Promise.resolve()
   }
-  const supabase = createClient()
+  const client = getConvexClient()
+  if (!client) return Promise.resolve()
 
   // Never trust p.certificateEarnedAt/certificateSerial at face value — this
   // object comes from localStorage, and every write helper in this file
@@ -80,47 +89,47 @@ function cloudSync(programId: string, p: ProgramProgress): Promise<unknown> {
   if (!eligible && p.certificateSerial) {
     // Local cache still holds a serial for a now-ineligible program — make
     // sure it doesn't linger in the public verification registry either.
-    trackWrite(supabase.from('certificates').delete().eq('user_id', _userId).eq('program_id', programId))
+    void client.mutation(removeCertificate, { programId }).catch(err => {
+      console.error('[mwalimu] certificate removal sync failed:', err)
+    })
   }
 
-  return trackWrite(supabase.from('learning_progress').upsert({
-    user_id:               _userId,
-    program_id:            programId,
-    completed_lessons:     p.completedLessons,
-    reflections:           p.reflections,
-    pre_assessment:        p.preAssessment  ?? null,
-    post_assessment:       p.postAssessment ?? null,
-    assignment:            p.assignment     ?? null,
-    certificate_earned_at: eligible ? (p.certificateEarnedAt ?? null) : null,
-    certificate_serial:    eligible ? (p.certificateSerial   ?? null) : null,
-    cohort_joined:         p.cohortJoined   ?? false,
-    updated_at:            new Date().toISOString(),
-  }, { onConflict: 'user_id,program_id' }))
+  const progress: ProgramProgress = {
+    completedLessons: p.completedLessons,
+    reflections: p.reflections,
+    cohortJoined: p.cohortJoined ?? false,
+    ...(p.preAssessment ? { preAssessment: p.preAssessment } : {}),
+    ...(p.postAssessment ? { postAssessment: p.postAssessment } : {}),
+    ...(p.assignment ? { assignment: p.assignment } : {}),
+    ...(eligible && p.certificateEarnedAt ? { certificateEarnedAt: p.certificateEarnedAt } : {}),
+    ...(eligible && p.certificateSerial ? { certificateSerial: p.certificateSerial } : {}),
+  }
+  return client.mutation(saveProgress, { programId, progress }).catch(err => {
+    console.error('[mwalimu] progress sync failed:', err)
+  })
 }
 
 // Called on sign-in: pulls cloud data into localStorage cache
 export async function loadProgressFromCloud(userId: string): Promise<void> {
+  void userId // Ownership comes from the authenticated Convex identity.
   try {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('learning_progress')
-      .select('*')
-      .eq('user_id', userId)
-
-    if (!data || data.length === 0) return
+    const client = getConvexClient()
+    if (!client) return
+    const data = await client.query(listProgress, {})
+    if (data.length === 0) return
 
     const cloud: AllProgress = {}
     for (const row of data) {
-      if (!row.program_id) continue
-      cloud[row.program_id] = {
-        completedLessons:    row.completed_lessons     ?? [],
-        reflections:         row.reflections           ?? {},
-        preAssessment:       row.pre_assessment        ?? undefined,
-        postAssessment:      row.post_assessment       ?? undefined,
-        assignment:          row.assignment            ?? undefined,
-        certificateEarnedAt: row.certificate_earned_at ?? undefined,
-        certificateSerial:   row.certificate_serial    ?? undefined,
-        cohortJoined:        row.cohort_joined         ?? false,
+      if (!row.programId) continue
+      cloud[row.programId] = {
+        completedLessons: row.completedLessons ?? [],
+        reflections: row.reflections ?? {},
+        ...(row.preAssessment ? { preAssessment: row.preAssessment } : {}),
+        ...(row.postAssessment ? { postAssessment: row.postAssessment } : {}),
+        ...(row.assignment ? { assignment: row.assignment } : {}),
+        ...(row.certificateEarnedAt ? { certificateEarnedAt: row.certificateEarnedAt } : {}),
+        ...(row.certificateSerial ? { certificateSerial: row.certificateSerial } : {}),
+        cohortJoined: row.cohortJoined ?? false,
       }
     }
     // Cloud wins — merge over local cache
@@ -221,11 +230,9 @@ function genSerial(): string {
 // blanks, and a call without them never clobbers good data.
 function registerCertificate(serial: string, programId: string, teacherName: string, programTitle: string) {
   if (!_userId) return
-  const row: Record<string, unknown> = { serial, user_id: _userId, program_id: programId }
-  if (programTitle) row.program_title = programTitle
-  if (teacherName)  row.teacher_name  = teacherName
-  const supabase = createClient()
-  trackWrite(supabase.from('certificates').upsert(row, { onConflict: 'user_id,program_id' }))
+  const client = getConvexClient()
+  void client?.mutation(saveCertificate, { serial, programId, teacherName, programTitle })
+    .catch(err => console.error('[mwalimu] certificate sync failed:', err))
 }
 
 /**
@@ -363,17 +370,10 @@ export function addDiscussionPost(
 
   // Sync to cloud so posts survive logout and appear on other devices
   if (userId) {
-    const supabase = createClient()
-    trackWrite(supabase.from('lesson_discussions').insert({
-      id:         post.id,
-      user_id:    userId,
-      program_id: programId,
-      module_id:  moduleId,
-      lesson_id:  lessonId,
-      author:     authorName,
-      content:    post.content,
-      is_seed:    false,
-    }))
+    const client = getConvexClient()
+    void client?.mutation(createDiscussion, {
+      clientId: post.id, programId, moduleId, lessonId, author: authorName, content: post.content,
+    }).catch(err => console.error('[mwalimu] discussion sync failed:', err))
   }
 
   return post

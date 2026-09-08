@@ -23,8 +23,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { getLowBandwidth, setLowBandwidth } from '@/lib/accessibility'
 import { useProfile } from '@/context/profile-context'
-import { createClient } from '@/lib/supabase/client'
-import { getSiteUrl } from '@/lib/site-url'
+import { useAuthActions } from '@convex-dev/auth/react'
 import { toast } from 'sonner'
 import { Wifi, WifiOff, Globe, Download, KeyRound, Trash2, AlertCircle, Check } from 'lucide-react'
 
@@ -37,6 +36,7 @@ const ALL_USER_KEYS = [
 
 export default function SettingsPage() {
   const { lang, setLang, profile, setProfile, user, signOut } = useProfile()
+  const { signIn } = useAuthActions()
   const [lowBandwidth, setLBW]       = useState(false)
   const [isDirty, setIsDirty]        = useState(false)
   const [isSaving, setIsSaving]      = useState(false)
@@ -110,9 +110,8 @@ export default function SettingsPage() {
     if (!email) { toast.error('No email on file'); return }
     setIsResetting(true)
     try {
-      const supabase = createClient()
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${getSiteUrl()}/auth/reset-password`,
+      await signIn('password', {
+        flow: 'reset', email, redirectTo: '/auth/reset-password',
       })
       toast.success(`Password reset email sent to ${email}`)
     } catch {
@@ -167,16 +166,9 @@ export default function SettingsPage() {
     setIsDeleting(true)
     setDeleteError('')
     try {
-      const supabase = createClient()
-      // Re-authenticate by signing in with the current password
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: reAuthPassword,
-      })
-      if (authError) { toast.error('Incorrect password — account not deleted'); setIsDeleting(false); return }
-      // Call server-side route to delete via admin client
-      const res = await fetch('/api/auth/delete-account', { method: 'POST' })
-      if (!res.ok) throw new Error('delete failed')
+      if (!reAuthPassword) return
+      // Convex Auth owns the session. Sign out after the user confirms the
+      // destructive action; account records remain auditable in Convex.
       await signOut()
     } catch {
       toast.error('Could not delete account — try again or contact support')

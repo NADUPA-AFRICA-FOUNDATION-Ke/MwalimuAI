@@ -18,7 +18,7 @@ export function DashboardMockup() {
         </div>
         <div className="flex-1 mx-2 bg-white/8 rounded-md px-3 py-1 flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-primary/60" />
-          <span className="text-[11px] text-white/40 font-mono">app.mwalimuai.com/dashboard</span>
+          <span className="text-[11px] text-white/75 font-mono">app.mwalimuai.com/dashboard</span>
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export function DashboardMockup() {
             </div>
             <div className="flex gap-1.5 mt-2.5 flex-wrap">
               {['View example →', 'Practice more'].map(s => (
-                <span key={s} className="text-[10px] bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-gray-500 cursor-pointer">
+                <span key={s} className="text-[10px] bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-gray-500">
                   {s}
                 </span>
               ))}

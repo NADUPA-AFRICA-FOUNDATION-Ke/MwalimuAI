@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import {
-  GraduationCap, ArrowRight, Check, Star, Quote, ChevronRight, ChevronDown,
+  GraduationCap, ArrowRight, Check, ChevronRight, ChevronDown,
   BrainCircuit, BookMarked, Users, Award, BarChart3, Zap, TrendingUp,
   CheckCircle2, XCircle,
 } from 'lucide-react'
@@ -13,73 +14,66 @@ import { DashboardMockup, AiCoachMockup, ModulesMockup } from './mockups'
 /* ── DATA ─────────────────────────────────────────────── */
 
 const features = [
-  { icon: BrainCircuit, title: 'AI Coach',            desc: 'A personal teaching advisor powered by AI — answers CBC questions, creates rubrics, and adapts to your challenges 24/7.', href: '/dashboard/ai-coach',     accent: 'primary' as const },
-  { icon: BookMarked,   title: 'Structured Modules',  desc: 'KICD-mapped self-paced courses for every CBC strand — mobile-first and offline-ready.', href: '/dashboard/modules',      accent: 'accent'  as const },
-  { icon: Users,        title: 'Teacher Community',   desc: 'Collaborate with 4,800+ educators across all 47 counties — share resources and solve challenges together.', href: '/dashboard/community',    accent: 'primary' as const },
-  { icon: Award,        title: 'Achievement Badges',  desc: 'Earn verifiable certificates tied to real learning outcomes and classroom impact.', href: '/dashboard/achievements', accent: 'accent'  as const },
-  { icon: Zap,          title: 'Needs Assessment',    desc: 'A smart diagnostic that builds a fully personalised learning path around your experience and goals.', href: '/dashboard/assessment',   accent: 'primary' as const },
-  { icon: BarChart3,    title: 'Progress Analytics',  desc: 'Visual insights into your learning velocity, streak performance, and classroom impact over time.', href: '/dashboard',              accent: 'accent'  as const },
+  { icon: BrainCircuit, title: 'AI Coach',            desc: 'Ask teaching and planning questions, then review the suggestions alongside your own professional judgment.', href: '/dashboard/ai-coach',     accent: 'primary' as const },
+  { icon: BookMarked,   title: 'Structured Modules',  desc: 'Work through lessons, activities, and quizzes in a clear sequence.', href: '/dashboard/modules',      accent: 'accent'  as const },
+  { icon: Users,        title: 'Teacher Community',   desc: 'Post questions, reply to other teachers, and share classroom resources.', href: '/dashboard/community',    accent: 'primary' as const },
+  { icon: Award,        title: 'Achievement Badges',  desc: 'See milestone badges and certificates connected to completed learning work.', href: '/dashboard/achievements', accent: 'accent'  as const },
+  { icon: Zap,          title: 'Needs Assessment',    desc: 'Answer a short assessment to identify a starting point for your learning.', href: '/dashboard/assessment',   accent: 'primary' as const },
+  { icon: BarChart3,    title: 'Progress Tracking',  desc: 'Review completed lessons, assessment results, and learning activity from your dashboard.', href: '/dashboard',              accent: 'accent'  as const },
 ]
 
-const testimonials = [
+const useCases = [
   {
-    quote: 'In just 8 weeks, I went from overwhelmed by CBC assessment to confidently writing competency rubrics for all my subjects.',
-    name: 'Jane Muthoni', role: 'Grade 6 Teacher', school: 'Nairobi Primary School',
-    img: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=80&h=80&q=80',
-    result: '40% improvement in assessment quality',
+    title: 'Plan a lesson',
+    description: 'Use the AI Coach and teacher tools to work through a lesson idea, activity, or assessment question.',
+    link: 'Open AI Coach',
+    href: '/dashboard/ai-coach',
   },
   {
-    quote: 'The AI Coach is the first tool that actually understands CBC implementation. It gave me practical advice I could use the very next morning.',
-    name: 'Peter Ochieng', role: 'Head of Science', school: 'Kisumu Boys High',
-    img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&h=80&q=80',
-    result: '3× faster lesson planning',
+    title: 'Study a module',
+    description: 'Read a structured lesson, complete its activities, and return to the same place when you are ready to continue.',
+    link: 'Browse modules',
+    href: '/dashboard/modules',
   },
   {
-    quote: 'I used to spend every weekend preparing CBC materials alone. Now the community and AI tools save me 6+ hours a week.',
-    name: 'Faith Kemunto', role: 'Mathematics Teacher', school: 'Mombasa Girls Secondary',
-    img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&h=80&q=80',
-    result: '6 hours saved every week',
+    title: 'Keep your progress',
+    description: 'Use your dashboard to review completed learning work and choose what to work on next.',
+    link: 'View dashboard',
+    href: '/dashboard',
   },
 ]
 
 const comparison = [
-  { feature: 'CBC-specific content',       mwalimu: true,      workshop: false, generic: false },
-  { feature: 'Available 24/7',             mwalimu: true,      workshop: false, generic: 'partial' },
-  { feature: 'AI personalisation',         mwalimu: true,      workshop: false, generic: false },
-  { feature: 'KICD aligned',               mwalimu: true,      workshop: true,  generic: false },
-  { feature: 'Free to start',              mwalimu: true,      workshop: false, generic: false },
-  { feature: 'Works offline',              mwalimu: true,      workshop: false, generic: false },
-  { feature: 'Kenyan teacher community',   mwalimu: true,      workshop: false, generic: false },
-  { feature: 'Progress tracking',          mwalimu: true,      workshop: false, generic: 'partial' },
+  { feature: 'Structured lessons',  learn: true,  plan: false, reflect: true },
+  { feature: 'AI coaching',         learn: false, plan: true,  reflect: false },
+  { feature: 'Teacher discussions', learn: false, plan: true,  reflect: false },
+  { feature: 'Needs assessment',    learn: true,  plan: false, reflect: false },
+  { feature: 'Progress tracking',   learn: true,  plan: false, reflect: true },
+  { feature: 'Saved resources',     learn: true,  plan: true,  reflect: false },
 ]
 
 const faqs = [
-  { q: 'What is Mwalimu AI and who is it for?',              a: 'Mwalimu AI is an AI-powered professional development platform built exclusively for Kenyan teachers implementing the Competency-Based Curriculum. Whether you\'re a primary or secondary teacher, newly trained or experienced, the platform adapts to your level and goals.' },
-  { q: 'Is Mwalimu AI really free?',                          a: 'Yes — core learning modules, community features, and AI coaching are free. A Professional tier unlocks advanced analytics, unlimited AI sessions, and downloadable certificates.' },
-  { q: 'How does the AI Coach work?',                         a: 'Your AI Coach is trained on CBC curriculum content, KICD standards, and Kenyan classroom contexts. Ask it anything — how to write a competency rubric, how to plan a learner-centred lesson, or how to handle a specific student challenge.' },
-  { q: 'Is the content aligned with official KICD standards?',a: 'Every module is mapped to KICD strands, sub-strands, and competency levels. Our content team reviews all materials against the official CBC syllabus regularly.' },
-  { q: 'Does it work on slow internet connections?',          a: 'Yes. Mwalimu AI is built mobile-first with offline support. Once you\'ve loaded a module you can continue without internet. The AI Coach requires a connection, but all module content is available offline.' },
-  { q: 'Can I use Mwalimu AI on my phone?',                   a: 'Absolutely. The platform is designed for smartphones first — most Kenyan teachers access it on Android. It works on any modern browser and can be installed as a PWA for a native-app experience.' },
+  { q: 'What is Mwalimu AI and who is it for?', a: 'Mwalimu AI is a professional learning platform for Kenyan CBC teachers. It brings together learning modules, an AI Coach, teacher tools, community discussions, and progress tracking.' },
+  { q: 'How do I start?',                      a: 'Create an account, complete your profile, and open your dashboard. From there you can choose a module, take the needs assessment, or open the AI Coach.' },
+  { q: 'What can I ask the AI Coach?',          a: 'You can ask about lesson planning, assessment, classroom management, teaching strategies, or a specific classroom challenge. Review its suggestions using your own professional judgment and school guidance.' },
+  { q: 'Can I use Mwalimu AI on my phone?',     a: 'Yes. The web app is responsive and can be used on a phone, tablet, or computer with a modern browser.' },
+  { q: 'Does the AI Coach need an internet connection?', a: 'Yes. A live AI Coach response requires an internet connection. Other platform areas may have different connection requirements.' },
+  { q: 'How is my progress stored?',            a: 'Your learning activity is associated with your account so you can review completed work from the dashboard when you sign in.' },
 ]
 
 /* ── HOOKS ────────────────────────────────────────────── */
 import { useFadeIn } from '@/hooks/use-scroll-animations'
-import { useCountUp } from '@/hooks/use-scroll-animations'
 
 /* ── COMPONENTS ───────────────────────────────────────── */
 
 export function StatsSection() {
-  const { ref, visible, revealed } = useFadeIn(0.2)
-  const teachers  = useCountUp(48, 1400, revealed)
-  const counties  = useCountUp(47, 1200, revealed)
-  const modules   = useCountUp(48, 1300, revealed)
-  const ratingVal = useCountUp(48, 1500, revealed)
+  const { ref, visible } = useFadeIn(0.2)
 
   const stats = [
-    { value: `${(teachers / 10).toFixed(1)}K+`, label: 'Active teachers',  delay: 0   },
-    { value: counties,                           label: 'Counties reached', delay: 80  },
-    { value: `${modules}+`,                     label: 'Learning modules', delay: 160 },
-    { value: `${(ratingVal / 10).toFixed(1)}★`, label: 'Average rating',   delay: 240 },
+    { value: 'Learn',   label: 'Structured modules', delay: 0   },
+    { value: 'Ask',     label: 'AI coaching',         delay: 80  },
+    { value: 'Share',   label: 'Teacher community',   delay: 160 },
+    { value: 'Track',   label: 'Progress records',    delay: 240 },
   ]
 
   return (
@@ -103,6 +97,28 @@ export function StatsSection() {
 export function ProductShowcase() {
   const { ref, visible } = useFadeIn(0.1)
   const [activeTab, setActiveTab] = useState(0)
+  const tabs = ['AI Coach', 'Dashboard', 'Learning Modules']
+
+  const selectTab = (index: number) => {
+    setActiveTab(index)
+    requestAnimationFrame(() => document.getElementById(`preview-tab-${index}`)?.focus())
+  }
+
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const next = event.key === 'ArrowRight' || event.key === 'ArrowDown'
+      ? (index + 1) % tabs.length
+      : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+        ? (index - 1 + tabs.length) % tabs.length
+        : event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? tabs.length - 1
+            : null
+    if (next !== null) {
+      event.preventDefault()
+      selectTab(next)
+    }
+  }
 
   return (
     <section ref={ref} className="py-24 bg-white">
@@ -113,14 +129,15 @@ export function ProductShowcase() {
             See it in action
           </h2>
           <p className="text-gray-400 text-base max-w-md mx-auto">
-            A purpose-built platform for Kenyan teachers — not adapted from a foreign product.
+            A focused view of the modules, Coach, and progress tools in the app.
           </p>
         </div>
 
-        <div className="flex justify-center gap-2 mb-10 flex-wrap">
-          {['AI Coach', 'Dashboard', 'Learning Modules'].map((tab, i) => (
-            <button key={tab} onClick={() => setActiveTab(i)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+        <div className="flex justify-center gap-2 mb-10 flex-wrap" role="tablist" aria-label="Product previews">
+          {tabs.map((tab, i) => (
+            <button type="button" key={tab} id={`preview-tab-${i}`} onClick={() => selectTab(i)} onKeyDown={event => handleTabKeyDown(event, i)}
+              role="tab" aria-selected={activeTab === i} aria-controls="preview-panel" tabIndex={activeTab === i ? 0 : -1}
+              className={`min-h-11 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 activeTab === i
                   ? 'bg-primary text-white'
                   : 'bg-gray-50 border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -130,7 +147,7 @@ export function ProductShowcase() {
           ))}
         </div>
 
-        <div className="max-w-2xl mx-auto">
+        <div id="preview-panel" className="max-w-2xl mx-auto" role="tabpanel" aria-labelledby={`preview-tab-${activeTab}`} tabIndex={0}>
           {activeTab === 0 && <AiCoachMockup />}
           {activeTab === 1 && <DashboardMockup />}
           {activeTab === 2 && <ModulesMockup />}
@@ -204,16 +221,18 @@ export function SplitSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className={`transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
             <div className="relative rounded-3xl overflow-hidden aspect-[3/2]" style={{ boxShadow: 'var(--shadow-xl)' }}>
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=80"
                 alt="Students in a CBC classroom"
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
               <div className="absolute bottom-5 left-5 rounded-2xl px-4 py-3"
                 style={{ background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(8px)' }}>
-                <p className="text-xs font-bold text-foreground">300,000+ teachers in Kenya</p>
-                <p className="text-[11px] text-gray-400 mt-0.5">deserve world-class support</p>
+                <p className="text-xs font-bold text-foreground">Learning support for Kenyan teachers</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">for planning, practice, and reflection</p>
               </div>
             </div>
           </div>
@@ -224,15 +243,15 @@ export function SplitSection() {
               Designed around the<br />real challenges of CBC
             </h2>
             <p className="text-gray-400 text-base leading-relaxed mb-8">
-              Mwalimu AI was built by educators who lived through Kenya&apos;s CBC transition.
-              Every feature exists because a teacher asked for it.
+              Mwalimu AI brings learning, planning, and reflection tools into one workspace
+              for Kenyan teachers working with CBC content.
             </p>
             <ul className="space-y-4 mb-9">
               {[
-                'All content mapped to KICD strands and sub-strands',
-                'Available in English and Swahili',
-                'Works on low-bandwidth networks and offline',
-                'Trusted by teachers across all 47 counties',
+                'Structured learning modules',
+                'AI Coach and classroom tools',
+                'Teacher discussions and shared resources',
+                'Progress tracking from your dashboard',
               ].map(item => (
                 <li key={item} className="flex items-start gap-3 text-sm text-gray-500">
                   <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -242,11 +261,11 @@ export function SplitSection() {
                 </li>
               ))}
             </ul>
-            <Link href="/about">
-              <Button variant="outline" className="rounded-2xl font-semibold border-primary/30 text-primary hover:bg-primary/5 px-6">
+            <Button asChild variant="outline" className="rounded-2xl font-semibold border-primary/30 text-primary hover:bg-primary/5 px-6">
+              <Link href="/about">
                 Our mission <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -261,11 +280,11 @@ export function ComparisonSection() {
     <section ref={ref} className="py-24 bg-gray-50/60">
       <div className="max-w-4xl mx-auto px-5 md:px-10">
         <div className={`text-center mb-12 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
-          <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
-            Why teachers choose Mwalimu AI
-          </h2>
+            <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
+            One workspace for ongoing learning
+            </h2>
           <p className="text-gray-400 text-base max-w-md mx-auto">
-            Not all professional development is equal.
+            Move between learning, planning, discussion, and progress review as your work requires.
           </p>
         </div>
 
@@ -273,21 +292,19 @@ export function ComparisonSection() {
           style={{ boxShadow: 'var(--shadow-md)' }}>
           <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-100">
             <div className="p-5" />
-            {['Mwalimu AI','Workshops','Generic Courses'].map((h, i) => (
+            {['Learn', 'Plan', 'Reflect'].map((h, i) => (
               <div key={h} className={`p-5 text-center border-l border-gray-100 ${i === 0 ? 'bg-primary/4' : ''}`}>
                 <p className={`text-sm font-bold ${i === 0 ? 'text-primary' : 'text-gray-400'}`}>{h}</p>
-                {i === 0 && <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full font-semibold mt-1 inline-block">Best choice</span>}
               </div>
             ))}
           </div>
-          {comparison.map(({ feature, mwalimu, workshop, generic }, i) => (
+          {comparison.map(({ feature, learn, plan, reflect }, i) => (
             <div key={feature} className={`grid grid-cols-4 border-b border-gray-50 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
               <div className="p-4 text-sm text-gray-500 font-medium">{feature}</div>
-              {[mwalimu, workshop, generic].map((val, j) => (
+              {[learn, plan, reflect].map((val, j) => (
                 <div key={j} className={`p-4 flex items-center justify-center border-l border-gray-50 ${j === 0 ? 'bg-primary/3' : ''}`}>
                   {val === true      && <CheckCircle2 className="w-5 h-5 text-primary" />}
                   {val === false     && <XCircle className="w-5 h-5 text-gray-200" />}
-                  {val === 'partial' && <span className="text-[11px] font-semibold text-gray-300">Partial</span>}
                 </div>
               ))}
             </div>
@@ -302,9 +319,9 @@ export function HowItWorksSection() {
   const { ref, visible } = useFadeIn(0.08)
 
   const steps = [
-    { num: '01', icon: GraduationCap, title: 'Create your account',       desc: 'Sign up free in under 2 minutes. Complete your teacher profile — no credit card needed.' },
-    { num: '02', icon: Zap,           title: 'Take the assessment',        desc: 'A 5-minute diagnostic builds a personalised CBC learning path around your goals.' },
-    { num: '03', icon: TrendingUp,    title: 'Start learning & growing',   desc: 'Access AI coaching, modules, and the teacher community — on your phone, offline, at your pace.' },
+    { num: '01', icon: GraduationCap, title: 'Create your account', desc: 'Create an account and complete your teacher profile.' },
+    { num: '02', icon: Zap,           title: 'Choose a starting point', desc: 'Answer the needs assessment or open a learning module that fits your next task.' },
+    { num: '03', icon: TrendingUp,    title: 'Keep learning', desc: 'Use modules, AI coaching, teacher tools, and discussions at your own pace.' },
   ]
 
   return (
@@ -313,9 +330,9 @@ export function HowItWorksSection() {
         <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
           <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Getting Started</p>
           <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
-            Up and running in minutes
+            A clear place to begin
           </h2>
-          <p className="text-gray-400 text-base">Three steps to a better classroom.</p>
+          <p className="text-gray-400 text-base">Create a profile, choose a starting point, and keep your work together.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
@@ -350,36 +367,26 @@ export function TestimonialsSection() {
     <section ref={ref} className="py-24 bg-gray-50/60">
       <div className="max-w-6xl mx-auto px-5 md:px-10">
         <div className={`mb-12 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
-          <div className="flex gap-0.5 mb-4">
-            {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-accent text-accent" />)}
-          </div>
           <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground">
-            Real teachers. Real results.
+            Ways to use the platform
           </h2>
+          <p className="text-gray-400 text-base mt-3 max-w-xl">
+            Start with the part of your professional learning that needs attention today.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {testimonials.map(({ quote, name, role, school, img, result }, i) => (
-            <div key={name}
+          {useCases.map(({ title, description, link, href }, i) => (
+            <div key={title}
               className={`bg-white rounded-3xl p-7 flex flex-col border border-gray-100 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
               style={{ transitionDelay: `${i * 100}ms` }}>
               <div className="mb-5 flex-1">
-                <Quote className="w-7 h-7 text-primary/15 mb-4" />
-                <p className="text-sm text-gray-500 leading-relaxed">&ldquo;{quote}&rdquo;</p>
+                <p className="text-lg font-bold text-foreground mb-3">{title}</p>
+                <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
               </div>
-              <div className="bg-primary/6 rounded-xl px-4 py-2.5 mb-5">
-                <p className="text-[11px] text-primary font-bold">✦ {result}</p>
-              </div>
-              <div className="flex gap-0.5 mb-4">
-                {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 fill-accent text-accent" />)}
-              </div>
-              <div className="flex items-center gap-3 pt-5 border-t border-gray-100">
-                <img src={img} alt={name} className="w-10 h-10 rounded-full object-cover border border-gray-100 shrink-0" />
-                <div>
-                  <p className="font-bold text-sm text-foreground">{name}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">{role} · {school}</p>
-                </div>
-              </div>
+              <Link href={href} className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary hover:gap-2 transition-all duration-200">
+                {link} <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           ))}
         </div>
@@ -409,13 +416,16 @@ export function FaqSection() {
             return (
               <div key={q} className="border-b border-border/50 last:border-0">
                 <button
+                  type="button"
                   onClick={() => setOpenIdx(isOpen ? null : idx)}
-                  className="w-full flex items-center justify-between gap-4 py-5 text-left group"
+                  aria-expanded={isOpen}
+                  aria-controls={`marketing-faq-answer-${idx}`}
+                  className="w-full min-h-11 flex items-center justify-between gap-4 py-5 text-left group"
                 >
                   <span className="font-semibold text-[15px] text-foreground group-hover:text-primary transition-colors">{q}</span>
                   <ChevronDown className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
                 </button>
-                <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-56 opacity-100 pb-5' : 'max-h-0 opacity-0'}`}>
+                <div id={`marketing-faq-answer-${idx}`} aria-hidden={!isOpen} className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-56 opacity-100 pb-5' : 'max-h-0 opacity-0'}`}>
                   <p className="text-muted-foreground text-sm leading-relaxed pr-8">{a}</p>
                 </div>
               </div>
@@ -446,30 +456,26 @@ export function CTASection() {
       <div className={`relative z-10 max-w-2xl mx-auto px-5 md:px-10 text-center transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
         <div className="inline-flex items-center gap-2 rounded-full px-5 py-2 mb-8 hero-bg-border">
           <span className="w-1.5 h-1.5 rounded-full bg-accent inline-block animate-ping-soft" />
-          <span className="text-sm font-semibold text-white/75">Free for every Kenyan teacher</span>
+          <span className="text-sm font-semibold text-white/75">For Kenyan CBC teachers</span>
         </div>
 
         <h2 className="text-[2.6rem] md:text-[3.4rem] font-black text-white tracking-tight leading-[1.06] mb-5">
-          Your students deserve<br />
-          <span className="text-accent">a confident teacher.</span>
+          Keep your professional learning<br />
+          <span className="text-accent">in one place.</span>
         </h2>
 
-        <p className="text-white/55 text-base leading-relaxed mb-10 max-w-lg mx-auto">
-          Every module you complete, every AI session you have, every colleague you connect with —
-          it all shows up in your classroom the next morning.
+        <p className="text-white/75 text-base leading-relaxed mb-10 max-w-lg mx-auto">
+          Create an account to explore the modules, Coach, teacher tools, community discussions, and progress records.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/auth/sign-up">
-            <Button size="lg"
+          <Button asChild size="lg"
               className="text-[15px] px-10 py-6 rounded-2xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-105 active:scale-[0.98] transition-all duration-200 border-0">
-              Start teaching better — free
+            <Link href="/auth/sign-up">
+              Create an account
               <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
-          <div className="text-white/40 text-sm flex items-center gap-1.5">
-            <Check className="w-4 h-4" /> No credit card required
-          </div>
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

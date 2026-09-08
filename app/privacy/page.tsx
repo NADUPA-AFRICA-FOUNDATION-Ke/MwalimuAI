@@ -1,6 +1,11 @@
 import { MarketingHeader } from '@/components/marketing-header'
 import { MarketingFooter } from '@/components/marketing-footer'
-import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'How Mwalimu AI collects, uses, and protects educator information.',
+}
 
 export default function PrivacyPage() {
   return (
@@ -10,7 +15,7 @@ export default function PrivacyPage() {
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 md:px-8 py-16">
         <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
-        <p className="text-muted-foreground mb-8">Last updated: April 1, 2026</p>
+        <p className="text-muted-foreground mb-8">Last updated: September 7, 2026</p>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8">
           <section>

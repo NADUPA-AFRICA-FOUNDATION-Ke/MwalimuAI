@@ -93,8 +93,8 @@ When planning lessons, consider how activities can develop multiple competencies
 
 Remember, competency development is gradual. Focus on creating opportunities for practice rather than expecting immediate mastery.
     `,
-    author: 'Dr. Sarah Kamau',
-    authorRole: 'CBC Curriculum Specialist',
+    author: 'Mwalimu AI',
+    authorRole: 'Editorial content',
     date: 'April 15, 2026',
     readTime: '8 min read',
     category: 'CBC Fundamentals',
@@ -143,8 +143,8 @@ Provide students with rubrics to evaluate their own work before submission. This
 
 The key to effective formative assessment is using the data you collect. Take time to analyze responses and adjust your teaching accordingly. Remember, the goal is to support learning, not just measure it.
     `,
-    author: 'James Ochieng',
-    authorRole: 'Assessment & Evaluation Expert',
+    author: 'Mwalimu AI',
+    authorRole: 'Editorial content',
     date: 'April 10, 2026',
     readTime: '6 min read',
     category: 'Assessment',
@@ -220,8 +220,8 @@ Consider these practical adjustments:
 
 Creating inclusion is a whole-school effort. Work with colleagues, parents, and the community to ensure every child can succeed.
     `,
-    author: 'Grace Muthoni',
-    authorRole: 'Special Needs Education Specialist',
+    author: 'Mwalimu AI',
+    authorRole: 'Editorial content',
     date: 'April 5, 2026',
     readTime: '7 min read',
     category: 'Inclusion',
@@ -286,8 +286,8 @@ If you haven't explored AI for professional development yet, start small. Try as
 
 The future of teacher professional development is here, and it's accessible to every teacher in Kenya.
     `,
-    author: 'Peter Njoroge',
-    authorRole: 'EdTech Researcher',
+    author: 'Mwalimu AI',
+    authorRole: 'Editorial content',
     date: 'March 28, 2026',
     readTime: '5 min read',
     category: 'Technology',
@@ -388,8 +388,8 @@ After the project:
 
 PBL takes practice, but the engagement and deep learning it produces make it worth the effort.
     `,
-    author: 'Dr. Sarah Kamau',
-    authorRole: 'CBC Curriculum Specialist',
+    author: 'Mwalimu AI',
+    authorRole: 'Editorial content',
     date: 'March 20, 2026',
     readTime: '10 min read',
     category: 'Pedagogy',
@@ -495,8 +495,8 @@ Remember that parent engagement is ongoing:
 
 When parents understand and support CBC, children benefit enormously. The investment in parent engagement pays dividends throughout the school year and beyond.
     `,
-    author: 'Mary Wanjiku',
-    authorRole: 'Parent Engagement Coordinator',
+    author: 'Mwalimu AI',
+    authorRole: 'Editorial content',
     date: 'March 15, 2026',
     readTime: '6 min read',
     category: 'Community',

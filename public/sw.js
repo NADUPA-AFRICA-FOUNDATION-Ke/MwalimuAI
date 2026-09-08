@@ -1,7 +1,7 @@
 // Mwalimu AI — Service Worker
 // Strategy: cache-first for immutable assets, network-first for pages.
 // Increment CACHE_VERSION whenever a breaking schema change needs a clean slate.
-const CACHE_VERSION = '2'
+const CACHE_VERSION = '3'
 const STATIC_CACHE  = `mwalimu-static-v${CACHE_VERSION}`
 const PAGES_CACHE   = `mwalimu-pages-v${CACHE_VERSION}`
 const ALL_CACHES    = [STATIC_CACHE, PAGES_CACHE]

@@ -32,10 +32,10 @@ function ThemeToggle() {
   const next = cycle[theme as keyof typeof cycle] ?? 'light'
   const Icon = { light: Sun, dark: Moon, system: Monitor }[theme as keyof typeof cycle] ?? Monitor
   return (
-    <button onClick={() => setTheme(next)}
-      className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all duration-150"
+    <button type="button" onClick={() => setTheme(next)}
+      className="w-11 h-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all duration-150"
       aria-label={`Switch to ${next} mode`}>
-      <Icon className="w-4 h-4" />
+      <Icon className="w-4 h-4" aria-hidden="true" />
     </button>
   )
 }
@@ -55,18 +55,18 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
         {/* Left */}
         <div className="flex items-center gap-1 shrink-0">
           {onMenuToggle && (
-            <button onClick={onMenuToggle}
-              className="md:hidden w-8 h-8 flex items-center justify-center hover:bg-muted/70 rounded-lg transition-colors"
+            <button type="button" onClick={onMenuToggle}
+              className="md:hidden w-11 h-11 flex items-center justify-center hover:bg-muted/70 rounded-lg transition-colors"
               aria-label="Open navigation">
-              <Menu className="w-4.5 h-4.5" />
+              <Menu className="w-4.5 h-4.5" aria-hidden="true" />
             </button>
           )}
           {onToggleCollapse && (
-            <button onClick={onToggleCollapse}
-              className="hidden md:flex w-8 h-8 items-center justify-center hover:bg-muted/70 rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+            <button type="button" onClick={onToggleCollapse}
+              className="hidden md:flex w-11 h-11 items-center justify-center hover:bg-muted/70 rounded-lg transition-colors text-muted-foreground hover:text-foreground"
               aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               aria-pressed={sidebarCollapsed}>
-              <PanelLeft className={cn('w-4 h-4 transition-transform duration-200', sidebarCollapsed && 'rotate-180')} />
+              <PanelLeft className={cn('w-4 h-4 transition-transform duration-200', sidebarCollapsed && 'rotate-180')} aria-hidden="true" />
             </button>
           )}
           <Link href="/dashboard" className="flex items-center gap-2 ml-1 group">
@@ -78,8 +78,8 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
         {/* Right */}
         <div className="flex items-center gap-1 ml-auto">
           {/* Language toggle */}
-          <button onClick={toggleLang}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
+          <button type="button" onClick={toggleLang}
+            className="hidden sm:flex min-h-11 items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
             title={t('header.langToggle')}>
             {t('header.langToggle')}
           </button>
@@ -98,11 +98,11 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
             </span>
           </div>
 
-          <button onClick={onLogout}
-            className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-150 ml-0.5"
+          <button type="button" onClick={onLogout}
+            className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-150 ml-0.5"
             title={t('header.logout')}
             aria-label={t('header.logout')}>
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 

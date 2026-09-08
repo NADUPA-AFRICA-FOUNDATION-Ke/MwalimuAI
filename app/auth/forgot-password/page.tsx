@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { getSiteUrl } from '@/lib/site-url'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { useAction } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,24 +16,37 @@ import { BrandMark } from '@/components/brand-mark'
 import Link from 'next/link'
 
 export default function Page() {
+  return <ConvexNativeAuthBoundary><ForgotPasswordContent /></ConvexNativeAuthBoundary>
+}
+
+function ForgotPasswordContent() {
   const [email, setEmail]         = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [sent, setSent]           = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const { signIn } = useAuthActions()
+  const provisionMigratedAccount = useAction(api.auth.provisionMigratedAccount)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${getSiteUrl()}/auth/callback?next=/auth/reset-password`,
+      const normalizedEmail = email.trim().toLowerCase()
+      try { localStorage.setItem('mwalimu_password_reset_email', normalizedEmail) } catch {}
+      await provisionMigratedAccount({ email: normalizedEmail })
+      await signIn('password', {
+        flow: 'reset',
+        email: normalizedEmail,
+        redirectTo: '/auth/reset-password',
       })
       // Always show success — don't reveal whether the email exists
       setSent(true)
-    } catch {
-      setError('Could not send reset email. Please try again.')
+    } catch (resetError) {
+      const message = resetError instanceof Error ? resetError.message : ''
+      setError(message.includes('Password reset is not enabled')
+        ? 'Password reset email is being configured. Please contact support for account access.'
+        : 'Could not send reset email. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -70,9 +85,7 @@ export default function Page() {
                   <p className="text-sm text-muted-foreground text-center mb-4">
                     Check your spam folder if it doesn&apos;t arrive within a few minutes.
                   </p>
-                  <Link href="/auth/login">
-                    <Button variant="outline" className="w-full">Back to sign in</Button>
-                  </Link>
+                  <Button asChild variant="outline" className="w-full"><Link href="/auth/login">Back to sign in</Link></Button>
                 </CardContent>
               </>
             ) : (
@@ -90,12 +103,14 @@ export default function Page() {
                           <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                           <Input id="email" type="email" inputMode="email" autoComplete="email" spellCheck={false}
                             placeholder="you@example.com" required className="pl-9"
+                            aria-invalid={!!error}
+                            aria-describedby={error ? 'forgot-password-error' : undefined}
                             value={email} onChange={(e) => setEmail(e.target.value)} />
                         </div>
                       </div>
 
                       {error && (
-                        <p role="alert" className="text-sm text-destructive rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2">
+                        <p id="forgot-password-error" role="alert" aria-live="assertive" className="text-sm text-destructive rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2">
                           {error}
                         </p>
                       )}

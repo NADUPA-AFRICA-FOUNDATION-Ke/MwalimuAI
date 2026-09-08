@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getProgramById } from '@/lib/learning-paths-data'
 import { getProgress, earnCertificate, isProgramComplete, type ProgramProgress } from '@/lib/learning-progress'
 import { downloadCertificatePDF } from '@/lib/certificate-pdf'
@@ -40,12 +41,9 @@ export default function CertificatePage() {
     }
     setProgress(getProgress(program.id))
     setMounted(true)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [program, syncReady, profile?.name])
 
-  if (!program) return <div className="p-8 text-muted-foreground">Program not found.</div>
-
-  const isUnlocked = mounted && isProgramComplete(program, progress)
+  const isUnlocked = mounted && !!program && isProgramComplete(program, progress)
   const teacherName = profile?.name ?? 'Teacher'
   const serial      = progress.certificateSerial ?? ''
   const postScore   = progress.postAssessment ? `${progress.postAssessment.score}/${progress.postAssessment.total}` : null
@@ -58,6 +56,8 @@ export default function CertificatePage() {
       return makeQR(url, 'M').createDataURL(6, 8)
     } catch { return '' }
   }, [serial])
+
+  if (!program) return <div className="p-8 text-muted-foreground">Program not found.</div>
 
   const handlePrint = async () => {
     setIsPrinting(true)
@@ -99,9 +99,7 @@ export default function CertificatePage() {
           <p className="text-muted-foreground text-sm mb-6 max-w-xs mx-auto">
             Read every lesson, write at least 6 reflections, and score 85% or higher on the post-assessment to earn your certificate.
           </p>
-          <Link href={`/dashboard/learning/${program.id}`}>
-            <Button className="rounded-xl">Back to Program</Button>
-          </Link>
+          <Button asChild className="rounded-xl"><Link href={`/dashboard/learning/${program.id}`}>Back to Program</Link></Button>
         </div>
       </div>
     )
@@ -254,7 +252,7 @@ export default function CertificatePage() {
             {/* QR */}
             <div className="mx-auto bg-white border border-primary/15 rounded-2xl p-3 shadow-sm">
               {qrDataUrl
-                ? <img src={qrDataUrl} alt="Scan to verify this certificate" width={160} height={160} className="w-40 h-40" style={{ imageRendering: 'pixelated' }} />
+                ? <Image src={qrDataUrl} alt="Scan to verify this certificate" width={160} height={160} unoptimized className="w-40 h-40" style={{ imageRendering: 'pixelated' }} />
                 : <div className="w-40 h-40 bg-gray-50 rounded" />}
             </div>
 

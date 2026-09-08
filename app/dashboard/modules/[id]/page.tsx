@@ -66,22 +66,22 @@ const difficultyColors = {
 export default function ModuleDetailPage() {
   const params = useParams()
   const moduleId = Number(params.id)
-  const module = getModuleById(moduleId)
+  const moduleData = getModuleById(moduleId)
   const { user, syncReady } = useProfile()
 
   const programId = `module-${moduleId}`
   const [completedLessons, setCompletedLessons] = useState<number[]>([])
 
   useEffect(() => {
-    if (!syncReady || !module) return
+    if (!syncReady || !moduleData) return
     const p = getProgress(programId)
     const ids = p.completedLessons
       .map(k => Number(k.split('/')[1]))
-      .filter(id => module.lessons.some(l => l.id === id))
+      .filter(id => moduleData.lessons.some(l => l.id === id))
     setCompletedLessons(ids)
-  }, [syncReady, programId, module])
+  }, [syncReady, programId, moduleData])
 
-  if (!module) {
+  if (!moduleData) {
     return (
       <div className="space-y-8">
         <BackButton fallbackHref="/dashboard/modules" label="Back to Modules" />
@@ -100,9 +100,9 @@ export default function ModuleDetailPage() {
   }
 
   const completedCount = completedLessons.length
-  const totalLessons = module.lessons.length
+  const totalLessons = moduleData.lessons.length
   const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
-  const nextLessonId = module.lessons.find(l => !completedLessons.includes(l.id))?.id ?? module.lessons[0]?.id ?? 1
+  const nextLessonId = moduleData.lessons.find(l => !completedLessons.includes(l.id))?.id ?? moduleData.lessons[0]?.id ?? 1
 
   const toggleLessonComplete = (lessonId: number) => {
     const isNowComplete = !completedLessons.includes(lessonId)
@@ -125,21 +125,21 @@ export default function ModuleDetailPage() {
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-4">
-            {(() => { const Icon = MODULE_ICONS[module.icon] ?? BookOpen; return <Icon className="w-9 h-9 text-primary" aria-hidden="true" /> })()}
+            {(() => { const Icon = MODULE_ICONS[moduleData.icon] ?? BookOpen; return <Icon className="w-9 h-9 text-primary" aria-hidden="true" /> })()}
             <div>
-              <Badge className={difficultyColors[module.difficulty]}>
-                {module.difficulty}
+              <Badge className={difficultyColors[moduleData.difficulty]}>
+                {moduleData.difficulty}
               </Badge>
             </div>
           </div>
           
-          <h1 className="text-3xl font-bold mb-3">{module.title}</h1>
-          <p className="text-lg text-muted-foreground mb-6">{module.description}</p>
+          <h1 className="text-3xl font-bold mb-3">{moduleData.title}</h1>
+          <p className="text-lg text-muted-foreground mb-6">{moduleData.description}</p>
           
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <span>{module.duration} minutes</span>
+              <span>{moduleData.duration} minutes</span>
             </div>
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
@@ -168,14 +168,14 @@ export default function ModuleDetailPage() {
             </div>
             {completedCount === 0 && (
               <Button className="w-full" asChild>
-                <Link href={`/dashboard/modules/${module.id}/lesson/1`}>
+                <Link href={`/dashboard/modules/${moduleData.id}/lesson/1`}>
                   Start Learning
                 </Link>
               </Button>
             )}
             {completedCount > 0 && completedCount < totalLessons && (
               <Button className="w-full" asChild>
-                <Link href={`/dashboard/modules/${module.id}/lesson/${nextLessonId}`}>
+                <Link href={`/dashboard/modules/${moduleData.id}/lesson/${nextLessonId}`}>
                   Continue Learning
                 </Link>
               </Button>
@@ -198,7 +198,7 @@ export default function ModuleDetailPage() {
         </div>
         <p className="text-muted-foreground mb-4">By the end of this module, you will be able to:</p>
         <ul className="space-y-2">
-          {module.objectives.map((objective, index) => (
+          {moduleData.objectives.map((objective, index) => (
             <li key={index} className="flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
               <span>{objective}</span>
@@ -208,14 +208,14 @@ export default function ModuleDetailPage() {
       </Card>
 
       {/* Prerequisites */}
-      {module.prerequisites.length > 0 && (
+      {moduleData.prerequisites.length > 0 && (
         <Card className="p-6 border-orange-200 dark:border-orange-800/50 bg-orange-50/50 dark:bg-orange-950/20">
           <div className="flex items-center gap-2 mb-3">
             <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             <h2 className="font-semibold text-orange-900 dark:text-orange-100">Prerequisites</h2>
           </div>
           <p className="text-sm text-orange-700 dark:text-orange-300">
-            Complete these modules first: {module.prerequisites.join(', ')}
+            Complete these modules first: {moduleData.prerequisites.join(', ')}
           </p>
         </Card>
       )}
@@ -224,7 +224,7 @@ export default function ModuleDetailPage() {
       <div>
         <h2 className="text-xl font-semibold mb-4">Lessons</h2>
         <div className="space-y-3">
-          {module.lessons.map((lesson, index) => {
+          {moduleData.lessons.map((lesson, index) => {
             const Icon = lessonTypeIcons[lesson.type]
             const isCompleted = completedLessons.includes(lesson.id)
             
@@ -272,7 +272,7 @@ export default function ModuleDetailPage() {
 
                   {/* Action */}
                   <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/dashboard/modules/${module.id}/lesson/${lesson.id}`}>
+                    <Link href={`/dashboard/modules/${moduleData.id}/lesson/${lesson.id}`}>
                       <span className="sr-only">Go to lesson</span>
                       <ChevronRight className="w-5 h-5" />
                     </Link>

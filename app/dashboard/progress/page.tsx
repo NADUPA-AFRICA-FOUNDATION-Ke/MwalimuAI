@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress'
 import { BackButton } from '@/components/back-button'
 import { useProfile } from '@/context/profile-context'
-import { createClient } from '@/lib/supabase/client'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import type { Id } from '@/convex/_generated/dataModel'
 import { getT, getCategories } from '@/lib/i18n'
 import {
   TrendingUp, Plus, Trash2, CheckCircle2, Circle,
@@ -37,16 +39,13 @@ const CATEGORY_COLORS: Record<Category, string> = {
 
 function uid() { return Math.random().toString(36).slice(2, 9) }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function dbToGoal(row: any): Goal {
   return {
-    id:         row.id,
+    id:         row._id,
     title:      row.title    ?? '',
     category:   row.category ?? 'other',
     milestones: row.milestones ?? [],
-    createdAt:  row.created_at
-      ? new Date(row.created_at).toLocaleDateString()
-      : new Date().toLocaleDateString(),
+    createdAt: new Date(row.createdAt ?? row._creationTime).toLocaleDateString(),
   }
 }
 
@@ -54,7 +53,10 @@ export default function ProgressPage() {
   const { lang, user } = useProfile()
   const t    = getT(lang)
   const cats = getCategories(lang)
-  const supabase = createClient()
+  const remoteGoals = useQuery(api.goals.listMine, user ? {} : 'skip')
+  const createGoal = useMutation(api.goals.create)
+  const updateGoal = useMutation(api.goals.update)
+  const removeGoal = useMutation(api.goals.remove)
 
   const [goals, setGoals]       = useState<Goal[]>([])
   const [loading, setLoading]   = useState(true)
@@ -64,24 +66,13 @@ export default function ProgressPage() {
   const [newCategory, setNewCategory]   = useState<Category>('assessment')
   const [newMilestones, setNewMilestones] = useState([''])
 
-  const loadGoals = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
-    const { data } = await supabase
-      .from('goals')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-    setGoals((data ?? []).map(dbToGoal))
-    setLoading(false)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
-
-  useEffect(() => { loadGoals() }, [loadGoals])
+  useEffect(() => {
+    if (remoteGoals !== undefined) { setGoals(remoteGoals.map(dbToGoal)); setLoading(false) }
+  }, [remoteGoals])
 
   const persistMilestones = async (goalId: string, milestones: Milestone[]) => {
     setGoals(prev => prev.map(g => g.id === goalId ? { ...g, milestones } : g))
-    await supabase.from('goals').update({ milestones }).eq('id', goalId)
+    await updateGoal({ goalId: goalId as Id<'goals'>, milestones })
   }
 
   const toggleMilestone = (goalId: string, msId: string) => {
@@ -96,7 +87,7 @@ export default function ProgressPage() {
 
   const deleteGoal = async (id: string) => {
     setGoals(prev => prev.filter(g => g.id !== id))
-    await supabase.from('goals').delete().eq('id', id)
+    await removeGoal({ goalId: id as Id<'goals'> })
   }
 
   const toggleExpand = (id: string) => {
@@ -111,22 +102,9 @@ export default function ProgressPage() {
       .map(s => s.trim()).filter(Boolean)
       .map(text => ({ id: uid(), text, completed: false }))
 
-    const { data: inserted } = await supabase
-      .from('goals')
-      .insert({
-        user_id:    user.id,
-        title:      newTitle.trim(),
-        category:   newCategory,
-        milestones,
-      })
-      .select()
-      .single()
-
-    if (inserted) {
-      const goal = dbToGoal(inserted)
-      setGoals(prev => [...prev, goal])
-      setExpanded(prev => new Set([...prev, goal.id]))
-    }
+    const inserted = await createGoal({ title: newTitle.trim(), category: newCategory, milestones, clientId: `goal-${Date.now()}` })
+    const goal = dbToGoal({ _id: inserted, title: newTitle.trim(), category: newCategory, milestones, createdAt: Date.now() })
+    setGoals(prev => [...prev, goal]); setExpanded(prev => new Set([...prev, goal.id]))
 
     setShowForm(false)
     setNewTitle('')

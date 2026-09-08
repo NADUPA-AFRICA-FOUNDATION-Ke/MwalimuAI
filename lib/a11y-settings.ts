@@ -1,12 +1,22 @@
-import { createClient } from '@/lib/supabase/client'
-import { trackWrite } from '@/lib/write-queue'
+import { makeFunctionReference } from 'convex/server'
+import { api } from '@/convex/_generated/api'
+import { getConvexClient } from '@/lib/convex/client'
 
 const KEY = 'mwalimu_a11y'
 
 let _userId: string | null = null
+const updatePreferences = makeFunctionReference<'mutation', { a11ySettings: A11ySettings }, unknown>('profiles:updatePreferences')
 
 export function setA11yUser(userId: string | null) {
   _userId = userId
+  if (!userId) return
+  const client = getConvexClient()
+  void client?.query(api.profiles.me, {}).then(profile => {
+    if (_userId !== userId || !profile?.a11ySettings) return
+    const settings = { ...DEFAULT_A11Y, ...profile.a11ySettings }
+    try { localStorage.setItem(KEY, JSON.stringify(settings)) } catch {}
+    applyA11y(settings)
+  }).catch(() => {})
 }
 
 export interface A11ySettings {
@@ -39,10 +49,9 @@ export function saveA11y(settings: A11ySettings): void {
   localStorage.setItem(KEY, JSON.stringify(settings))
   applyA11y(settings)
   if (_userId) {
-    const supabase = createClient()
-    trackWrite(supabase
-      .from('profiles')
-      .upsert({ id: _userId, a11y_settings: settings, updated_at: new Date().toISOString() }))
+    const client = getConvexClient()
+    void client?.mutation(updatePreferences, { a11ySettings: settings })
+      .catch(err => console.error('[mwalimu] accessibility settings sync failed:', err))
   }
 }
 

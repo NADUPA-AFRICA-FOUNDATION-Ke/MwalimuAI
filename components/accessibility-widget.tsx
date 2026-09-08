@@ -203,6 +203,7 @@ export function AccessibilityWidget() {
           bottom-20 on mobile to clear the 64px MobileBottomNav;
           bottom-6 on md+ where the bottom nav is hidden */}
       <button
+        type="button"
         ref={btnRef}
         onClick={() => setOpen(o => !o)}
         aria-label={
@@ -256,9 +257,10 @@ export function AccessibilityWidget() {
               </span>
             </div>
             <button
+              type="button"
               ref={closeBtnRef}
               onClick={() => setOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               aria-label="Close accessibility panel"
             >
               <X className="w-3.5 h-3.5" aria-hidden="true" />
@@ -276,11 +278,12 @@ export function AccessibilityWidget() {
               <div className="grid grid-cols-4 gap-1.5" role="group" aria-labelledby="a11y-text-label">
                 {TEXT_SIZES.map(({ key, px, label }) => (
                   <button
+                    type="button"
                     key={key}
                     onClick={() => update({ textSize: key }, `Text size set to ${label}`)}
                     aria-pressed={settings.textSize === key}
                     aria-label={`Text size: ${label}${settings.textSize === key ? ' (current)' : ''}`}
-                    className={`py-3 rounded-xl font-bold transition-all duration-150 flex items-center justify-center border ${
+                    className={`min-h-11 py-3 rounded-xl font-bold transition-all duration-150 flex items-center justify-center border ${
                       settings.textSize === key
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/30'
                         : 'bg-muted text-muted-foreground border-transparent hover:bg-muted/60 hover:text-foreground'
@@ -306,6 +309,7 @@ export function AccessibilityWidget() {
                   const descId = `${uid}-desc-${key}`
                   return (
                     <button
+                      type="button"
                       key={key}
                       onClick={() => update(
                         { [key]: !settings[key] },
@@ -313,7 +317,7 @@ export function AccessibilityWidget() {
                       )}
                       aria-pressed={settings[key]}
                       aria-describedby={descId}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left border ${
+                      className={`w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left border ${
                         settings[key]
                           ? 'bg-primary/8 border-primary/30 text-primary'
                           : 'border-transparent bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/70'
@@ -334,6 +338,7 @@ export function AccessibilityWidget() {
                   const descId = `${uid}-desc-darkmode`
                   return (
                     <button
+                      type="button"
                       onClick={() => {
                         const next = theme === 'dark' ? 'light' : 'dark'
                         setTheme(next)
@@ -341,7 +346,7 @@ export function AccessibilityWidget() {
                       }}
                       aria-pressed={theme === 'dark'}
                       aria-describedby={descId}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left border ${
+                      className={`w-full min-h-11 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-left border ${
                         theme === 'dark'
                           ? 'bg-primary/8 border-primary/30 text-primary'
                           : 'border-transparent bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/70'
@@ -364,8 +369,9 @@ export function AccessibilityWidget() {
 
             {/* ── Reset ── */}
             <button
+              type="button"
               onClick={reset}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full min-h-11 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
               Reset All to Default

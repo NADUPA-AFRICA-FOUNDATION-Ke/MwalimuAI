@@ -1,9 +1,9 @@
 // Streak tracking and badge computation
 // Primary: localStorage for instant reads.
-// Cloud: Supabase activity_log table — synced on login and on each new activity.
+// Cloud: Convex activity functions — synced on login and on each new activity.
 
-import { createClient } from '@/lib/supabase/client'
-import { trackWrite } from '@/lib/write-queue'
+import { makeFunctionReference } from 'convex/server'
+import { getConvexClient } from '@/lib/convex/client'
 
 const ACTIVITY_KEY        = 'mwalimu_activity'
 const TOOLS_KEY           = 'mwalimu_tools_used'
@@ -15,6 +15,12 @@ interface ActivityEntry {
   date: string   // YYYY-MM-DD
   type: ActivityType
 }
+
+const recordCloudActivity = makeFunctionReference<'mutation', { date: string; type: ActivityType }, unknown>('activity:record')
+const listCloudActivity = makeFunctionReference<'query', Record<string, never>, ActivityEntry[]>('activity:mine')
+const recordCloudTool = makeFunctionReference<'mutation', { toolId: string }, unknown>('activity:recordToolUsed')
+const listCloudTools = makeFunctionReference<'query', Record<string, never>, string[]>('activity:toolsUsed')
+const countCloudCommunityPosts = makeFunctionReference<'query', Record<string, never>, number>('activity:communityPostCount')
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
@@ -41,29 +47,25 @@ export function recordActivity(type: ActivityType, userId?: string) {
     entries.push({ date: d, type })
     saveActivity(entries)
   }
-  // Sync to Supabase fire-and-forget
+  // Convex derives the owner from auth; userId remains for call-site compatibility.
   if (userId) {
-    const supabase = createClient()
-    trackWrite(supabase
-      .from('activity_log')
-      .upsert({ user_id: userId, date: d, type }, { onConflict: 'user_id,date,type' }))
+    const client = getConvexClient()
+    void client?.mutation(recordCloudActivity, { date: d, type })
+      .catch(err => console.error('[mwalimu] activity sync failed:', err))
   }
 }
 
 /**
- * Pull activity from Supabase into localStorage so streak is accurate on new devices.
+ * Pull activity from Convex into localStorage so streak is accurate on new devices.
  * Called once after sign-in.
  */
-export async function syncActivityFromSupabase(userId: string): Promise<void> {
+export async function syncActivityFromConvex(userId: string): Promise<void> {
   if (typeof window === 'undefined') return
+  void userId
   try {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('activity_log')
-      .select('date, type')
-      .eq('user_id', userId)
-
-    if (!data) return
+    const client = getConvexClient()
+    if (!client) return
+    const data = await client.query(listCloudActivity, {})
     const local = loadActivity()
     const merged = [...local]
     for (const row of data) {
@@ -76,18 +78,16 @@ export async function syncActivityFromSupabase(userId: string): Promise<void> {
 }
 
 /**
- * Pull tools_used from Supabase into localStorage so badge counts are accurate on new devices.
+ * Pull the user's community post count from Convex for badge calculations.
  * Called once after sign-in.
  */
-export async function syncCommunityPostsFromSupabase(userId: string): Promise<void> {
+export async function syncCommunityPostsFromConvex(userId: string): Promise<void> {
   if (typeof window === 'undefined') return
+  void userId
   try {
-    const supabase = createClient()
-    const { count } = await supabase
-      .from('community_posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-    if (typeof count === 'number') {
+    const client = getConvexClient()
+    if (client) {
+      const count = await client.query(countCloudCommunityPosts, {})
       localStorage.setItem(COMMUNITY_COUNT_KEY, String(count))
     }
   } catch {}
@@ -101,19 +101,17 @@ export function recordCommunityPost() {
   } catch {}
 }
 
-export async function syncToolsUsedFromSupabase(userId: string): Promise<void> {
+export async function syncToolsUsedFromConvex(userId: string): Promise<void> {
   if (typeof window === 'undefined') return
+  void userId
   try {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('tools_used')
-      .select('tool_id')
-      .eq('user_id', userId)
-
-    if (!data || data.length === 0) return
+    const client = getConvexClient()
+    if (!client) return
+    const data = await client.query(listCloudTools, {})
+    if (data.length === 0) return
     const raw = localStorage.getItem(TOOLS_KEY)
     const local: string[] = raw ? JSON.parse(raw) : []
-    const merged = [...new Set([...local, ...data.map(r => r.tool_id as string)])]
+    const merged = [...new Set([...local, ...data])]
     localStorage.setItem(TOOLS_KEY, JSON.stringify(merged))
   } catch {}
 }
@@ -129,12 +127,16 @@ export function recordToolUsed(toolId: string, userId?: string) {
     }
   } catch {}
   if (userId) {
-    const supabase = createClient()
-    trackWrite(supabase
-      .from('tools_used')
-      .upsert({ user_id: userId, tool_id: toolId }, { onConflict: 'user_id,tool_id' }))
+    const client = getConvexClient()
+    void client?.mutation(recordCloudTool, { toolId })
+      .catch(err => console.error('[mwalimu] tool usage sync failed:', err))
   }
 }
+
+// Compatibility aliases while profile-context remains outside this task's scope.
+export const syncActivity = syncActivityFromConvex
+export const syncCommunityPosts = syncCommunityPostsFromConvex
+export const syncToolsUsed = syncToolsUsedFromConvex
 
 export function getToolsUsedCount(): number {
   if (typeof window === 'undefined') return 0

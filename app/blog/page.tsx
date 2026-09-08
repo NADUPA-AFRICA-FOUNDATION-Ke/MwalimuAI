@@ -7,6 +7,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, Clock, User, ArrowRight } from 'lucide-react'
 import { getAllBlogPosts } from '@/lib/blog-data'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'CBC Teaching Resources & Insights',
+  description: 'Practical insights, tips, and resources for Kenyan teachers implementing the Competency-Based Curriculum.',
+}
 
 export default function BlogPage() {
   const blogPosts = getAllBlogPosts()
@@ -16,6 +22,8 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen">
       <MarketingHeader activePath="/blog" />
+
+      <main>
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 text-center">
@@ -117,23 +125,18 @@ export default function BlogPage() {
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* Continue learning */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 pb-20">
         <Card className="p-8 md:p-12 text-center bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/20">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Subscribe to Our Newsletter</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Continue learning with Mwalimu AI</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Get the latest CBC teaching tips, resources, and updates delivered to your inbox weekly.
+            Create an account to save your progress and use the platform&apos;s learning and planning tools.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 min-w-[200px] px-4 py-3 rounded-full border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-            <Button className="rounded-xl px-6 shadow-md shadow-primary/25">Subscribe</Button>
-          </div>
+          <Button asChild className="rounded-xl px-6 shadow-md shadow-primary/25"><Link href="/auth/sign-up">Create an account</Link></Button>
         </Card>
       </section>
+
+      </main>
 
       <MarketingFooter />
     </div>

@@ -12,7 +12,8 @@ import { toast } from 'sonner'
 import { CheckCircle, ArrowRight, AlertCircle, ChevronRight, BookOpen, Award, Brain, Target } from 'lucide-react'
 import Link from 'next/link'
 import { useProfile } from '@/context/profile-context'
-import { createClient } from '@/lib/supabase/client'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -357,6 +358,8 @@ function restoreFromResponses(
 
 export default function AssessmentPage() {
   const { user } = useProfile()
+  const cloudAssessment = useQuery(api.assessments.mine, user ? {} : 'skip')
+  const saveCloudAssessment = useMutation(api.assessments.save)
   const [currentStep, setCurrentStep] = useState(0)
   const [responses, setResponses] = useState<Record<string, unknown>>({})
   // For knowledge questions: track which have been answered and whether correct
@@ -382,20 +385,15 @@ export default function AssessmentPage() {
       }
     } catch {}
 
-    // 2. Fallback: pull from Supabase for cross-device restoration
-    if (!user) return
-    const supabase = createClient()
-    supabase.from('assessment_results')
-      .select('responses, completed_at')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data?.responses) return
+    // 2. Pull from Convex for cross-device restoration.
+    if (!user || !cloudAssessment?.responses) return
+    {
+        const data = cloudAssessment
         const savedResponses = data.responses as Record<string, unknown>
         // Seed localStorage so next visit is instant
         try {
           localStorage.setItem('mwalimu_assessment', JSON.stringify({
-            completedAt: data.completed_at,
+            completedAt: new Date(data.completedAt).toISOString(),
             responses:   savedResponses,
           }))
         } catch {}
@@ -404,9 +402,8 @@ export default function AssessmentPage() {
         setKnowledgeCorrect(correct)
         setKnowledgeRevealed(revealed)
         setCompleted(true)
-      })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+      }
+  }, [user, cloudAssessment])
 
   const totalQuestions = questions.length
   const currentQuestion = questions[currentStep]
@@ -469,13 +466,7 @@ export default function AssessmentPage() {
       localStorage.setItem('mwalimu_assessment', JSON.stringify({ completedAt, responses }))
     } catch {}
 
-    // Sync to Supabase fire-and-forget
-    if (user) {
-      const supabase = createClient()
-      supabase.from('assessment_results')
-        .upsert({ user_id: user.id, responses, completed_at: completedAt }, { onConflict: 'user_id' })
-        .then(() => {}, () => {})
-    }
+    if (user) void saveCloudAssessment({ responses, completedAt: Date.parse(completedAt) })
 
     setCompleted(true)
     toast.success('Assessment complete! Your learning journey is now personalised.')

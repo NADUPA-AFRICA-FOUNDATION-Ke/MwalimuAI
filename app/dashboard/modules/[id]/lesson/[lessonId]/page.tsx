@@ -45,7 +45,7 @@ export default function LessonPage() {
   const lessonId = Number(params.lessonId)
   const { user, syncReady } = useProfile()
 
-  const module = getModuleById(moduleId)
+  const lessonModule = getModuleById(moduleId)
   const programId = `module-${moduleId}`
   const [isCompleted, setIsCompleted] = useState(false)
 
@@ -66,7 +66,7 @@ export default function LessonPage() {
     }
   }
 
-  if (!module) {
+  if (!lessonModule) {
     return (
       <div className="space-y-8">
         <BackButton fallbackHref="/dashboard/modules" label="Back to Modules" />
@@ -84,8 +84,8 @@ export default function LessonPage() {
     )
   }
 
-  const lesson = module.lessons.find(l => l.id === lessonId)
-  const lessonIndex = module.lessons.findIndex(l => l.id === lessonId)
+  const lesson = lessonModule.lessons.find(l => l.id === lessonId)
+  const lessonIndex = lessonModule.lessons.findIndex(l => l.id === lessonId)
   
   if (!lesson) {
     return (
@@ -105,9 +105,9 @@ export default function LessonPage() {
     )
   }
 
-  const prevLesson = lessonIndex > 0 ? module.lessons[lessonIndex - 1] : null
-  const nextLesson = lessonIndex < module.lessons.length - 1 ? module.lessons[lessonIndex + 1] : null
-  const progressPercent = Math.round(((lessonIndex + 1) / module.lessons.length) * 100)
+  const prevLesson = lessonIndex > 0 ? lessonModule.lessons[lessonIndex - 1] : null
+  const nextLesson = lessonIndex < lessonModule.lessons.length - 1 ? lessonModule.lessons[lessonIndex + 1] : null
+  const progressPercent = Math.round(((lessonIndex + 1) / lessonModule.lessons.length) * 100)
 
   const Icon = lessonTypeIcons[lesson.type]
 
@@ -257,12 +257,12 @@ export default function LessonPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <BackButton fallbackHref={`/dashboard/modules/${moduleId}`} label={`Back to ${module.title}`} />
+      <BackButton fallbackHref={`/dashboard/modules/${moduleId}`} label={`Back to ${lessonModule.title}`} />
       
       {/* Progress Bar */}
       <div className="flex items-center gap-4">
         <span className="text-sm text-muted-foreground">
-          Lesson {lessonIndex + 1} of {module.lessons.length}
+          Lesson {lessonIndex + 1} of {lessonModule.lessons.length}
         </span>
         <Progress value={progressPercent} className="flex-1 h-2" />
         <span className="text-sm font-medium">{progressPercent}%</span>

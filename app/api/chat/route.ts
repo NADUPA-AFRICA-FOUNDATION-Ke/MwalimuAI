@@ -14,14 +14,14 @@ const ollama = createOpenAI({
   apiKey: 'ollama',
 })
 
-const GROQ_MODEL = process.env.GROQ_MODEL ?? 'llama-3.1-8b-instant'
+const GROQ_MODEL = process.env.GROQ_MODEL ?? 'openai/gpt-oss-20b'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma2:2b'
 
 function buildSystemPrompt(lang?: string, profile?: {
   name?: string; subjects?: string[]; grades?: string[]; cbcLevel?: string
 } | null, currentLesson?: {
   programTitle?: string; moduleTitle?: string; lessonTitle?: string
-} | null): string {
+} | null, timeZone?: unknown): string {
   const langInstruction = lang === 'sw'
     ? `LUGHA YA JIBU: Lazima ujibu KWA KISWAHILI SANIFU pekee — hii ni amri ya lazima, isibadilishwe.
 Kanuni za lugha:
@@ -46,8 +46,34 @@ The teacher is currently studying: "${currentLesson.lessonTitle}" (${currentLess
 If their question is related to this topic, connect your answer to this lesson content. You may proactively offer to explain key concepts from this lesson if helpful.
 ` : ''
 
+  let zone = 'UTC'
+  if (typeof timeZone === 'string' && timeZone.trim()) {
+    try {
+      // Formatting validates that the browser supplied a real IANA timezone.
+      new Intl.DateTimeFormat('en-US', { timeZone }).format()
+      zone = timeZone
+    } catch {
+      // Keep the safe UTC fallback for invalid or outdated browser timezone data.
+    }
+  }
+  const localDateTime = new Intl.DateTimeFormat('en-US', {
+    timeZone: zone,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'long',
+  }).format(new Date())
+  const timeContext = `
+USER LOCAL TIME: It is currently ${localDateTime} (${zone}) for the user.
+Use this local time for greetings and time-sensitive phrasing; never use the server's timezone.
+Do not say “good morning” unless the user's local time is morning. If the local time is evening or night, use an appropriate greeting or skip the greeting.
+`
+
   return `${langInstruction}You are Mwalimu AI, an expert professional development coach for Kenyan teachers implementing Competency-Based Curriculum (CBC).
-${profileContext}${lessonContext}
+${timeContext}${profileContext}${lessonContext}
 You are knowledgeable about:
 - CBC fundamentals and implementation strategies
 - Competency-based assessment techniques
@@ -105,18 +131,18 @@ export async function POST(req: Request) {
   const limit = rateLimit(`chat:${userId}`, 60, 60 * 60 * 1000)
   if (!limit.ok) return rateLimitResponse(limit)
 
-  let parsed: { messages?: unknown; lang?: string; profile?: never; currentLesson?: never }
+  let parsed: { messages?: unknown; lang?: string; profile?: never; currentLesson?: never; timeZone?: unknown }
   try { parsed = await req.json() } catch {
     return Response.json({ error: 'Invalid request body.' }, { status: 400 })
   }
-  const { messages, lang, profile, currentLesson } = parsed
+  const { messages, lang, profile, currentLesson, timeZone } = parsed
   if (!Array.isArray(messages) || messages.length === 0) {
     return Response.json({ error: 'Messages are required.' }, { status: 400 })
   }
   // Cap history to last 12 messages to prevent unbounded token growth in long sessions
   const recentMessages = messages.slice(-12)
   const converted = await convertToModelMessages(recentMessages)
-  const system = buildSystemPrompt(lang, profile, currentLesson)
+  const system = buildSystemPrompt(lang, profile, currentLesson, timeZone)
 
   const canUseGroq = process.env.GROQ_API_KEY && !groqOnCooldown()
 

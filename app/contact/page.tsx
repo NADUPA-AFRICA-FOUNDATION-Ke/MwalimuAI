@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { MarketingHeader } from '@/components/marketing-header'
 import { MarketingFooter } from '@/components/marketing-footer'
-import Link from 'next/link'
-import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react'
+import { Mail, Send, CheckCircle } from 'lucide-react'
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [startedAt] = useState(() => Date.now())
+  const [website, setWebsite] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,21 +23,37 @@ export default function ContactPage() {
     message: '',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In a real app, this would send to an API
-    setSubmitted(true)
+    setFormError(null)
+    setIsSending(true)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, website, startedAt }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error ?? 'Message could not be sent.')
+      setSubmitted(true)
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Message could not be sent. Please try again.')
+    } finally {
+      setIsSending(false)
+    }
   }
 
   return (
     <div className="min-h-screen">
       <MarketingHeader />
 
+      <main>
+
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">Contact Us</h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Have questions or feedback? We&apos;d love to hear from you. Our team is here to help.
+          Send a message about the platform, your account, or a classroom use case.
         </p>
       </section>
 
@@ -48,7 +67,7 @@ export default function ContactPage() {
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h3 className="text-2xl font-semibold mb-2">Message Sent!</h3>
                 <p className="text-muted-foreground mb-6">
-                  Thank you for reaching out. We&apos;ll get back to you within 24-48 hours.
+                  Your message was sent. We&apos;ll follow up using the email address you provided.
                 </p>
                 <Button onClick={() => setSubmitted(false)} variant="outline">
                   Send Another Message
@@ -56,6 +75,10 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
+                  <label htmlFor="website">Leave this field empty</label>
+                  <Input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                </div>
                 <div>
                   <Label htmlFor="name">Your Name</Label>
                   <Input
@@ -63,6 +86,8 @@ export default function ContactPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    minLength={2}
+                    maxLength={100}
                     className="mt-2"
                     placeholder="John Kamau"
                   />
@@ -75,6 +100,7 @@ export default function ContactPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
+                    maxLength={160}
                     className="mt-2"
                     placeholder="john@school.ac.ke"
                   />
@@ -86,6 +112,8 @@ export default function ContactPage() {
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     required
+                    minLength={3}
+                    maxLength={160}
                     className="mt-2"
                     placeholder="How can we help?"
                   />
@@ -97,13 +125,16 @@ export default function ContactPage() {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     required
+                    minLength={10}
+                    maxLength={5000}
                     className="mt-2 min-h-[150px]"
                     placeholder="Tell us more about your inquiry..."
                   />
                 </div>
-                <Button type="submit" className="w-full gap-2">
+                {formError && <p role="alert" aria-live="assertive" className="text-sm text-red-700">{formError}</p>}
+                <Button type="submit" disabled={isSending} className="w-full gap-2">
                   <Send className="w-4 h-4" />
-                  Send Message
+                  {isSending ? 'Sending…' : 'Send Message'}
                 </Button>
               </form>
             )}
@@ -114,8 +145,7 @@ export default function ContactPage() {
             <div>
               <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
               <p className="text-muted-foreground mb-8">
-                Whether you have questions about our platform, need technical support, or want to explore
-                partnership opportunities, we&apos;re here to help.
+                Use the form to send a question, report an issue, or share feedback about Mwalimu AI.
               </p>
             </div>
 
@@ -127,46 +157,22 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-semibold mb-1">Email</h3>
                   <p className="text-muted-foreground">support@mwalimu.ai</p>
-                  <p className="text-muted-foreground">partnerships@mwalimu.ai</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-                  <Phone className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Phone</h3>
-                  <p className="text-muted-foreground">+254 700 123 456</p>
-                  <p className="text-sm text-muted-foreground">Mon-Fri, 8am-6pm EAT</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-                  <MapPin className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Office</h3>
-                  <p className="text-muted-foreground">Westlands Business Park</p>
-                  <p className="text-muted-foreground">Nairobi, Kenya</p>
                 </div>
               </div>
             </div>
 
             <Card className="p-6 bg-muted/50">
-              <h3 className="font-semibold mb-2">School Partnerships</h3>
+              <h3 className="font-semibold mb-2">School and team questions</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Interested in bringing Mwalimu AI to your entire school or county? Contact us for
-                special institutional pricing and custom training programs.
+                Include your team size and what you want to use the platform for in the message form.
               </p>
-              <Button variant="outline" size="sm">
-                Learn About Partnerships
-              </Button>
+              <p className="text-sm text-muted-foreground">A support reply will use the email address you provide.</p>
             </Card>
           </div>
         </div>
       </section>
+
+      </main>
 
       <MarketingFooter />
     </div>

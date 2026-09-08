@@ -1,48 +1,25 @@
-import { createClient } from '@/lib/supabase/server'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '@/convex/_generated/api'
 
-/**
- * Verifies the Supabase session from cookies (or a Bearer token if provided).
- * Returns null on success, or a 401 Response on failure.
- */
-export async function requireAuth(req: Request): Promise<Response | null> {
-  const supabase = await createClient()
-  const token = req.headers.get('Authorization')?.split('Bearer ')[1]
-
-  const { data: { user } } = token
-    ? await supabase.auth.getUser(token)
-    : await supabase.auth.getUser()
-
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-  return null
+function unauthorized() {
+  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
 }
 
-/**
- * Like requireAuth, but also returns the caller's user id so routes can
- * key per-user rate limits and ownership records.
- */
-export async function requireAuthUser(
-  req: Request,
-): Promise<{ userId: string; error: null } | { userId: null; error: Response }> {
-  const supabase = await createClient()
-  const token = req.headers.get('Authorization')?.split('Bearer ')[1]
+export async function requireAuth(req: Request): Promise<Response | null> {
+  const result = await requireAuthUser(req)
+  return result.error
+}
 
-  const { data: { user } } = token
-    ? await supabase.auth.getUser(token)
-    : await supabase.auth.getUser()
-
-  if (!user) {
-    return {
-      userId: null,
-      error: new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    }
+export async function requireAuthUser(req: Request): Promise<{ userId: string | null; error: Response | null }> {
+  const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  const url = process.env.CONVEX_URL ?? process.env.NEXT_PUBLIC_CONVEX_URL
+  if (!token || !url) return { userId: null, error: unauthorized() }
+  try {
+    const client = new ConvexHttpClient(url)
+    client.setAuth(token)
+    const profile = await client.query(api.profiles.me, {})
+    return profile ? { userId: profile.legacySupabaseUserId ?? profile._id, error: null } : { userId: null, error: unauthorized() }
+  } catch {
+    return { userId: null, error: unauthorized() }
   }
-  return { userId: user.id, error: null }
 }

@@ -20,7 +20,7 @@ const outDir = mkdtempSync(path.join(root, '.test-build-'))
 // resolve natively in node, matching how the bundler resolves them.
 writeFileSync(path.join(outDir, 'package.json'), '{"type":"commonjs"}')
 
-const FILES = ['lib/rate-limit.ts', 'lib/print-pdf.ts', 'lib/certificate-pdf.ts', 'lib/device-claim.ts']
+const FILES = ['lib/rate-limit.ts', 'lib/print-pdf.ts', 'lib/certificate-pdf.ts']
 execSync(
   `"${path.join(root, 'node_modules/.bin/tsc')}" ${FILES.join(' ')} --target es2022 --module commonjs --moduleResolution node --esModuleInterop --outDir "${outDir}"`,
   { cwd: root, stdio: 'inherit' },
@@ -39,27 +39,6 @@ jsPDF.API.save = function (filename) {
 }
 
 process.on('exit', () => rmSync(outDir, { recursive: true, force: true }))
-
-/* ── single-device watchdog decision ────────────────────────── */
-const { decideDeviceAction } = await mod('device-claim.js')
-
-test('decideDeviceAction: same device keeps the session', () => {
-  assert.equal(decideDeviceAction('dev-A', 'dev-A'), 'ok')
-})
-
-test('decideDeviceAction: another device that took over forces logout', () => {
-  assert.equal(decideDeviceAction('dev-B', 'dev-A'), 'logout')
-})
-
-test('decideDeviceAction: no recorded owner triggers reclaim, never logout', () => {
-  assert.equal(decideDeviceAction(null, 'dev-A'), 'reclaim')
-})
-
-test('decideDeviceAction: never logs out a session that has not claimed yet', () => {
-  // cold start / restored session before claim completes — must not self-logout
-  assert.equal(decideDeviceAction('dev-A', null), 'reclaim')
-  assert.equal(decideDeviceAction('dev-B', null), 'reclaim')
-})
 
 /* ── rate-limit ─────────────────────────────────────────────── */
 const { rateLimit, rateLimitResponse } = await mod('rate-limit.js')

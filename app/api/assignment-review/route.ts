@@ -5,7 +5,7 @@ import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 const groq = createOpenAI({ baseURL: 'https://api.groq.com/openai/v1', apiKey: process.env.GROQ_API_KEY })
 const ollama = createOpenAI({ baseURL: 'http://localhost:11434/v1', apiKey: 'ollama' })
-const GROQ_MODEL = process.env.GROQ_MODEL ?? 'llama-3.1-8b-instant'
+const GROQ_MODEL = process.env.GROQ_MODEL ?? 'openai/gpt-oss-20b'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma2:2b'
 
 let groqFailedAt = 0

@@ -70,9 +70,10 @@ export default function ModulesPage() {
       <div className="flex gap-2 overflow-x-auto pb-2">
         {categories.map((category) => (
           <button
+            type="button"
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={`px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-colors ${
+            className={`min-h-11 px-4 py-2 rounded-full font-medium text-sm whitespace-nowrap transition-colors ${
               selectedCategory === category.id
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:text-foreground'

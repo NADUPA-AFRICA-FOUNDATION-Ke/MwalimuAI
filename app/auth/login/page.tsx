@@ -9,22 +9,32 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ArrowLeft, MonitorSmartphone } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
-import { createClient } from '@/lib/supabase/client'
-import { FORCED_LOGOUT_FLAG } from '@/context/profile-context'
+import { OAuthButtons } from '@/components/oauth-buttons'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { useConvexAuth } from 'convex/react'
+import { ConvexNativeAuthBoundary, FORCED_LOGOUT_FLAG } from '@/context/profile-context'
 
 const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
-  if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials'))
+  if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials') || msg.includes('Invalid credentials'))
     return 'Incorrect email or password.'
   if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed'))
     return 'Please verify your email before signing in.'
   if (msg.includes('too many requests') || msg.includes('rate limit'))
     return 'Too many attempts. Please wait a moment and try again.'
+  if (msg.includes('already exists') || msg.includes('already registered'))
+    return 'This account has already moved to Convex. Use your Convex password or reset it.'
+  if (msg.includes('Invalid password'))
+    return 'For security, migrated accounts need a password of at least 8 characters. Please reset your password.'
   return 'Sign-in failed. Please try again.'
 }
 
 export default function LoginPage() {
+  return <ConvexNativeAuthBoundary><LoginContent /></ConvexNativeAuthBoundary>
+}
+
+function LoginContent() {
   const [email,        setEmail]        = useState('')
   const [password,     setPassword]     = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -32,6 +42,12 @@ export default function LoginPage() {
   const [error,        setError]        = useState<string | null>(null)
   const [deviceNotice, setDeviceNotice] = useState(false)
   const router = useRouter()
+  const { signIn } = useAuthActions()
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth()
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) router.replace('/dashboard')
+  }, [authLoading, isAuthenticated, router])
 
   // Shown when this device was signed out because the account was used
   // to sign in somewhere else (single-device policy).
@@ -49,16 +65,12 @@ export default function LoginPage() {
     setError(null)
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      })
-      if (authError) { setError(mapError(authError.message)); return }
-      if (!data.user?.email_confirmed_at) { router.push('/auth/sign-up-success'); return }
+      const normalizedEmail = email.trim().toLowerCase()
+      const result = await signIn('password', { flow: 'signIn', email: normalizedEmail, password })
+      if (!result.signingIn) throw new Error('Invalid credentials')
       router.push('/dashboard')
-    } catch {
-      setError('Sign-in failed. Please try again.')
+    } catch (authError) {
+      setError(mapError(authError instanceof Error ? authError.message : ''))
     } finally {
       setIsLoading(false)
     }
@@ -85,32 +97,20 @@ export default function LoginPage() {
 
         {/* Centre copy */}
         <div className="relative z-10">
-          <p className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
+          <p className="text-[11px] font-bold text-white/75 uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
-            Every lesson<br />counts.<br />
-            <span style={{ color: 'var(--accent)' }}>Make it great.</span>
+            Professional learning<br />for Kenyan CBC<br />
+            <span style={{ color: 'var(--accent)' }}>teachers.</span>
           </h2>
-          <p className="text-white/50 text-[15px] leading-relaxed max-w-xs">
-            Your AI coach, KICD-aligned modules, and a community of educators are waiting for you.
+          <p className="text-white/80 text-[15px] leading-relaxed max-w-xs">
+            Access learning modules, an AI Coach, teacher tools, community discussions, and progress tracking.
           </p>
         </div>
 
-        {/* Testimonial */}
+        {/* Product summary */}
         <div className="relative z-10 rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <p className="text-white/70 text-sm leading-relaxed mb-4">
-            &ldquo;In 8 weeks I went from CBC confusion to writing confident assessment rubrics for all my subjects.&rdquo;
-          </p>
-          <div className="flex items-center gap-3">
-            <img
-              src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=40&h=40&q=80"
-              alt="Jane Muthoni"
-              className="w-9 h-9 rounded-full object-cover border-2 border-white/20"
-            />
-            <div>
-              <p className="text-white text-sm font-semibold leading-tight">Jane Muthoni</p>
-              <p className="text-white/40 text-xs mt-0.5">Grade 6 Teacher · Nairobi</p>
-            </div>
-          </div>
+          <p className="text-white text-sm font-semibold leading-relaxed">A shared place for learning and planning</p>
+          <p className="text-white/70 text-xs leading-relaxed mt-1">Sign in to return to the work saved on your account.</p>
         </div>
       </div>
 
@@ -142,7 +142,7 @@ export default function LoginPage() {
 
             <div className="mb-8">
               <h1 className="text-[1.8rem] font-black tracking-tight text-gray-900 mb-2">Welcome back</h1>
-              <p className="text-gray-400 text-[15px]">Sign in to continue your CBC journey.</p>
+              <p className="text-gray-400 text-[15px]">Sign in to return to your learning workspace.</p>
             </div>
 
             <form onSubmit={handleLogin} noValidate className="space-y-5">
@@ -152,6 +152,8 @@ export default function LoginPage() {
                 <Input
                   id="email" type="email" inputMode="email" autoComplete="email" spellCheck={false}
                   placeholder="you@school.ac.ke" required
+                  aria-invalid={!!error}
+                  aria-describedby={error ? 'login-error' : undefined}
                   value={email} onChange={e => setEmail(e.target.value)}
                   className="h-11 rounded-xl border-gray-200 bg-gray-50 text-[14px] focus:border-primary focus:ring-primary/20 placeholder:text-gray-300"
                 />
@@ -167,6 +169,8 @@ export default function LoginPage() {
                 <div className="relative">
                   <Input
                     id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'login-error' : undefined}
                     value={password} onChange={e => setPassword(e.target.value)}
                     className="h-11 rounded-xl border-gray-200 bg-gray-50 text-[14px] pr-10 focus:border-primary focus:ring-primary/20"
                   />
@@ -185,7 +189,7 @@ export default function LoginPage() {
                 </div>
               )}
               {error && (
-                <div role="alert" className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                <div id="login-error" role="alert" aria-live="assertive" className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
                   {error}
                 </div>
               )}
@@ -197,10 +201,17 @@ export default function LoginPage() {
 
             </form>
 
+            <div className="mt-6">
+              <OAuthButtons />
+            </div>
+
             <p className="text-center text-[12px] text-gray-300 mt-8">
               By signing in you agree to our{' '}
               <Link href="/privacy" className="text-gray-400 hover:text-gray-600 underline underline-offset-4 transition-colors">
                 Privacy Policy
+              </Link>{' '}and{' '}
+              <Link href="/terms" className="text-gray-400 hover:text-gray-600 underline underline-offset-4 transition-colors">
+                Terms &amp; Conditions
               </Link>
             </p>
           </div>

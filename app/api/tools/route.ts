@@ -13,7 +13,7 @@ const ollama = createOpenAI({
   apiKey: 'ollama',
 })
 
-const GROQ_MODEL = process.env.GROQ_MODEL ?? 'llama-3.1-8b-instant'
+const GROQ_MODEL = process.env.GROQ_MODEL ?? 'openai/gpt-oss-20b'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma2:2b'
 
 const SYSTEM_PROMPTS: Record<string, string> = {

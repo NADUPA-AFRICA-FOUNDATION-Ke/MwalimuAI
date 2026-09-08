@@ -105,7 +105,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
                     <TooltipTrigger asChild>
                       <Link href={href} onClick={onClose} aria-current={isActive ? 'page' : undefined} aria-label={label}
                         className={cn(
-                          'flex items-center justify-center w-9 h-9 mx-auto mb-0.5 rounded-xl transition-all duration-150',
+                          'flex items-center justify-center min-w-11 min-h-11 mx-auto mb-0.5 rounded-xl transition-all duration-150',
                           isActive
                             ? 'bg-primary/12 text-primary'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
@@ -120,7 +120,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
             /* Expanded: grouped list */
             : NAV_GROUPS.map(({ label: groupLabel, items }) => (
                 <div key={groupLabel} className="mb-4">
-                  <p className="px-3 mb-1 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">
+                  <p className="px-3 mb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     {groupLabel}
                   </p>
                   {items.map(({ href, labelKey, icon: Icon }) => {
@@ -129,7 +129,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
                     return (
                       <Link key={href} href={href} onClick={onClose} aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                          'relative flex items-center gap-2.5 h-8 px-3 rounded-lg text-[13px] font-medium mb-0.5',
+                          'relative flex items-center gap-2.5 min-h-11 px-3 rounded-lg text-[13px] font-medium mb-0.5',
                           'transition-all duration-150',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                           isActive
@@ -151,8 +151,8 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
         <div className="hidden md:flex items-center justify-end shrink-0 border-t border-border/30 p-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <button onClick={onToggleCollapse}
-                className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all duration-150"
+              <button type="button" onClick={onToggleCollapse}
+                className="w-11 h-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all duration-150"
                 aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
                 {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
               </button>

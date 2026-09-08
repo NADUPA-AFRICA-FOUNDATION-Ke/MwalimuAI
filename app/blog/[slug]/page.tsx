@@ -57,12 +57,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </Link>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/auth/login">
-              <Button variant="ghost" className="rounded-full">Log In</Button>
-            </Link>
-            <Link href="/auth/sign-up">
-              <Button className="rounded-full shadow-md shadow-primary/25">Sign Up</Button>
-            </Link>
+            <Button asChild variant="ghost" className="rounded-full"><Link href="/auth/login">Log In</Link></Button>
+            <Button asChild className="rounded-full shadow-md shadow-primary/25"><Link href="/auth/sign-up">Sign Up</Link></Button>
           </div>
         </div>
       </header>
@@ -169,11 +165,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <p className="text-muted-foreground mb-4">
                 Get personalized AI coaching and professional development with Mwalimu AI.
               </p>
-              <Link href="/auth/sign-up">
-                <Button className="rounded-full shadow-md shadow-primary/25">
+              <Button asChild className="rounded-full shadow-md shadow-primary/25">
+                <Link href="/auth/sign-up">
                   Get Started Free <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </Card>
           </div>
         </Card>

@@ -221,6 +221,7 @@ function FieldError({
   return (
     <div
       role="alert"
+      aria-live="assertive"
       data-slot="field-error"
       className={cn('text-destructive text-sm font-normal', className)}
       {...props}

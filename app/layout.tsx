@@ -1,19 +1,16 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { Providers } from '@/components/providers'
 import { GradientBackground } from '@/components/gradient-background'
 import { SWRegister } from '@/components/sw-register'
+import { AnalyticsConsent } from '@/components/analytics-consent'
+import { CookieConsent } from '@/components/cookie-consent'
 import './globals.css'
-
-const geist     = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
-const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
 export const viewport: Viewport = {
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fafafa' },
-    { media: '(prefers-color-scheme: dark)',  color: '#0f0f14' },
+    { media: '(prefers-color-scheme: light)', color: '#F7FAF8' },
+    { media: '(prefers-color-scheme: dark)',  color: '#0E201B' },
   ],
 }
 
@@ -24,6 +21,26 @@ export const metadata: Metadata = {
     template: '%s · Mwalimu AI',
   },
   description: 'AI-powered professional development for Kenyan CBC teachers.',
+  verification: {
+    google: 'CtkTzynmMk7TzRvZGE1k6r3a0d-j8GRhOSjvahFa7IE',
+  },
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'en_KE',
+    url: 'https://mwalimu-ai-nu.vercel.app',
+    siteName: 'Mwalimu AI',
+    title: 'Mwalimu AI — Learn Smarter. Teach Better.',
+    description: 'AI-powered professional development for Kenyan CBC teachers.',
+    images: [{ url: '/og-image.svg', width: 1200, height: 630, alt: 'Mwalimu AI for Kenyan CBC teachers' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mwalimu AI — Learn Smarter. Teach Better.',
+    description: 'AI-powered professional development for Kenyan CBC teachers.',
+    images: ['/og-image.svg'],
+  },
+  robots: { index: true, follow: true },
   applicationName: 'Mwalimu AI',
   manifest: '/manifest.json',
   icons: {
@@ -42,9 +59,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`bg-background ${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className="bg-background">
       <style href="mwalimu-layout" precedence="default">{`
-        body { font-family: var(--font-geist-sans, 'Geist', system-ui, sans-serif); }
+        body { font-family: var(--font-family-body); }
         h1, h2, h3, h4, h5, h6 { text-wrap: balance; }
         p, li, figcaption        { text-wrap: pretty; }
 
@@ -62,9 +79,9 @@ export default function RootLayout({
 
         .pb-safe-nav { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
         .sidebar-nav  { width: 16rem; }
-        .layout-main  { transition: margin-left 300ms ease-in-out; }
+        .layout-main  { transition: margin-left 250ms ease-out; }
         @media (min-width: 768px) {
-          .sidebar-nav { transition: width 300ms ease-in-out; }
+          .sidebar-nav { transition: width 250ms ease-out; }
           [data-sidebar="expanded"]  .sidebar-nav { width: 14rem; }
           [data-sidebar="collapsed"] .sidebar-nav { width: 4rem;  }
           [data-sidebar="expanded"]  .layout-main { margin-left: 14rem; }
@@ -80,9 +97,10 @@ export default function RootLayout({
         </a>
         <GradientBackground />
         <Providers>
-          {children}
-          {process.env.NODE_ENV === 'production' && <Analytics />}
+          <div id="main-content" tabIndex={-1} className="outline-none">{children}</div>
+          <AnalyticsConsent />
         </Providers>
+        <CookieConsent />
         <SWRegister />
       </body>
     </html>

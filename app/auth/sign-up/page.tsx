@@ -9,8 +9,10 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft, Check } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
-import { createClient } from '@/lib/supabase/client'
-import { getSiteUrl } from '@/lib/site-url'
+import { OAuthButtons } from '@/components/oauth-buttons'
+import Image from 'next/image'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 
 const DARK = 'var(--hero-bg)'
 
@@ -18,13 +20,18 @@ function mapError(msg: string): string {
   if (msg.includes('already registered') || msg.includes('already exists'))
     return 'An account with this email already exists. Try signing in instead.'
   if (msg.includes('valid email')) return 'Please enter a valid email address.'
-  if (msg.includes('least 6'))     return 'Password must be at least 6 characters.'
+  if (msg.includes('Invalid password') || msg.includes('least 8'))
+    return 'Password must be at least 8 characters.'
   if (msg.includes('rate limit') || msg.includes('after 60'))
     return 'Too many attempts. Please wait 60 seconds and try again.'
   return 'Sign-up failed. Please try again.'
 }
 
 export default function SignUpPage() {
+  return <ConvexNativeAuthBoundary><SignUpContent /></ConvexNativeAuthBoundary>
+}
+
+function SignUpContent() {
   const [email,          setEmail]          = useState('')
   const [password,       setPassword]       = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
@@ -32,25 +39,27 @@ export default function SignUpPage() {
   const [error,          setError]          = useState<string | null>(null)
   const [isLoading,      setIsLoading]      = useState(false)
   const router = useRouter()
+  const { signIn } = useAuthActions()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     if (password !== repeatPassword) { setError('Passwords do not match.'); return }
-    if (password.length < 6)         { setError('Password must be at least 6 characters.'); return }
+    if (password.length < 8)         { setError('Password must be at least 8 characters.'); return }
 
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      const { error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
+      const normalizedEmail = email.trim().toLowerCase()
+      const result = await signIn('password', {
+        flow: 'signUp',
+        email: normalizedEmail,
         password,
-        options: { emailRedirectTo: `${getSiteUrl()}/auth/callback` },
       })
-      if (authError) { setError(mapError(authError.message)); return }
+      if (!result.signingIn) throw new Error('Sign-up did not complete')
+      try { localStorage.setItem('mwalimu_last_auth_email', normalizedEmail) } catch {}
       router.push('/auth/sign-up-success')
-    } catch {
-      setError('Sign-up failed. Please try again.')
+    } catch (authError) {
+      setError(mapError(authError instanceof Error ? authError.message : ''))
     } finally {
       setIsLoading(false)
     }
@@ -69,9 +78,11 @@ export default function SignUpPage() {
 
         {/* Background classroom photo with overlay */}
         <div className="absolute inset-0 opacity-10">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=80"
             alt=""
+            fill
+            sizes="42vw"
             className="w-full h-full object-cover"
           />
         </div>
@@ -86,17 +97,17 @@ export default function SignUpPage() {
 
         {/* Centre copy */}
         <div className="relative z-10">
-          <p className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-5">Free for every teacher</p>
+          <p className="text-[11px] font-bold text-white/75 uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
-            Join Kenya&apos;s largest<br />CBC teacher<br />
-            <span style={{ color: 'var(--accent)' }}>community.</span>
+            Learn, plan,<br />and reflect<br />
+            <span style={{ color: 'var(--accent)' }}>in one place.</span>
           </h2>
           <ul className="space-y-3.5">
             {[
-              'Personal AI Coach — available 24/7',
-              'KICD-aligned learning modules',
-              'Educators across all 47 counties',
-              'Free forever, no credit card needed',
+              'AI Coach for teaching questions',
+              'Structured learning modules',
+              'Teacher tools and progress tracking',
+              'Community discussions and resources',
             ].map(item => (
               <li key={item} className="flex items-center gap-3 text-white/65 text-[14px]">
                 <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
@@ -109,20 +120,9 @@ export default function SignUpPage() {
           </ul>
         </div>
 
-        {/* Stacked avatars */}
+        {/* Product summary */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="flex">
-            {[
-              'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=36&h=36&q=80',
-              'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=36&h=36&q=80',
-              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=36&h=36&q=80',
-            ].map((src, i) => (
-              <img key={i} src={src} alt="" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" style={{ marginLeft: i > 0 ? '-8px' : 0 }} />
-            ))}
-          </div>
-          <p className="text-white/45 text-[13px]">
-            <span className="text-white font-semibold">4,800+</span> teachers already inside
-          </p>
+          <p className="text-white/80 text-[13px]">Create a profile to start using the platform.</p>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ export default function SignUpPage() {
 
             <div className="mb-8">
               <h1 className="text-[1.8rem] font-black tracking-tight text-gray-900 mb-2">Create your account</h1>
-              <p className="text-gray-400 text-[15px]">Start your CBC professional development — free.</p>
+              <p className="text-gray-400 text-[15px]">Create a profile to explore your learning workspace.</p>
             </div>
 
             <form onSubmit={handleSignUp} noValidate className="space-y-4">
@@ -164,6 +164,8 @@ export default function SignUpPage() {
                 <Input
                   id="email" type="email" inputMode="email" autoComplete="email" spellCheck={false}
                   placeholder="you@school.ac.ke" required
+                  aria-invalid={!!error}
+                  aria-describedby={error ? 'signup-error' : undefined}
                   value={email} onChange={e => setEmail(e.target.value)}
                   className="h-11 rounded-xl border-gray-200 bg-gray-50 text-[14px] focus:border-primary focus:ring-primary/20 placeholder:text-gray-300"
                 />
@@ -174,7 +176,9 @@ export default function SignUpPage() {
                 <div className="relative">
                   <Input
                     id="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required
-                    placeholder="Min. 6 characters"
+                    placeholder="Min. 8 characters"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'signup-error' : undefined}
                     value={password} onChange={e => setPassword(e.target.value)}
                     className="h-11 rounded-xl border-gray-200 bg-gray-50 text-[14px] pr-10 focus:border-primary focus:ring-primary/20 placeholder:text-gray-300"
                   />
@@ -190,13 +194,15 @@ export default function SignUpPage() {
                 <Label htmlFor="repeat-password" className="text-[13px] font-semibold text-gray-700">Confirm password</Label>
                 <Input
                   id="repeat-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required
+                  aria-invalid={!!error}
+                  aria-describedby={error ? 'signup-error' : undefined}
                   value={repeatPassword} onChange={e => setRepeatPassword(e.target.value)}
                   className="h-11 rounded-xl border-gray-200 bg-gray-50 text-[14px] focus:border-primary focus:ring-primary/20"
                 />
               </div>
 
               {error && (
-                <div role="alert" className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                <div id="signup-error" role="alert" aria-live="assertive" className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
                   {error}
                 </div>
               )}
@@ -208,10 +214,17 @@ export default function SignUpPage() {
 
             </form>
 
+            <div className="mt-6">
+              <OAuthButtons />
+            </div>
+
             <p className="text-center text-[12px] text-gray-300 mt-8">
               By creating an account you agree to our{' '}
               <Link href="/privacy" className="text-gray-400 hover:text-gray-600 underline underline-offset-4 transition-colors">
                 Privacy Policy
+              </Link>{' '}and{' '}
+              <Link href="/terms" className="text-gray-400 hover:text-gray-600 underline underline-offset-4 transition-colors">
+                Terms &amp; Conditions
               </Link>
             </p>
           </div>

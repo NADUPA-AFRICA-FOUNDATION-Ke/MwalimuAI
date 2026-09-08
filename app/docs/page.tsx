@@ -5,11 +5,25 @@ import { MarketingFooter } from '@/components/marketing-footer'
 import Link from 'next/link'
 import { BookOpen, Zap, Users, Settings, HelpCircle, FileText } from 'lucide-react'
 
+export const metadata = {
+  title: 'Documentation',
+  description: 'Guides for using Mwalimu AI learning modules, AI Coach, community, and account features.',
+}
+
+const sectionLinks: Record<string, string> = {
+  'Getting Started': '/auth/sign-up',
+  'Learning Modules': '/dashboard/learning',
+  'AI Coach': '/dashboard/ai-coach',
+  'Community Forum': '/dashboard/community',
+  'Account Settings': '/dashboard/settings',
+  'Troubleshooting': '/support',
+}
+
 const docSections = [
   {
     icon: BookOpen,
     title: 'Getting Started',
-    description: 'Learn how to create an account, complete your profile, and begin your learning journey.',
+    description: 'Create an account, complete your profile, and open your dashboard.',
     articles: [
       'Creating your account',
       'Completing the needs assessment',
@@ -20,7 +34,7 @@ const docSections = [
   {
     icon: FileText,
     title: 'Learning Modules',
-    description: 'Understand how our structured learning modules work and how to track your progress.',
+    description: 'Open lessons and activities, then review completed work from your dashboard.',
     articles: [
       'Module structure and lessons',
       'Completing activities and quizzes',
@@ -31,7 +45,7 @@ const docSections = [
   {
     icon: Zap,
     title: 'AI Coach',
-    description: 'Get the most out of your AI Coach conversations for personalized guidance.',
+    description: 'Use the AI Coach to ask teaching and planning questions.',
     articles: [
       'How the AI Coach works',
       'Asking effective questions',
@@ -42,7 +56,7 @@ const docSections = [
   {
     icon: Users,
     title: 'Community Forum',
-    description: 'Connect with fellow teachers, share resources, and participate in discussions.',
+    description: 'Read questions and participate in teacher discussions.',
     articles: [
       'Posting and replying',
       'Sharing resources',
@@ -53,7 +67,7 @@ const docSections = [
   {
     icon: Settings,
     title: 'Account Settings',
-    description: 'Manage your profile, preferences, notifications, and subscription.',
+    description: 'Review the account settings available to you.',
     articles: [
       'Updating your profile',
       'Notification preferences',
@@ -64,7 +78,7 @@ const docSections = [
   {
     icon: HelpCircle,
     title: 'Troubleshooting',
-    description: 'Solutions to common technical issues and how to get additional support.',
+    description: 'Review common account and platform issues, or contact support.',
     articles: [
       'Login problems',
       'Progress not saving',
@@ -79,20 +93,24 @@ export default function DocsPage() {
     <div className="min-h-screen">
       <MarketingHeader />
 
+      <main>
+
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">Documentation</h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          Everything you need to know about using Mwalimu AI effectively. Find guides, tutorials, and
-          answers to common questions.
+          Find practical guidance for accounts, learning modules, AI Coach, community, and support.
         </p>
       </section>
 
       {/* Search */}
       <section className="max-w-2xl mx-auto px-4 md:px-8 pb-12">
         <div className="relative">
+          <label htmlFor="docs-search" className="sr-only">Search documentation</label>
           <input
+            id="docs-search"
             type="search"
+            aria-label="Search documentation"
             placeholder="Search documentation..."
             className="w-full px-4 py-3 rounded-lg border bg-background text-lg"
           />
@@ -112,12 +130,12 @@ export default function DocsPage() {
               <ul className="space-y-2">
                 {section.articles.map((article) => (
                   <li key={article}>
-                    <a
-                      href="#"
+                    <Link
+                      href={sectionLinks[section.title]}
                       className="text-sm text-primary hover:underline"
                     >
                       {article}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -132,37 +150,35 @@ export default function DocsPage() {
           <h2 className="text-2xl font-bold mb-6 text-center">Popular Resources</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
-              <h3 className="font-semibold mb-2">Video Tutorials</h3>
+              <h3 className="font-semibold mb-2">Guidance Articles</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Watch step-by-step guides on using every feature.
+                Read articles about teaching, planning, and using the platform.
               </p>
-              <Button variant="outline" size="sm">
-                Watch Videos
+              <Button asChild variant="outline" size="sm">
+                <Link href="/blog">Browse Articles</Link>
               </Button>
             </div>
             <div className="text-center">
               <h3 className="font-semibold mb-2">CBC Quick Reference</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Download our CBC implementation cheat sheet.
+                Browse the resources available in your dashboard.
               </p>
-              <Button variant="outline" size="sm">
-                Download PDF
-              </Button>
+              <Button asChild variant="outline" size="sm"><Link href="/dashboard/resources">Browse Resources</Link></Button>
             </div>
             <div className="text-center">
               <h3 className="font-semibold mb-2">Community Support</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Ask questions and get help from other teachers.
               </p>
-              <Link href="/dashboard/community">
-                <Button variant="outline" size="sm">
-                  Visit Forum
-                </Button>
-              </Link>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/community">Visit Forum</Link>
+              </Button>
             </div>
           </div>
         </Card>
       </section>
+
+      </main>
 
       <MarketingFooter />
     </div>

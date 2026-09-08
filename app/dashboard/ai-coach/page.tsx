@@ -13,7 +13,9 @@ import {
 import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { useProfile } from '@/context/profile-context'
 import { authHeaders } from '@/lib/authed-fetch'
-import { createClient } from '@/lib/supabase/client'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import type { Id } from '@/convex/_generated/dataModel'
 import Link from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────
@@ -47,6 +49,14 @@ function mkTitle(text: string) {
   return t.length > 55 ? t.slice(0, 55) + '…' : t
 }
 
+function getBrowserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
+
 function groupConversations(convs: Conversation[]) {
   const s = new Date()
   const today     = new Date(s.getFullYear(), s.getMonth(), s.getDate()).getTime()
@@ -76,7 +86,7 @@ function groupConversations(convs: Conversation[]) {
 
 function TypingDots() {
   return (
-    <div className="flex gap-1.5 items-center py-1">
+    <div className="flex gap-1.5 items-center py-1" role="status" aria-label="AI Coach is typing">
       {[0, 1, 2].map(i => (
         <div key={i}
           className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce motion-reduce:animate-none"
@@ -99,23 +109,24 @@ interface SidebarProps {
 }
 
 function Sidebar({ conversations, selectedId, loading, onSelect, onNewChat, onDelete }: SidebarProps) {
-  const supabase = createClient()
+  const messages = useQuery(api.ai.listMessages, selectedId ? { conversationId: selectedId as Id<'aiConversations'>, limit: 500 } : 'skip')
+  const deleteConversation = useMutation(api.ai.deleteConversation)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const handleSelect = async (convId: string) => {
+  const handleSelect = (convId: string) => {
     if (convId === selectedId) return
-    const { data } = await supabase
-      .from('ai_messages')
-      .select('*')
-      .eq('conversation_id', convId)
-      .order('created_at', { ascending: true })
-    onSelect(convId, (data ?? []) as SavedMessage[])
+    onSelect(convId, [])
   }
+
+  useEffect(() => {
+    if (!selectedId || !messages) return
+    onSelect(selectedId, messages.map(m => ({ id: m._id, role: m.role, content: m.content, created_at: new Date(m.createdAt).toISOString() })))
+  }, [messages, onSelect, selectedId])
 
   const handleDelete = async (e: React.MouseEvent, convId: string) => {
     e.stopPropagation()
     setDeletingId(convId)
-    await supabase.from('ai_conversations').delete().eq('id', convId)
+    await deleteConversation({ conversationId: convId as Id<'aiConversations'> })
     setDeletingId(null)
     onDelete(convId)
   }
@@ -138,7 +149,7 @@ function Sidebar({ conversations, selectedId, loading, onSelect, onNewChat, onDe
       {/* List */}
       <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-4">
         {loading ? (
-          <div className="text-xs text-muted-foreground px-3 py-4">Loading…</div>
+          <div className="text-xs text-muted-foreground px-3 py-4" role="status" aria-live="polite">Loading conversations…</div>
         ) : groups.length === 0 ? (
           <div className="flex flex-col items-center py-10 text-muted-foreground/40">
             <MessageSquare className="w-7 h-7 mb-2" />
@@ -154,24 +165,28 @@ function Sidebar({ conversations, selectedId, loading, onSelect, onNewChat, onDe
                 {group.items.map(conv => (
                   <div
                     key={conv.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleSelect(conv.id)}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleSelect(conv.id) }}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors group relative cursor-pointer ${
                       selectedId === conv.id
                         ? 'bg-primary/10 text-foreground'
                         : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                     }`}
                   >
-                    <span className="flex-1 truncate leading-snug">{conv.title}</span>
                     <button
+                      type="button"
+                      onClick={() => handleSelect(conv.id)}
+                      aria-current={selectedId === conv.id ? 'page' : undefined}
+                      className="flex-1 min-w-0 min-h-11 text-left truncate leading-snug focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                    >
+                      {conv.title}
+                    </button>
+                    <button
+                      type="button"
                       onClick={e => handleDelete(e, conv.id)}
                       disabled={deletingId === conv.id}
-                      aria-label="Delete conversation"
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 disabled:opacity-50"
+                      aria-label={`Delete conversation ${conv.title}`}
+                      className="min-w-11 min-h-11 inline-flex items-center justify-center opacity-60 group-hover:opacity-100 rounded-md hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 disabled:opacity-50"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
@@ -209,7 +224,9 @@ function ChatPanel({
   const [lessonCtx, setLessonCtx]   = useState<LessonContext | null>(null)
   const bottomRef                   = useRef<HTMLDivElement>(null)
   const convIdRef                   = useRef<string | null>(initConvId)
-  const supabase                    = createClient()
+  const hasSentMessageRef           = useRef(false)
+  const createConversation = useMutation(api.ai.createConversation)
+  const appendMessage = useMutation(api.ai.appendMessage)
   const showSuggestions             = initialMessages.length === 0
 
   useEffect(() => {
@@ -235,20 +252,21 @@ function ChatPanel({
   // Capture the id once at mount so it never changes mid-stream.
   // ChatPanel already remounts (key prop) when switching conversations,
   // so the correct id is always set at mount time.
-  const stableId = useRef(initConvId ?? 'new').current
+  const [stableId] = useState(() => initConvId ?? 'new')
 
-  const { messages, status, error, sendMessage } = useChat({
+  const { messages, status, error, sendMessage, setMessages } = useChat({
     id: stableId,
     messages: uiInitialMessages,
     transport: new DefaultChatTransport({
       api: '/api/chat',
-      body: {
+      body: () => ({
         lang,
         profile,
+        timeZone: getBrowserTimeZone(),
         currentLesson: lessonCtx
           ? { programTitle: lessonCtx.programTitle, moduleTitle: lessonCtx.moduleTitle, lessonTitle: lessonCtx.lessonTitle }
           : null,
-      },
+      }),
       fetch: async (url, init) => {
         const extra = await authHeaders()
         const headers = new Headers(init?.headers as HeadersInit)
@@ -262,29 +280,28 @@ function ChatPanel({
     onFinish: async ({ message }) => {
       const convId = convIdRef.current
       if (!convId) return
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const text = (message.parts as any[])
         ?.filter((p) => p.type === 'text').map((p) => p.text).join('')
         ?? (message as { content?: string }).content ?? ''
 
-      supabase.from('ai_messages')
-        .insert({ conversation_id: convId, role: 'assistant', content: text })
-        .then(
-          ({ error }) => { if (error) console.error('[AI Coach] Failed to save assistant message:', error.message) },
-          (err) => console.error('[AI Coach] Assistant message error:', err),
-        )
-
-      supabase.from('ai_conversations')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', convId)
-        .then(
-          ({ error }) => { if (error) console.error('[AI Coach] Failed to update conversation timestamp:', error.message) },
-          () => {},
-        )
+      void appendMessage({ conversationId: convId as Id<'aiConversations'>, role: 'assistant', content: text, clientId: `assistant-${Date.now()}` })
 
       onMessageSaved(convId)
     },
   })
+
+  // Loading the saved conversation is allowed before the user sends anything.
+  // Once a send has started, the local chat state owns the active stream; a
+  // reactive sidebar update must not replace it with a partial database copy.
+  useEffect(() => {
+    if (hasSentMessageRef.current || status !== 'ready' || initialMessages.length === 0) return
+    setMessages(initialMessages.map(m => ({
+      id: m.id,
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+      parts: [{ type: 'text' as const, text: m.content }],
+    })))
+  }, [initialMessages, setMessages, status])
 
   const isLoading = status === 'streaming' || status === 'submitted'
 
@@ -296,40 +313,26 @@ function ChatPanel({
     const trimmed = text.trim()
     if (!trimmed || isLoading) return
     setInput('')
+    hasSentMessageRef.current = true
 
     // Send to AI immediately — don't block on DB writes
-    sendMessage({ text: trimmed })
+    void sendMessage({ text: trimmed })
 
     let convId = convIdRef.current
 
     // Create conversation on first message
     if (!convId) {
-      const { data, error: convErr } = await supabase
-        .from('ai_conversations')
-        .insert({ user_id: userId, title: mkTitle(trimmed) })
-        .select()
-        .single()
-
-      if (convErr) {
-        console.error('[AI Coach] Failed to create conversation:', convErr.message)
-      } else if (data) {
-        convId = data.id as string
-        convIdRef.current = data.id as string
-        onConversationCreated(data.id as string, data.title as string)
-      }
+      const id = await createConversation({ title: mkTitle(trimmed), clientId: `chat-${Date.now()}` })
+      convId = id as string; convIdRef.current = convId
+      onConversationCreated(convId, mkTitle(trimmed))
     }
 
     // Save user message — log if it fails so we can diagnose persistence issues
     if (convId) {
-      supabase.from('ai_messages')
-        .insert({ conversation_id: convId, role: 'user', content: trimmed })
-        .then(
-          ({ error }) => { if (error) console.error('[AI Coach] Failed to save user message:', error.message) },
-          (err) => console.error('[AI Coach] Message insert error:', err),
-        )
+      void appendMessage({ conversationId: convId as Id<'aiConversations'>, role: 'user', content: trimmed, clientId: `user-${Date.now()}` })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isLoading, userId, supabase, onConversationCreated, sendMessage])
+  }, [input, isLoading, userId, createConversation, appendMessage, onConversationCreated, sendMessage])
 
   const errorMessage = (() => {
     if (!error) return null
@@ -354,7 +357,7 @@ function ChatPanel({
           {/* Mobile only: sidebar toggle */}
           <button
             onClick={onToggleSidebar}
-            className="md:hidden p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+            className="md:hidden min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground"
             aria-label="Toggle chat history"
           >
             <Menu className="w-4 h-4" />
@@ -382,21 +385,21 @@ function ChatPanel({
 
       {/* Banners */}
       {lang === 'sw' && (
-        <div className="mx-4 mb-1 flex items-center gap-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 px-3 py-2 rounded-xl text-xs shrink-0">
+        <div role="status" aria-live="polite" className="mx-4 mb-1 flex items-center gap-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 px-3 py-2 rounded-xl text-xs shrink-0">
           <Globe className="w-3.5 h-3.5 shrink-0" />
           <span>Majibu ya AI yanaweza kuwa na makosa ya Kiswahili. Thibitisha istilahi muhimu.</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="mx-4 mb-2 flex items-start gap-3 bg-destructive/10 border border-destructive/25 text-destructive px-4 py-3 rounded-xl text-sm shrink-0">
+        <div role="alert" aria-live="assertive" className="mx-4 mb-2 flex items-start gap-3 bg-destructive/10 border border-destructive/25 text-destructive px-4 py-3 rounded-xl text-sm shrink-0">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="flex-1">{errorMessage}</span>
         </div>
       )}
 
       {lessonCtx && (
-        <div className="mx-4 mb-2 flex items-center gap-3 bg-primary/6 border border-primary/20 px-4 py-2.5 rounded-xl text-sm shrink-0">
+        <div role="status" className="mx-4 mb-2 flex items-center gap-3 bg-primary/6 border border-primary/20 px-4 py-2.5 rounded-xl text-sm shrink-0">
           <BookMarked className="w-4 h-4 text-primary shrink-0" />
           <div className="flex-1 min-w-0">
             <span className="text-xs text-muted-foreground">Studying · </span>
@@ -407,21 +410,21 @@ function ChatPanel({
             className="text-xs text-primary hover:underline shrink-0">
             Back to lesson
           </Link>
-          <button onClick={() => setLessonCtx(null)} className="text-muted-foreground hover:text-foreground ml-1 shrink-0" aria-label="Dismiss">
-            <X className="w-3.5 h-3.5" />
+          <button type="button" onClick={() => setLessonCtx(null)} className="min-w-11 min-h-11 inline-flex items-center justify-center text-muted-foreground hover:text-foreground ml-1 shrink-0" aria-label="Dismiss lesson context">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {!isOnline && messages.length === 0 && backend !== 'ollama' && (
-        <div className="mx-4 mb-2 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm shrink-0">
+        <div role="status" aria-live="polite" className="mx-4 mb-2 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm shrink-0">
           <WifiOff className="w-4 h-4 mt-0.5 shrink-0" />
           <span>You&apos;re offline. Messages will use Ollama if it&apos;s running. Setup: <code className="bg-amber-100 px-1 rounded">ollama pull gemma2:2b</code></span>
         </div>
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 space-y-5" aria-live="polite" aria-busy={isLoading}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center pb-8">
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-5">
@@ -434,8 +437,8 @@ function ChatPanel({
             {showSuggestions && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
                 {SUGGESTED.map((q, i) => (
-                  <button key={i} onClick={() => handleSend(q)}
-                    className="text-left p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-sm text-muted-foreground hover:text-foreground group">
+                  <button type="button" key={i} onClick={() => handleSend(q)}
+                    className="min-h-11 text-left p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-sm text-muted-foreground hover:text-foreground group">
                     <span className="text-primary text-xs font-semibold mr-1.5">→</span>{q}
                   </button>
                 ))}
@@ -445,7 +448,6 @@ function ChatPanel({
         ) : (
           <>
             {messages.map((message, idx) => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const textContent = (message.parts as any[])
                 ?.filter((p) => p.type === 'text').map((p) => p.text).join('')
                 ?? (message as { content?: string }).content ?? ''
@@ -492,18 +494,18 @@ function ChatPanel({
         {error && (
           <div className="flex justify-end mb-2">
             <button
+              type="button"
               onClick={() => handleSend(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (messages.findLast(m => m.role === 'user') as any)
                   ?.parts?.find((p: { type: string }) => p.type === 'text')?.text ?? ''
               )}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              className="min-h-11 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Retry
             </button>
           </div>
         )}
-        <div className="flex gap-2 max-w-4xl mx-auto">
+        <form className="flex gap-2 max-w-4xl mx-auto" onSubmit={e => { e.preventDefault(); void handleSend() }}>
           <Input
             value={input}
             onChange={e => setInput(e.target.value)}
@@ -514,11 +516,11 @@ function ChatPanel({
             disabled={isLoading}
             className="flex-1 rounded-xl border-border/60 focus:border-primary/50 bg-background"
           />
-          <Button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="rounded-xl gap-2 px-5">
+          <Button type="submit" disabled={isLoading || !input.trim()} className="rounded-xl gap-2 px-5">
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Send</span>
           </Button>
-        </div>
+        </form>
         <p className="text-xs text-muted-foreground mt-2 text-center">
           Press Enter to send · Shift+Enter for new line
         </p>
@@ -531,7 +533,7 @@ function ChatPanel({
 
 export default function AICoachPage() {
   const { lang, profile, user } = useProfile()
-  const supabase = createClient()
+  const remoteConversations = useQuery(api.ai.listConversations, user ? { limit: 100 } : 'skip')
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [convLoading, setConvLoading]     = useState(true)
@@ -540,19 +542,12 @@ export default function AICoachPage() {
   const [chatKey, setChatKey]             = useState('new')
   const [sidebarOpen, setSidebarOpen]     = useState(false)
 
-  const loadConversations = useCallback(async () => {
-    if (!user) return
-    const { data } = await supabase
-      .from('ai_conversations')
-      .select('id, title, created_at, updated_at')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-    setConversations((data ?? []) as Conversation[])
-    setConvLoading(false)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
-
-  useEffect(() => { loadConversations() }, [loadConversations])
+  useEffect(() => {
+    if (remoteConversations !== undefined) {
+      setConversations(remoteConversations.map(c => ({ id: c._id, title: c.title, created_at: new Date(c.createdAt).toISOString(), updated_at: new Date(c.updatedAt).toISOString() })))
+      setConvLoading(false)
+    }
+  }, [remoteConversations])
 
   const handleNewChat = useCallback(() => {
     setSelectedConvId(null)
@@ -562,11 +557,14 @@ export default function AICoachPage() {
   }, [])
 
   const handleSelectConversation = useCallback((id: string, messages: SavedMessage[]) => {
+    const isSameConversation = id === selectedConvId
     setSelectedConvId(id)
     setChatMessages(messages)
-    setChatKey(id)
+    // Sidebar message hydration can arrive after a newly created chat has
+    // started streaming. Keep that live ChatPanel mounted in that case.
+    if (!isSameConversation) setChatKey(id)
     setSidebarOpen(false)
-  }, [])
+  }, [selectedConvId])
 
   const handleConversationCreated = useCallback((id: string, title: string) => {
     setSelectedConvId(id)
@@ -616,7 +614,7 @@ export default function AICoachPage() {
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Chat history">
           <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
@@ -629,7 +627,7 @@ export default function AICoachPage() {
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
+                className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground"
                 aria-label="Close sidebar"
               >
                 <X className="w-4 h-4" />

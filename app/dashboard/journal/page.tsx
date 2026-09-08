@@ -8,8 +8,8 @@ import { BackButton } from '@/components/back-button'
 import { useProfile } from '@/context/profile-context'
 import { recordActivity } from '@/lib/streak'
 import { PenLine, RefreshCw, ChevronDown, ChevronUp, Calendar, Flame, Sparkles, Lock, CheckCircle, Laugh, Smile, Meh, Frown, Annoyed, type LucideIcon } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { trackWrite } from '@/lib/write-queue'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 
 const JOURNAL_KEY = 'mwalimu_journal'
 
@@ -85,6 +85,8 @@ const MOOD_LABELS: Record<number, { label: string; icon: LucideIcon; color: stri
 
 export default function JournalPage() {
   const { user } = useProfile()
+  const remoteEntries = useQuery(api.journal.listMine, user ? { limit: 100 } : 'skip')
+  const saveRemote = useMutation(api.journal.save)
   const [entries, setEntries]       = useState<JournalEntry[]>([])
   const [content, setContent]       = useState('')
   const [mood, setMood]             = useState<number | null>(null)
@@ -106,27 +108,10 @@ export default function JournalPage() {
       } catch {}
 
       try {
-        const supabase = createClient()
-        const { data: remote } = await supabase
-          .from('journal_entries')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-
-        if (remote) {
-          const mapped: JournalEntry[] = remote.map(r => ({
-            id:          r.id as string,
-            date:        (r.created_at as string).slice(0, 10),
-            displayDate: displayDate((r.created_at as string).slice(0, 10)),
-            prompt:      (r.title as string) ?? '',
-            content:     (r.content as string) ?? '',
-            mood:        Number(r.mood) || 3,
-          }))
-          setEntries(mapped)
-          localStorage.setItem(JOURNAL_KEY, JSON.stringify(mapped))
+        if (remoteEntries) {
+          const mapped: JournalEntry[] = remoteEntries.map(r => ({ id: r.clientId, date: r.entryDate, displayDate: displayDate(r.entryDate), prompt: r.title, content: r.content, mood: r.mood }))
+          setEntries(mapped); localStorage.setItem(JOURNAL_KEY, JSON.stringify(mapped))
         }
-      } catch {
-        // Offline — local cache already shown above
       } finally {
         setLoading(false)
         setMounted(true)
@@ -146,7 +131,7 @@ export default function JournalPage() {
         )
       }
     } catch {}
-  }, [user])
+  }, [user, remoteEntries])
 
   const todayEntry = entries.find(e => e.date === todayStr())
   const wordCount  = content.trim().split(/\s+/).filter(Boolean).length
@@ -174,17 +159,7 @@ export default function JournalPage() {
 
     recordActivity('journal', user.id)
 
-    // Persist to Supabase — trackWrite logs failures and lets signOut flush
-    // in-flight writes; the entry stays in localStorage if the write fails.
-    const supabase = createClient()
-    trackWrite(supabase.from('journal_entries').insert({
-      id:         entry.id,
-      user_id:    user.id,
-      title:      entry.prompt,
-      content:    entry.content,
-      mood:       entry.mood,
-      created_at: new Date(entry.date).toISOString(),
-    }))
+    void saveRemote({ clientId: entry.id, entryDate: entry.date, title: entry.prompt, content: entry.content, mood: entry.mood })
   }
 
   const avgMood = entries.length

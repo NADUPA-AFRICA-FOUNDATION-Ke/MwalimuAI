@@ -7,8 +7,9 @@ import { SidebarNav } from '@/components/sidebar-nav'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { OfflineIndicator } from '@/components/offline-indicator'
 import { useProfile, ProfileProvider } from '@/context/profile-context'
-import { createClient } from '@/lib/supabase/client'
-import { trackWrite } from '@/lib/write-queue'
+import { useMutation } from 'convex/react'
+import { useConvexAuth } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 
 const COLLAPSE_KEY = 'mwalimu_sidebar_collapsed'
 
@@ -30,6 +31,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const router = useRouter()
   const { user, authLoading, profile, mounted, signOut } = useProfile()
+  const { isAuthenticated } = useConvexAuth()
+  const updatePreferences = useMutation(api.preferences.update)
 
   // Restore desktop collapsed preference from localStorage on mount
   useEffect(() => {
@@ -41,24 +44,24 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   // Auth guard
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/auth/login'); return }
+    if (!user) {
+      router.push(isAuthenticated ? '/onboarding' : '/auth/login')
+      return
+    }
     if (!user.email_confirmed_at) { router.push('/auth/sign-up-success'); return }
     if (mounted && !profile?.completed) router.push('/onboarding')
-  }, [authLoading, user, mounted, profile, router])
+  }, [authLoading, user, mounted, profile, router, isAuthenticated])
 
   const handleToggleCollapse = useCallback(() => {
     setSidebarCollapsed(prev => {
       const next = !prev
       try { localStorage.setItem(COLLAPSE_KEY, String(next)) } catch {}
       if (user) {
-        const supabase = createClient()
-        trackWrite(supabase
-          .from('profiles')
-          .upsert({ id: user.id, sidebar_collapsed: next, updated_at: new Date().toISOString() }))
+        void updatePreferences({ sidebarCollapsed: next })
       }
       return next
     })
-  }, [user])
+  }, [user, updatePreferences])
 
   // Auth loading spinner
   if (authLoading) {
@@ -102,7 +105,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {/* Main: margin-left driven by .layout-main + [data-sidebar] in the <style> tag */}
       <main
-        id="main-content"
+        id="dashboard-main"
         tabIndex={-1}
         className="layout-main flex-1 min-w-0 overflow-x-hidden"
       >

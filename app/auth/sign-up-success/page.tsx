@@ -1,64 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { getSiteUrl } from '@/lib/site-url'
+import { useConvexAuth } from 'convex/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
-import { Mail, CheckCircle, RefreshCw } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
+import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 import Link from 'next/link'
 
 export default function Page() {
+  return <ConvexNativeAuthBoundary><SuccessContent /></ConvexNativeAuthBoundary>
+}
+
+function SuccessContent() {
   const router = useRouter()
-  const [userEmail, setUserEmail]     = useState<string | null>(null)
-  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [checkState, setCheckState]   = useState<'idle' | 'checking' | 'unverified'>('idle')
-  const [resendError, setResendError] = useState<string | null>(null)
+  const { isLoading, isAuthenticated } = useConvexAuth()
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
   useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) setUserEmail(session.user.email ?? null)
-    })
+    try { setUserEmail(localStorage.getItem('mwalimu_last_auth_email')) } catch {}
   }, [])
-
-  const handleResend = async () => {
-    setResendError(null)
-    if (!userEmail) { setResendError('Session expired. Please sign in again.'); return }
-    setResendState('sending')
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: userEmail,
-        options: { emailRedirectTo: `${getSiteUrl()}/auth/callback` },
-      })
-      if (error) throw error
-      setResendState('sent')
-    } catch {
-      setResendState('idle')
-      setResendError('Could not resend email. Please wait a moment and try again.')
-    }
-  }
-
-  const handleCheckVerified = async () => {
-    setCheckState('checking')
-    try {
-      const supabase = createClient()
-      const { data } = await supabase.auth.refreshSession()
-      if (data.user?.email_confirmed_at) {
-        window.location.href = '/dashboard'
-      } else {
-        setCheckState('unverified')
-        setTimeout(() => setCheckState('idle'), 3000)
-      }
-    } catch {
-      setCheckState('idle')
-    }
-  }
 
   return (
     <div className="relative flex min-h-svh w-full items-center justify-center overflow-hidden p-6 md:p-10">
@@ -77,63 +41,30 @@ export default function Page() {
 
           <Card>
             <CardHeader className="text-center space-y-3">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                <Mail className="h-7 w-7 text-primary" aria-hidden="true" />
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" aria-hidden="true" />
               </div>
-              <CardTitle className="text-2xl">Check your email</CardTitle>
+              <CardTitle className="text-2xl">Your account is ready</CardTitle>
               <CardDescription>
-                We sent a verification link to{' '}
                 {userEmail
-                  ? <strong className="text-foreground">{userEmail}</strong>
-                  : 'your email address'
-                }
+                  ? <>You&apos;re signed in as <strong className="text-foreground">{userEmail}</strong>.</>
+                  : 'Your Mwalimu AI account has been created.'}
               </CardDescription>
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
-              <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                Click the link in the email to verify your account. Once done, come back and click the button below.
-              </p>
-
-              <Button onClick={handleCheckVerified} className="w-full gap-2" disabled={checkState === 'checking'}>
-                {checkState === 'checking'
-                  ? <><Spinner className="size-4" /> Checking…</>
-                  : <><CheckCircle className="size-4" /> I&apos;ve verified my email</>}
-              </Button>
-
-              {checkState === 'unverified' && (
-                <p role="alert" className="text-sm text-center text-destructive">
-                  Email not verified yet. Please click the link in your email first.
-                </p>
-              )}
-
-              <div className="relative flex items-center">
-                <div className="flex-1 border-t border-border" />
-                <span className="px-3 text-xs text-muted-foreground">didn&apos;t get the email?</span>
-                <div className="flex-1 border-t border-border" />
-              </div>
-
-              {resendState === 'sent' ? (
-                <p className="text-sm text-center text-green-600 dark:text-green-400 flex items-center justify-center gap-1.5">
-                  <CheckCircle className="size-4" aria-hidden="true" /> Verification email sent
-                </p>
-              ) : (
-                <Button variant="outline" onClick={handleResend} disabled={resendState === 'sending'} className="w-full gap-2">
-                  {resendState === 'sending'
-                    ? <><Spinner className="size-4" /> Sending…</>
-                    : <><RefreshCw className="size-4" /> Resend verification email</>}
+              {isLoading ? (
+                <Button disabled className="w-full gap-2"><Spinner className="size-4" /> Finishing sign in…</Button>
+              ) : isAuthenticated ? (
+                <Button onClick={() => router.push('/dashboard')} className="w-full gap-2">
+                  Continue to dashboard
                 </Button>
-              )}
-
-              {resendError && (
-                <p role="alert" className="text-sm text-center text-destructive">{resendError}</p>
+              ) : (
+                <Button asChild className="w-full"><Link href="/auth/login">Sign in</Link></Button>
               )}
 
               <p className="text-center text-xs text-muted-foreground">
-                Wrong account?{' '}
-                <Link href="/auth/login" className="font-medium text-primary underline-offset-4 hover:underline">
-                  Sign in with a different account
-                </Link>
+                Convex Auth now securely manages your account and session.
               </p>
             </CardContent>
           </Card>

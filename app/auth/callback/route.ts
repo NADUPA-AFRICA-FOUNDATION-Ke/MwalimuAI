@@ -1,19 +1,17 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
-  const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const requestedNext = searchParams.get('next') ?? '/dashboard'
+  const next = requestedNext.startsWith('/') && !requestedNext.startsWith('//')
+    ? requestedNext
+    : '/dashboard'
+  const destination = new URL(next, origin)
 
-  if (code) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
-    }
-  }
-
-  // Code missing or exchange failed — send to error page
-  return NextResponse.redirect(`${origin}/auth/error?error=Could+not+confirm+your+account.+Try+signing+in+or+request+a+new+link.`)
+  // ConvexAuthProvider completes verification in the browser. Preserve all
+  // callback values while preventing an external/open redirect.
+  searchParams.forEach((value, key) => {
+    if (key !== 'next') destination.searchParams.set(key, value)
+  })
+  return NextResponse.redirect(destination)
 }

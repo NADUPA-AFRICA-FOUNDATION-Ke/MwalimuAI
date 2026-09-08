@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,45 +23,31 @@ export default function VerifyPage() {
   const [serial, setSerial] = useState('')
   const [status, setStatus] = useState<Status>('idle')
   const [cert, setCert]     = useState<VerifiedCert | null>(null)
+  const normalizedSerial = serial.trim().toUpperCase()
+  const convexCert = useQuery(api.certificates.verify, normalizedSerial ? { serial: normalizedSerial } : 'skip')
 
-  const check = async (override?: string) => {
+  const check = (override?: string) => {
     const cleaned = (override ?? serial).trim().toUpperCase()
     if (!cleaned) return
     setSerial(cleaned)
     setStatus('checking')
     setCert(null)
-    try {
-      const supabase = createClient()
-      // Exact-match RPC (no table enumeration); falls back to a direct
-      // lookup if the 013 migration has not been applied yet.
-      let data: Record<string, unknown> | null = null
-      const rpc = await supabase.rpc('verify_certificate', { p_serial: cleaned })
-      if (!rpc.error && Array.isArray(rpc.data)) {
-        data = (rpc.data[0] as Record<string, unknown>) ?? null
-      } else if (rpc.error) {
-        const direct = await supabase
-          .from('certificates')
-          .select('serial, program_title, teacher_name, earned_at')
-          .eq('serial', cleaned)
-          .maybeSingle()
-        data = direct.data
-      }
+  }
 
-      if (data) {
+  useEffect(() => {
+    if (status !== 'checking' || !normalizedSerial || convexCert === undefined) return
+    if (convexCert) {
         setCert({
-          serial:       String(data.serial ?? cleaned),
-          programTitle: String(data.program_title ?? ''),
-          teacherName:  String(data.teacher_name ?? ''),
-          earnedAt:     new Date(String(data.earned_at)).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
+          serial: convexCert.serial,
+          programTitle: convexCert.programTitle,
+          teacherName: convexCert.teacherName,
+          earnedAt: new Date(convexCert.earnedAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
         })
-        setStatus('valid')
-      } else {
-        setStatus('invalid')
-      }
-    } catch {
+      setStatus(convexCert.valid ? 'valid' : 'invalid')
+    } else {
       setStatus('invalid')
     }
-  }
+  }, [convexCert, normalizedSerial, status])
 
   // Auto-verify when arriving from a certificate QR (…/verify?serial=MW-…).
   useEffect(() => {
@@ -148,7 +135,7 @@ export default function VerifyPage() {
         )}
 
         {status === 'invalid' && (
-          <div className="rounded-2xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-6" role="alert">
+          <div className="rounded-2xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-6" role="alert" aria-live="assertive">
             <div className="flex items-center gap-2.5 mb-2">
               <ShieldX className="w-5 h-5 text-red-600 dark:text-red-400" aria-hidden="true" />
               <p className="font-bold text-red-700 dark:text-red-300">No certificate found</p>

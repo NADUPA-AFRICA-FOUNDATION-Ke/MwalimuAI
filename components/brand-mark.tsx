@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 
 /**
  * The Mwalimu AI logo mark (the gradient "M" + reader). Transparent PNG, so it
@@ -13,7 +14,7 @@ export function BrandMark({
   alt?: string
 }) {
   return (
-    <img
+    <Image
       src="/mwalimu-mark.png"
       alt={alt}
       width={512}

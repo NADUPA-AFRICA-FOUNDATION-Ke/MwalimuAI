@@ -89,7 +89,7 @@ export function ToolHistoryPanel({ toolId, refreshKey = 0, onRestore }: Props) {
                 <button
                   type="button"
                   onClick={() => onRestore(entry)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                  className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   title="Restore"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -97,7 +97,7 @@ export function ToolHistoryPanel({ toolId, refreshKey = 0, onRestore }: Props) {
                 <button
                   type="button"
                   onClick={() => handleDelete(entry.id)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                   title="Delete"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

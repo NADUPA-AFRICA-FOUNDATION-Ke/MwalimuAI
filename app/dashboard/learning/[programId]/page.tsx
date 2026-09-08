@@ -109,7 +109,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
         <GraduationCap className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2">{program.title}</h1>
         <p className="text-muted-foreground mb-6">This program is coming soon. Check back shortly!</p>
-        <Link href="/dashboard/learning"><Button variant="outline" className="rounded-xl">Back to Programs</Button></Link>
+        <Button asChild variant="outline" className="rounded-xl"><Link href="/dashboard/learning">Back to Programs</Link></Button>
       </div>
     )
   }
@@ -202,33 +202,33 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
           {/* Action buttons */}
           <div className="flex flex-wrap gap-2 mb-4">
             {!progress.preAssessment && (
-              <Link href={`/dashboard/learning/${program.id}/assessment?type=pre`}>
-                <Button variant="outline" size="sm" className="rounded-xl gap-2 border-primary/40 text-primary hover:bg-primary/5">
+              <Button asChild variant="outline" size="sm" className="rounded-xl gap-2 border-primary/40 text-primary hover:bg-primary/5">
+                <Link href={`/dashboard/learning/${program.id}/assessment?type=pre`}>
                   <ClipboardList className="w-4 h-4" /> Take Pre-Assessment
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
             {nextLesson && (
-              <Link href={`/dashboard/learning/${program.id}/${nextLesson.moduleId}/${nextLesson.lessonId}`}>
-                <Button size="sm" className="rounded-xl gap-2">
+              <Button asChild size="sm" className="rounded-xl gap-2">
+                <Link href={`/dashboard/learning/${program.id}/${nextLesson.moduleId}/${nextLesson.lessonId}`}>
                   <PlayCircle className="w-4 h-4" />
                   {pct === 0 ? 'Start First Lesson' : 'Continue Learning'}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
             {pct === 100 && !progress.postAssessment && (
-              <Link href={`/dashboard/learning/${program.id}/assessment?type=post`}>
-                <Button size="sm" className="rounded-xl gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button asChild size="sm" className="rounded-xl gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link href={`/dashboard/learning/${program.id}/assessment?type=post`}>
                   <ClipboardList className="w-4 h-4" /> Take Post-Assessment
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
             {complete && (
-              <Link href={`/dashboard/learning/${program.id}/certificate`}>
-                <Button size="sm" className="rounded-xl gap-2 bg-green-600 hover:bg-green-700 text-white">
+              <Button asChild size="sm" className="rounded-xl gap-2 bg-green-600 hover:bg-green-700 text-white">
+                <Link href={`/dashboard/learning/${program.id}/certificate`}>
                   <Award className="w-4 h-4" /> View Certificate
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
           </div>
 
@@ -302,9 +302,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
                 <CheckCircle2 className="w-3.5 h-3.5" /> Submitted
               </span>
             ) : (
-              <Link href={`/dashboard/learning/${program.id}/assignment`}>
-                <Button size="sm" variant="outline" className="rounded-xl text-xs">Open</Button>
-              </Link>
+              <Button asChild size="sm" variant="outline" className="rounded-xl text-xs"><Link href={`/dashboard/learning/${program.id}/assignment`}>Open</Link></Button>
             )}
           </div>
         </div>
@@ -343,9 +341,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
               {complete ? 'You\'ve earned your certificate!' : 'Read every lesson, write 6+ reflections, and score 85%+ on the post-assessment to unlock.'}
             </p>
             {complete && (
-              <Link href={`/dashboard/learning/${program.id}/certificate`}>
-                <Button size="sm" className="w-full rounded-xl text-xs">View & Print Certificate</Button>
-              </Link>
+              <Button asChild size="sm" className="w-full rounded-xl text-xs"><Link href={`/dashboard/learning/${program.id}/certificate`}>View &amp; Print Certificate</Link></Button>
             )}
           </div>
 

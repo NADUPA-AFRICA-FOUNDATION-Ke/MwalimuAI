@@ -22,8 +22,9 @@ export function PromptBlock({ code }: { code: string }) {
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Prompt template</span>
         </div>
         <button
+          type="button"
           onClick={copy}
-          className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors shrink-0 ${
+          className={`min-h-11 flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors shrink-0 ${
             copied
               ? 'border-primary/30 bg-primary/10 text-primary'
               : 'border-border/60 text-muted-foreground hover:text-foreground hover:border-border'

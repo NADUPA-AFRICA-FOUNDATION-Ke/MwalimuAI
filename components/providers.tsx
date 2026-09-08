@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
+import { ConvexAuthBridge } from '@/components/convex-provider'
 
 // Accessibility widget is a non-critical floating panel — defer it so it
 // doesn't block the initial JS parse / hydration of the main UI.
@@ -23,7 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           mounted here — marketing pages must not pay for it. It wraps only
           the routes that consume it: /dashboard (its layout), /onboarding,
           and /pricing (their layouts). */}
-      {children}
+      <ConvexAuthBridge>{children}</ConvexAuthBridge>
       <AccessibilityWidget />
       <Toaster />
     </ThemeProvider>

@@ -1,7 +1,28 @@
 # Environment Setup Guide
 
 ## Overview
-This guide helps you configure the environment variables needed for Mwalimu AI to work properly with Supabase and AI services.
+The current production app uses Convex for authentication and application data. The Supabase instructions later in this document are retained as legacy migration notes and are not required by the current frontend.
+
+## Current Convex Auth setup
+
+Set the deployment URL in the frontend environment:
+
+```env
+NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+```
+
+Convex Auth OAuth callback URLs for the current production deployment are:
+
+- Google: `https://savory-mallard-562.convex.site/api/auth/callback/google`
+
+Register the exact callback URL with Google, then set the credentials on the production Convex deployment. Do not put these values in `NEXT_PUBLIC_*` variables or in browser code:
+
+```bash
+npx convex env set AUTH_GOOGLE_ID "your-google-client-id" --prod
+npx convex env set AUTH_GOOGLE_SECRET "your-google-client-secret" --prod
+```
+
+Google sign-ins with an exact verified email are linked to an existing native Convex user. Duplicate native accounts are audited and consolidated only through the protected migration operation.
 
 ## Required Environment Variables
 

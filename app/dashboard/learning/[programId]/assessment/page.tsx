@@ -94,9 +94,7 @@ export default function AssessmentPage() {
             <p className="text-muted-foreground text-sm mb-4 max-w-xs mx-auto">You need 85% or higher to earn the certificate — review the material and try again.</p>
           )}
           <div className="flex gap-2 justify-center">
-            <Link href={`/dashboard/learning/${program.id}`}>
-              <Button variant={failedPost ? 'outline' : 'default'} className="rounded-xl">Back to Program</Button>
-            </Link>
+            <Button asChild variant={failedPost ? 'outline' : 'default'} className="rounded-xl"><Link href={`/dashboard/learning/${program.id}`}>Back to Program</Link></Button>
             {failedPost && (
               <Button onClick={handleRetake} disabled={retaking} className="rounded-xl gap-2">
                 <RotateCw className={`w-4 h-4 ${retaking ? 'animate-spin' : ''}`} /> {retaking ? 'Retaking…' : 'Retake Assessment'}
@@ -150,13 +148,9 @@ export default function AssessmentPage() {
             })}
           </div>
           <div className="flex gap-2 mt-6">
-            <Link href={`/dashboard/learning/${program.id}`} className="flex-1">
-              <Button variant="outline" className="w-full rounded-xl">Back to Program</Button>
-            </Link>
+            <Button asChild variant="outline" className="flex-1 w-full rounded-xl"><Link href={`/dashboard/learning/${program.id}`}>Back to Program</Link></Button>
             {type === 'post' && certificateEarned && (
-              <Link href={`/dashboard/learning/${program.id}/certificate`} className="flex-1">
-                <Button className="w-full rounded-xl gap-2"><Award className="w-4 h-4" /> View Certificate</Button>
-              </Link>
+              <Button asChild className="flex-1 w-full rounded-xl gap-2"><Link href={`/dashboard/learning/${program.id}/certificate`}><Award className="w-4 h-4" aria-hidden="true" /> View Certificate</Link></Button>
             )}
           </div>
         </div>
@@ -179,7 +173,7 @@ export default function AssessmentPage() {
           </div>
           <Progress value={((current + 1) / questions.length) * 100} className="h-1.5" />
           {type === 'pre' && (
-            <p className="text-xs text-muted-foreground mt-2">This measures your starting knowledge — answer honestly, there's no pass/fail.</p>
+            <p className="text-xs text-muted-foreground mt-2">This measures your starting knowledge — answer honestly, there&apos;s no pass/fail.</p>
           )}
         </div>
 

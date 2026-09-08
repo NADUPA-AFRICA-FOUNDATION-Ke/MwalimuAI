@@ -14,19 +14,19 @@ const faqs = [
     questions: [
       {
         q: 'What is Mwalimu AI?',
-        a: 'Mwalimu AI is an AI-powered professional development platform designed specifically for Kenyan teachers implementing the Competency-Based Curriculum (CBC). It offers structured learning modules, an AI coach for personalized guidance, community forums, and downloadable resources.',
+        a: 'Mwalimu AI is a professional learning platform for Kenyan CBC teachers. It brings together learning modules, an AI Coach, teacher tools, community discussions, and progress tracking.',
       },
       {
-        q: 'Is Mwalimu AI free to use?',
-        a: 'Yes! We offer a free plan that includes access to 3 learning modules, 10 AI Coach questions per day, and full community forum access. For unlimited access to all features, you can upgrade to our Professional plan.',
+        q: 'How do I get started?',
+        a: 'Create an account, complete your profile, and open your dashboard. From there you can choose a module, take the needs assessment, or open the AI Coach.',
       },
       {
         q: 'How do I create an account?',
-        a: 'Click the "Sign Up" button on our homepage, enter your email and password, then complete your profile with your teaching details. You\'ll receive a confirmation email to verify your account.',
+        a: 'Click Sign Up, enter your email and password, then complete your profile with your teaching details. Follow any verification instructions shown after sign-up.',
       },
       {
         q: 'What devices can I use Mwalimu AI on?',
-        a: 'Mwalimu AI works on any device with a web browser - smartphones, tablets, laptops, and desktop computers. Our platform is fully responsive and optimized for mobile use.',
+        a: 'Mwalimu AI is a responsive web app that can be used on a phone, tablet, laptop, or desktop with a modern browser.',
       },
     ],
   },
@@ -35,19 +35,19 @@ const faqs = [
     questions: [
       {
         q: 'What topics do the learning modules cover?',
-        a: 'Our modules cover CBC fundamentals, assessment strategies, differentiated instruction, classroom management, subject-specific pedagogy, and more. All content is aligned with KICD guidelines and practical for Kenyan classrooms.',
+        a: 'Available modules cover teaching and professional learning topics. Open the Learning Modules area to see the current content and descriptions.',
       },
       {
         q: 'How long does each module take to complete?',
-        a: 'Each module typically takes 2-4 hours to complete, broken into short lessons of 10-15 minutes each. You can learn at your own pace and pick up where you left off.',
+        a: 'Module length varies. The module page shows the lessons and activities included, and you can return to your progress when you are ready.',
       },
       {
         q: 'Do I get a certificate after completing modules?',
-        a: 'Yes! Professional plan subscribers receive digital certificates for each completed module. These certificates can be downloaded and shared with your school administration.',
+        a: 'Certificate availability depends on the learning content and plan shown in the product. Check the relevant module or plan details for the current information.',
       },
       {
         q: 'Can I download content for offline use?',
-        a: 'Professional plan subscribers can download lesson materials, resources, and worksheets for offline use. This is especially helpful for teachers in areas with limited internet connectivity.',
+        a: 'Some saved content can be available offline. The AI Coach still needs an internet connection for a live response.',
       },
     ],
   },
@@ -56,19 +56,19 @@ const faqs = [
     questions: [
       {
         q: 'How does the AI Coach work?',
-        a: 'The AI Coach uses advanced language AI trained on CBC curriculum materials and teaching best practices. Simply type your question or describe your classroom challenge, and receive personalized, actionable advice.',
+        a: 'Type a teaching or planning question, or describe a classroom challenge. The AI Coach returns suggestions that you should review alongside your own professional judgment and school guidance.',
       },
       {
         q: 'What kind of questions can I ask the AI Coach?',
-        a: 'You can ask about lesson planning, assessment strategies, classroom management, how to teach specific concepts, differentiation strategies, parent communication, and any other teaching-related questions.',
+        a: 'You can ask about lesson planning, assessment, classroom management, teaching strategies, or a specific classroom challenge.',
       },
       {
-        q: 'Is the AI Coach available 24/7?',
-        a: 'Yes! The AI Coach is available anytime you need it - during lesson prep, after school hours, or on weekends. It\'s like having a mentor teacher available whenever you need guidance.',
+        q: 'Does the AI Coach need an internet connection?',
+        a: 'Yes. A live AI Coach response requires an internet connection.',
       },
       {
         q: 'How accurate is the AI Coach advice?',
-        a: 'The AI Coach is trained on verified CBC curriculum materials and teaching best practices. However, we recommend using it as a helpful tool alongside your own professional judgment and school guidelines.',
+        a: 'AI responses can be incomplete or incorrect. Review suggestions alongside your own professional judgment and school guidance.',
       },
     ],
   },
@@ -76,16 +76,16 @@ const faqs = [
     category: 'Account & Billing',
     questions: [
       {
-        q: 'How do I upgrade to Professional?',
-        a: 'Log into your account, go to Settings, and click on "Upgrade Plan." You can pay via M-Pesa, credit card, or bank transfer. Schools can contact us for invoice payments.',
+        q: 'How do I manage a paid plan?',
+        a: 'Open the pricing page to review the current plans. If you choose a paid plan, the checkout flow will show the available payment and account steps.',
       },
       {
         q: 'Can I cancel my subscription anytime?',
-        a: 'Yes, you can cancel your Professional subscription at any time from your account settings. You\'ll continue to have access until the end of your billing period.',
+        a: 'Plan changes and cancellation options are shown in your account or checkout experience. Contact support if you need help with a paid plan.',
       },
       {
-        q: 'Do you offer school or county licenses?',
-        a: 'Yes! We offer special pricing for schools and counties that want to provide access to multiple teachers. Contact us at partnerships@mwalimu.ai for more information.',
+        q: 'Can I ask about using Mwalimu AI with a school?',
+        a: 'Yes. Send a message through the contact form with the details of your school or team and the support team can advise on the next step.',
       },
       {
         q: 'How do I reset my password?',
@@ -97,12 +97,16 @@ const faqs = [
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [isOpen, setIsOpen] = useState(false)
+  const answerId = `faq-answer-${question.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 
   return (
     <div className="border-b last:border-b-0">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-4 flex items-center justify-between text-left"
+        aria-expanded={isOpen}
+        aria-controls={answerId}
+        className="w-full min-h-11 py-4 flex items-center justify-between text-left"
       >
         <span className="font-medium pr-4">{question}</span>
         {isOpen ? (
@@ -111,11 +115,9 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
           <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
         )}
       </button>
-      {isOpen && (
-        <div className="pb-4 text-muted-foreground">
+      <div id={answerId} aria-hidden={!isOpen} className={`pb-4 text-muted-foreground ${isOpen ? '' : 'hidden'}`}>
           {answer}
-        </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -124,6 +126,8 @@ export default function FAQPage() {
   return (
     <div className="min-h-screen">
       <MarketingHeader />
+
+      <main>
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 text-center">
@@ -155,13 +159,13 @@ export default function FAQPage() {
         <Card className="p-8 text-center bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
           <h2 className="text-2xl font-bold mb-4">Still Have Questions?</h2>
           <p className="text-muted-foreground mb-6">
-            Our support team is here to help. Reach out and we&apos;ll get back to you within 24 hours.
+            If your question is not here, send us a message through the contact form.
           </p>
-          <Link href="/contact">
-            <Button>Contact Support</Button>
-          </Link>
+          <Button asChild><Link href="/contact">Contact Support</Link></Button>
         </Card>
       </section>
+
+      </main>
 
       <MarketingFooter />
     </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -103,11 +103,15 @@ function StepDot({ n, current, total }: { n: number; current: number; total: num
   const done   = n < current
   const active = n === current
   return (
-    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+    <div
+      aria-current={active ? 'step' : undefined}
+      aria-label={`Step ${n} of ${total}${active ? ', current' : done ? ', completed' : ''}`}
+      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
       done   ? 'bg-primary text-primary-foreground' :
       active ? 'bg-primary text-primary-foreground ring-4 ring-primary/25' :
                'bg-muted text-muted-foreground'
-    }`}>
+    }`}
+    >
       {done ? <CheckCircle2 className="w-4 h-4" /> : n}
     </div>
   )
@@ -126,7 +130,7 @@ function MultiSelect({ options, selected, onChange }: {
           type="button"
           onClick={() => toggle(o)}
           aria-pressed={selected.includes(o)}
-          className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all duration-150 ${
+          className={`min-h-11 px-3 py-1.5 rounded-xl text-sm font-medium border transition-all duration-150 ${
             selected.includes(o)
               ? 'bg-primary/10 border-primary/50 text-foreground'
               : 'bg-transparent border-border/50 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/40'
@@ -144,7 +148,7 @@ const TOTAL_STEPS = 4
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { setProfile, lang } = useProfile()
+  const { setProfile, profile, user, authLoading, lang } = useProfile()
   const t = getT(lang)
 
   const [step, setStep] = useState(1)
@@ -158,6 +162,12 @@ export default function OnboardingPage() {
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizScore, setQuizScore]         = useState(0)
   const [derivedLevel, setDerivedLevel]   = useState<TeacherProfile['cbcLevel'] | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!authLoading && user && profile?.completed) router.replace('/dashboard')
+  }, [authLoading, profile, router, user])
 
   const set = (k: keyof typeof form) => (v: string | string[]) => setForm(f => ({ ...f, [k]: v }))
 
@@ -186,13 +196,29 @@ export default function OnboardingPage() {
       cbcLevel: (form.cbcLevel || 'beginner') as TeacherProfile['cbcLevel'],
       completed: true,
     }
-    await setProfile(profile)
-    router.push('/dashboard')
+    setSaveError(null)
+    setSaving(true)
+    try {
+      await setProfile(profile)
+      router.replace('/dashboard')
+    } catch {
+      setSaveError('We could not save your profile. Please check your connection and try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const skip = async () => {
-    await setProfile({ name: 'Teacher', school: '', county: '', subjects: [], grades: [], cbcLevel: 'beginner', completed: true })
-    router.push('/dashboard')
+    setSaveError(null)
+    setSaving(true)
+    try {
+      await setProfile({ name: 'Teacher', school: '', county: '', subjects: [], grades: [], cbcLevel: 'beginner', completed: true })
+      router.replace('/dashboard')
+    } catch {
+      setSaveError('We could not save your profile. Please check your connection and try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const recommendation = derivedLevel ? LEVEL_PROGRAM[derivedLevel] : null
@@ -212,7 +238,7 @@ export default function OnboardingPage() {
         </div>
 
         {/* Step dots */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-2 mb-8" aria-label={`Onboarding step ${step} of ${TOTAL_STEPS}`}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(n => (
             <div key={n} className="flex items-center gap-2">
               <StepDot n={n} current={step} total={TOTAL_STEPS} />
@@ -410,7 +436,8 @@ export default function OnboardingPage() {
                 You can explore any program after setup — this is just a starting suggestion.
               </p>
 
-              <Button onClick={finish} className="w-full rounded-xl gap-2 font-semibold" size="lg">
+              {saveError && <p role="alert" aria-live="assertive" className="text-sm text-destructive text-center">{saveError}</p>}
+              <Button onClick={finish} disabled={saving} className="w-full rounded-xl gap-2 font-semibold" size="lg">
                 {t('onboard.finish')} <ArrowRight className="w-4 h-4" />
               </Button>
             </div>

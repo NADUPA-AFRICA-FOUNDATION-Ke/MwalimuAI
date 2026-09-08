@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '@/convex/_generated/api'
 
 /**
  * Stripe fulfillment webhook.
@@ -38,7 +39,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
+  const convexUrl = process.env.CONVEX_URL
+  if (!convexUrl) return NextResponse.json({ error: 'Convex is not configured.' }, { status: 503 })
+  const convex = new ConvexHttpClient(convexUrl)
 
   try {
     switch (event.type) {
@@ -49,14 +52,12 @@ export async function POST(req: NextRequest) {
           console.error('[stripe/webhook] checkout completed without client_reference_id', session.id)
           break
         }
-        await admin.from('subscriptions').upsert({
-          user_id:                userId,
-          plan:                   session.metadata?.plan ?? 'professional',
-          status:                 'active',
-          stripe_customer_id:     typeof session.customer === 'string' ? session.customer : null,
-          stripe_subscription_id: typeof session.subscription === 'string' ? session.subscription : null,
-          updated_at:             new Date().toISOString(),
-        }, { onConflict: 'user_id' })
+        await convex.mutation(api.subscriptions.fulfillFromStripe, {
+          webhookSecret: WEBHOOK_SECRET, legacyUserId: userId,
+          plan: session.metadata?.plan ?? 'professional', status: 'active',
+          ...(typeof session.customer === 'string' ? { stripeCustomerId: session.customer } : {}),
+          ...(typeof session.subscription === 'string' ? { stripeSubscriptionId: session.subscription } : {}),
+        })
         break
       }
 
@@ -64,9 +65,16 @@ export async function POST(req: NextRequest) {
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
         const status = event.type === 'customer.subscription.deleted' ? 'canceled' : sub.status
-        await admin.from('subscriptions')
-          .update({ status, updated_at: new Date().toISOString() })
-          .eq('stripe_subscription_id', sub.id)
+        // Stripe sends the customer/subscription identifiers, while the
+        // Convex mutation resolves ownership from the migrated profile.
+        const profileId = typeof sub.metadata?.legacyUserId === 'string' ? sub.metadata.legacyUserId : ''
+        if (profileId) await convex.mutation(api.subscriptions.fulfillFromStripe, {
+          webhookSecret: WEBHOOK_SECRET, legacyUserId: profileId,
+          plan: sub.metadata?.plan ?? 'professional', status,
+          stripeCustomerId: typeof sub.customer === 'string' ? sub.customer : undefined,
+          stripeSubscriptionId: sub.id,
+          currentPeriodEnd: ((sub as Stripe.Subscription & { current_period_end?: number }).current_period_end ?? 0) * 1000,
+        })
         break
       }
     }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import {
-  BookOpen, MessageSquare, FileText, Trophy, Users,
+  BookOpen, MessageSquare, FileText, Trophy, Users, Award, Star, Settings,
   Sparkles, Clock, ChevronRight, Flame, Check, CheckCircle2, X,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -71,14 +71,14 @@ export default function DashboardPage() {
 
   // ── Streak milestones with personality ──────────────
   const MILESTONES = [
-    { days: 1,   name: 'Chalk Dust',        emoji: '🖊️', flavour: 'Every legend starts somewhere.' },
-    { days: 3,   name: 'Morning Register',  emoji: '📋', flavour: 'Three days. A pattern is forming.' },
-    { days: 7,   name: 'Full Week Champ',   emoji: '🏆', flavour: 'A whole school week. Respect.' },
-    { days: 14,  name: 'Two-Week Terror',   emoji: '💪', flavour: 'Most teachers quit here. You did not.' },
-    { days: 21,  name: 'Habit Machine',     emoji: '⚙️', flavour: 'Science says 21 days builds a habit.' },
-    { days: 30,  name: 'CBC Believer',      emoji: '⭐', flavour: 'A whole month. Your students feel it.' },
-    { days: 60,  name: 'Iron Mwalimu',      emoji: '🔥', flavour: 'Two months of pure commitment.' },
-    { days: 100, name: 'Blackboard Legend', emoji: '👑', flavour: 'One hundred days. The stuff of myth.' },
+    { days: 1,   name: 'Chalk Dust',        Icon: BookOpen,     flavour: 'Every legend starts somewhere.' },
+    { days: 3,   name: 'Morning Register',  Icon: CheckCircle2, flavour: 'Three days. A pattern is forming.' },
+    { days: 7,   name: 'Full Week Champ',   Icon: Trophy,       flavour: 'A whole school week. Respect.' },
+    { days: 14,  name: 'Two-Week Terror',   Icon: Award,        flavour: 'Most teachers quit here. You did not.' },
+    { days: 21,  name: 'Habit Machine',     Icon: Settings,     flavour: 'Science says 21 days builds a habit.' },
+    { days: 30,  name: 'CBC Believer',      Icon: Star,         flavour: 'A whole month. Your students feel it.' },
+    { days: 60,  name: 'Iron Mwalimu',      Icon: Flame,        flavour: 'Two months of pure commitment.' },
+    { days: 100, name: 'Blackboard Legend', Icon: Trophy,       flavour: 'One hundred days. The stuff of myth.' },
   ] as const
 
   const earnedMilestones = MILESTONES.filter(m => streak.current >= m.days)
@@ -102,8 +102,8 @@ export default function DashboardPage() {
   ]
   const motivationalMsg = MOTIVATION_MAP.find(m => streak.current <= m.max)?.msg ?? ''
 
-  const streakEmoji  = streak.current >= 100 ? '👑' : streak.current >= 60 ? '🔥' : streak.current >= 30 ? '⭐' : streak.current >= 14 ? '💪' : streak.current >= 7 ? '🏆' : streak.current >= 3 ? '🌿' : streak.current >= 1 ? '🌱' : '📚'
-  const streakEmojiLabel = streak.current >= 100 ? 'Crown' : streak.current >= 60 ? 'Fire' : streak.current >= 30 ? 'Star' : streak.current >= 14 ? 'Muscle' : streak.current >= 7 ? 'Trophy' : streak.current >= 3 ? 'Leaf' : streak.current >= 1 ? 'Seedling' : 'Books'
+  const StreakIcon = streak.current >= 100 ? Trophy : streak.current >= 60 ? Flame : streak.current >= 30 ? Sparkles : streak.current >= 14 ? Award : streak.current >= 7 ? Trophy : streak.current >= 3 ? CheckCircle2 : streak.current >= 1 ? Star : BookOpen
+  const streakIconLabel = streak.current >= 100 ? 'Crown milestone' : streak.current >= 60 ? 'Fire milestone' : streak.current >= 30 ? 'Star milestone' : streak.current >= 14 ? 'Fourteen-day milestone' : streak.current >= 7 ? 'Weekly milestone' : streak.current >= 3 ? 'Three-day milestone' : streak.current >= 1 ? 'First-day milestone' : 'Learning'
 
   return (
     <div className="space-y-7">
@@ -113,8 +113,8 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3 p-4 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <p className="text-sm font-medium flex-1">Payment successful. Welcome to the Professional tier.</p>
-          <button onClick={() => setShowPaymentSuccess(false)} className="shrink-0 p-1 rounded hover:bg-green-100 dark:hover:bg-green-900/40">
-            <X className="w-4 h-4" />
+          <button type="button" onClick={() => setShowPaymentSuccess(false)} aria-label="Dismiss payment confirmation" className="shrink-0 min-w-11 min-h-11 inline-flex items-center justify-center rounded hover:bg-green-100 dark:hover:bg-green-900/40">
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -139,18 +139,18 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Link href="/dashboard/ai-coach">
-              <Button size="sm" className="gap-2 rounded-xl px-5 shadow-sm shadow-primary/15 active:scale-[0.97] transition-transform">
+            <Button asChild size="sm" className="gap-2 rounded-xl px-5 shadow-sm shadow-primary/15 active:scale-[0.97] transition-transform">
+              <Link href="/dashboard/ai-coach">
                 <MessageSquare className="w-3.5 h-3.5" />
                 AI Coach
-              </Button>
-            </Link>
-            <Link href="/dashboard/modules">
-              <Button size="sm" variant="outline" className="gap-2 rounded-xl px-5 border-border/70 active:scale-[0.97] transition-transform">
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl px-5 border-border/70 active:scale-[0.97] transition-transform">
+              <Link href="/dashboard/modules">
                 <BookOpen className="w-3.5 h-3.5" />
                 Modules
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
         <div className="mt-6 h-px bg-border/50" />
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                 title={m.flavour}
                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent/10 text-accent rounded-full text-[11px] font-semibold select-none"
               >
-                <span aria-hidden="true">{m.emoji}</span> {m.name}
+                <m.Icon className="w-3 h-3" aria-hidden="true" /> {m.name}
               </span>
             ))}
           </div>
@@ -318,11 +318,11 @@ export default function DashboardPage() {
 
         <div className="p-5">
 
-          {/* Header: emoji + count + motivation */}
+          {/* Header: streak icon + count + motivation */}
           <div className="flex items-start justify-between gap-4 mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center text-xl select-none" role="img" aria-label={`${streakEmojiLabel}: ${streak.current}-day streak`}>
-                {streakEmoji}
+              <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center select-none" role="img" aria-label={`${streakIconLabel}: ${streak.current}-day streak`}>
+                <StreakIcon className="w-5 h-5 text-accent" aria-hidden="true" />
               </div>
               <div>
                 <div className="flex items-baseline gap-1.5">
@@ -336,15 +336,13 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-            <Link href="/dashboard/achievements">
-              <Button
+            <Button asChild
                 size="sm"
                 variant="outline"
                 className="text-xs rounded-lg h-7 px-3 border-border/60 hover:border-primary/40 hover:text-primary transition-all active:scale-[0.97] shrink-0"
               >
-                All Badges
-              </Button>
-            </Link>
+              <Link href="/dashboard/achievements">All Badges</Link>
+            </Button>
           </div>
 
           {/* Mon→Sun fixed week grid */}
@@ -381,7 +379,9 @@ export default function DashboardPage() {
           <div className="rounded-xl bg-muted/40 p-3.5">
             <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-2.5">
-                <span className="text-xl select-none" role="img" aria-label={`${nextMilestone.name} milestone`}>{nextMilestone.emoji}</span>
+                <span role="img" aria-label={`${nextMilestone.name} milestone`}>
+                  <nextMilestone.Icon className="w-5 h-5 text-accent" aria-hidden="true" />
+                </span>
                 <div>
                   <p className="text-xs font-bold tracking-tight">{nextMilestone.name}</p>
                   <p className="text-[10px] text-muted-foreground">{nextMilestone.days}-day milestone</p>

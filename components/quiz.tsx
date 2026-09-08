@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -50,8 +50,13 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
   )
   const [isQuizComplete, setIsQuizComplete] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
-  const [startTime] = useState(Date.now())
+  const startTimeRef = useRef<number | null>(null)
   const [endTime, setEndTime] = useState<number | null>(null)
+  const [timeTaken, setTimeTaken] = useState(0)
+
+  useEffect(() => {
+    startTimeRef.current = Date.now()
+  }, [])
 
   const currentQuestion = quiz.questions[currentQuestionIndex]
   const currentState = questionStates[currentQuestionIndex]
@@ -87,7 +92,9 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
       setCurrentQuestionIndex(prev => prev + 1)
     } else {
       setIsQuizComplete(true)
-      setEndTime(Date.now())
+      const completedAt = Date.now()
+      setEndTime(completedAt)
+      setTimeTaken(completedAt - (startTimeRef.current ?? completedAt))
       const finalCorrect = questionStates.filter(s => s.isCorrect).length
       const finalPercent = Math.round((finalCorrect / quiz.questions.length) * 100)
       onComplete?.(finalCorrect, quiz.questions.length, finalPercent >= passingScore)
@@ -103,7 +110,9 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
     })))
     setIsQuizComplete(false)
     setShowExplanation(false)
+    startTimeRef.current = Date.now()
     setEndTime(null)
+    setTimeTaken(0)
   }, [quiz.questions])
 
   const formatTime = (ms: number) => {
@@ -115,8 +124,6 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
 
   // Quiz Complete Screen
   if (isQuizComplete) {
-    const timeTaken = endTime ? endTime - startTime : 0
-
     return (
       <div className="space-y-6">
         <Card className="p-8 text-center">
@@ -163,6 +170,7 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
             <div className="grid grid-cols-5 gap-2">
               {questionStates.map((state, index) => (
                 <button
+                  type="button"
                   key={index}
                   onClick={() => {
                     setIsQuizComplete(false)
@@ -170,7 +178,7 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
                     setShowExplanation(true)
                   }}
                   className={cn(
-                    "p-3 rounded-lg text-sm font-medium transition-colors",
+                    "min-h-11 p-3 rounded-lg text-sm font-medium transition-colors",
                     state.isCorrect 
                       ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400" 
                       : "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
@@ -243,6 +251,7 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
 
             return (
               <button
+                type="button"
                 key={index}
                 onClick={() => handleSelectAnswer(index)}
                 disabled={currentState.isAnswered}

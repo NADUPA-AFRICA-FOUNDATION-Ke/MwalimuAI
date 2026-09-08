@@ -7,15 +7,15 @@
 // 'unsafe-inline' here is minimal. Dev additionally needs 'unsafe-eval'
 // for React dev tooling and Turbopack HMR.
 const isDev = process.env.NODE_ENV === 'development'
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://*.supabase.co'
-const supabaseWs = supabaseUrl.replace(/^https:/, 'wss:')
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL ?? 'https://*.convex.cloud'
+const convexWs = convexUrl.replace(/^https:/, 'wss:')
 const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob: https://images.unsplash.com`,
   `font-src 'self'`,
-  `connect-src 'self' ${supabaseUrl} ${supabaseWs}`,
+  `connect-src 'self' ${convexUrl} ${convexWs}`,
   `worker-src 'self'`,
   `manifest-src 'self'`,
   `object-src 'none'`,
@@ -40,12 +40,17 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          ...(process.env.NODE_ENV === 'production'
+            ? [{ key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' }]
+            : []),
         ],
       },
     ]
   },
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
   },
   // jsPDF and html2canvas are browser-only and use dynamic requires that
   // Turbopack cannot statically resolve. Mark them as server-external so

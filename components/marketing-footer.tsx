@@ -17,6 +17,7 @@ export function MarketingFooter() {
 
           <div className="flex items-center gap-5 text-xs text-muted-foreground">
             <Link href="/privacy"  className="hover:text-foreground transition-colors">Privacy policy</Link>
+            <Link href="/terms"    className="hover:text-foreground transition-colors">Terms</Link>
             <Link href="/docs"     className="hover:text-foreground transition-colors">Documentation</Link>
             <Link href="/contact"  className="hover:text-foreground transition-colors">Contact</Link>
           </div>
