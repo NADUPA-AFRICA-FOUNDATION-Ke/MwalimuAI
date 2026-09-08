@@ -10,7 +10,6 @@ import { useState } from 'react'
 import { Eye, EyeOff, ArrowLeft, Check } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 import { OAuthButtons } from '@/components/oauth-buttons'
-import Image from 'next/image'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 
@@ -76,16 +75,9 @@ function SignUpContent() {
         <div className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{ background: 'radial-gradient(ellipse at 20% 10%, oklch(0.54 0.14 163 / 0.30) 0%, transparent 60%)' }} />
 
-        {/* Background classroom photo with overlay */}
-        <div className="absolute inset-0 opacity-10">
-          <Image
-            src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=80"
-            alt=""
-            fill
-            sizes="42vw"
-            className="w-full h-full object-cover"
-          />
-        </div>
+        {/* Lightweight brand detail: avoids making authentication wait for a
+            third-party photograph to download before the form is usable. */}
+        <div className="absolute -right-24 top-1/4 h-80 w-80 rounded-full border-[28px] border-accent/15" aria-hidden="true" />
 
         {/* Logo */}
         <div className="relative z-10">
@@ -100,7 +92,7 @@ function SignUpContent() {
           <p className="text-[11px] font-bold text-white/75 uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
             Learn, plan,<br />and reflect<br />
-            <span style={{ color: 'var(--accent)' }}>in one place.</span>
+            <span style={{ color: 'var(--color-accent-bright)' }}>in one place.</span>
           </h2>
           <ul className="space-y-3.5">
             {[

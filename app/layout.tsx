@@ -9,7 +9,7 @@ import './globals.css'
 export const viewport: Viewport = {
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F7FAF8' },
+    { media: '(prefers-color-scheme: light)', color: '#FAFCFB' },
     { media: '(prefers-color-scheme: dark)',  color: '#0E201B' },
   ],
 }
@@ -45,6 +45,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
+      { url: '/mwalimu-mark.svg', type: 'image/svg+xml' },
       { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icon-16.png', sizes: '16x16', type: 'image/png' },
       { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -66,8 +67,8 @@ export default function RootLayout({
         p, li, figcaption        { text-wrap: pretty; }
 
         @keyframes card-rise {
-          from { opacity: 0; transform: translateY(10px); filter: blur(2px); }
-          to   { opacity: 1; transform: translateY(0);    filter: blur(0);   }
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         .stagger-1 { animation: card-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
         .stagger-2 { animation: card-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }

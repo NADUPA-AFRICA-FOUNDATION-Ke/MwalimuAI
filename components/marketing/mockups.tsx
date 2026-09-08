@@ -191,7 +191,7 @@ export function ModulesMockup() {
               </div>
               <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold shrink-0 ml-2 ${
                 status === 'In Progress' ? 'bg-primary/10 text-primary' :
-                status === 'Started' ? 'bg-accent/12 text-accent-foreground' :
+                status === 'Started' ? 'bg-accent/12 text-accent' :
                 'bg-muted text-muted-foreground'
               }`}>{status}</span>
             </div>

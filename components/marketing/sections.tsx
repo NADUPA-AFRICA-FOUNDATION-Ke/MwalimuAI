@@ -225,6 +225,7 @@ export function SplitSection() {
                 src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=80"
                 alt="Students in a CBC classroom"
                 fill
+                loading="lazy"
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="w-full h-full object-cover"
               />

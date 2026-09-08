@@ -226,8 +226,8 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen mesh-bg flex items-center justify-center px-4 py-12">
       <div className="fixed inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-20 left-8 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-blob" />
-        <div className="absolute bottom-20 right-12 w-80 h-80 bg-accent/8 rounded-full blur-3xl animate-blob animation-delay-3000" />
+        <div className="absolute top-20 left-8 w-48 h-48 bg-primary/6 rounded-full" />
+        <div className="absolute bottom-20 right-12 w-56 h-56 bg-accent/6 rounded-full" />
       </div>
 
       <div className="w-full max-w-lg">

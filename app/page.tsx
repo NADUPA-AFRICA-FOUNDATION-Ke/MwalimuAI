@@ -52,7 +52,7 @@ export default function LandingPage() {
                 </span>
                 <svg aria-hidden className="w-full" height="10" viewBox="0 0 300 10" preserveAspectRatio="none" fill="none">
                   <path pathLength="1" d="M0 7 C 50 1, 110 9.5, 150 5 C 190 0.5, 250 9, 300 5"
-                    style={{ stroke: 'var(--accent)' }} strokeWidth="3" strokeLinecap="round"
+                    style={{ stroke: 'var(--color-accent-bright)' }} strokeWidth="3" strokeLinecap="round"
                     strokeDasharray="1" className="animate-hero-underline" />
                 </svg>
               </span>
@@ -94,14 +94,14 @@ export default function LandingPage() {
 
       {/* ════════════════════ SECTIONS ══════════════════════ */}
       <StatsSection />
-      <ProductShowcase />
-      <FeaturesSection />
-      <SplitSection />
-      <ComparisonSection />
-      <HowItWorksSection />
-      <TestimonialsSection />
-      <FaqSection />
-      <CTASection />
+      <div className="marketing-lazy"><ProductShowcase /></div>
+      <div className="marketing-lazy"><FeaturesSection /></div>
+      <div className="marketing-lazy"><SplitSection /></div>
+      <div className="marketing-lazy"><ComparisonSection /></div>
+      <div className="marketing-lazy"><HowItWorksSection /></div>
+      <div className="marketing-lazy"><TestimonialsSection /></div>
+      <div className="marketing-lazy"><FaqSection /></div>
+      <div className="marketing-lazy"><CTASection /></div>
       </main>
 
       {/* ════════════════════ FOOTER ════════════════════════ */}

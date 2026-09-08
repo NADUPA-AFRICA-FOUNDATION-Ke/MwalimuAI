@@ -39,6 +39,7 @@ function LoginContent() {
   const [password,     setPassword]     = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading,    setIsLoading]    = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const [error,        setError]        = useState<string | null>(null)
   const [deviceNotice, setDeviceNotice] = useState(false)
   const router = useRouter()
@@ -46,7 +47,10 @@ function LoginContent() {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth()
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) router.replace('/dashboard')
+    if (!authLoading && isAuthenticated) {
+      setIsRedirecting(true)
+      router.replace('/dashboard')
+    }
   }, [authLoading, isAuthenticated, router])
 
   // Shown when this device was signed out because the account was used
@@ -68,12 +72,29 @@ function LoginContent() {
       const normalizedEmail = email.trim().toLowerCase()
       const result = await signIn('password', { flow: 'signIn', email: normalizedEmail, password })
       if (!result.signingIn) throw new Error('Invalid credentials')
-      router.push('/dashboard')
+      // Convex updates its auth state immediately after this resolves. Let the
+      // single effect above perform navigation so the page never starts two
+      // competing transitions (the source of the apparent refresh).
+      setIsRedirecting(true)
     } catch (authError) {
+      setIsRedirecting(false)
       setError(mapError(authError instanceof Error ? authError.message : ''))
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isLoading || isRedirecting) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-background px-6">
+        <div className="flex w-full max-w-sm flex-col items-center text-center" role="status" aria-live="polite">
+          <BrandMark className="mb-6 h-14 w-14" alt="Mwalimu AI" />
+          <Spinner className="mb-4 h-5 w-5 text-primary" />
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Signing you in securely</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Your workspace is opening. Please keep this tab open.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -100,7 +121,7 @@ function LoginContent() {
           <p className="text-[11px] font-bold text-white/75 uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
             Professional learning<br />for Kenyan CBC<br />
-            <span style={{ color: 'var(--accent)' }}>teachers.</span>
+            <span style={{ color: 'var(--color-accent-bright)' }}>teachers.</span>
           </h2>
           <p className="text-white/80 text-[15px] leading-relaxed max-w-xs">
             Access learning modules, an AI Coach, teacher tools, community discussions, and progress tracking.

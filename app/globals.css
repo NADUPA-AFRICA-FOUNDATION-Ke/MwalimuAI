@@ -3,19 +3,23 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Mwalimu AI shared design tokens. Keep page components on these semantic
-   values so light/dark themes and accessibility settings stay consistent. */
+/* Mwalimu AI shared design tokens. The palette intentionally stays close to
+   the original orange, green, and white experience: warm enough to feel
+   human, with darker text colors reserved for readable UI labels. */
 :root {
-  --color-canvas: #F7FAF8;
+  --color-canvas: #FAFCFB;
   --color-surface: #FFFFFF;
-  --color-surface-subtle: #EEF5F1;
-  --color-ink: #12312B;
-  --color-ink-muted: #48615A;
+  --color-surface-subtle: #F1F8F4;
+  --color-ink: #17352C;
+  --color-ink-muted: #49635A;
   --color-brand: #057A5B;
   --color-on-brand: #FFFFFF;
   --color-brand-hover: #045E48;
   --color-brand-soft: #DDF5EB;
-  --color-accent-text: #9B5C00;
+  /* #B35F00 is a readable orange for text and solid accent surfaces. */
+  --brand-accent: #B35F00;
+  --color-accent-bright: #F5A623;
+  --color-accent-text: #B35F00;
   --color-accent-soft: #FFF1D4;
   --color-success: #0B6B43;
   --color-on-success: #FFFFFF;
@@ -38,8 +42,8 @@
   --secondary-foreground: var(--color-ink);
   --muted: var(--color-surface-subtle);
   --muted-foreground: var(--color-ink-muted);
-  --accent: var(--color-accent-soft);
-  --accent-foreground: var(--color-accent-text);
+  --accent: var(--brand-accent);
+  --accent-foreground: #FFFFFF;
   --destructive: var(--color-danger);
   --destructive-foreground: var(--color-on-danger);
   --border: var(--color-border);
@@ -78,6 +82,13 @@
 .text-gray-400,
 .text-gray-500 { color: var(--color-ink-muted) !important; }
 
+/* Accent is used as both an icon/text color and a solid status/background
+   color. Keep the semantic utility readable on light surfaces while allowing
+   the hero to use the brighter orange against the dark green background. */
+.text-accent { color: var(--color-accent-text) !important; }
+.hero-bg .text-accent,
+.hero-bg .text-accent-foreground { color: var(--color-accent-bright) !important; }
+
 .dark {
   --color-canvas: #0E201B;
   --color-surface: #142A24;
@@ -88,6 +99,8 @@
   --color-on-brand: #0E201B;
   --color-brand-hover: #79E5C8;
   --color-brand-soft: #1A4639;
+  --brand-accent: #F5A623;
+  --color-accent-bright: #F8BD57;
   --color-accent-text: #F8BD57;
   --color-accent-soft: #4A3212;
   --color-success: #62D39F;
@@ -98,6 +111,8 @@
   --color-border-strong: #75958A;
   --color-focus: #79E5C8;
   --hero-bg: #0E201B;
+  --accent: var(--brand-accent);
+  --accent-foreground: #2D1B00;
   --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.15);
   --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.20);
   --shadow-md: 0 8px 24px rgb(0 0 0 / 0.20);
@@ -257,13 +272,12 @@
 
 /* Glass header */
 .glass-header {
-  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* An opaque header avoids repainting the full page behind a blur on mobile. */
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
 .dark .glass-header {
-  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+  background: var(--color-surface);
   border-bottom-color: var(--color-border);
 }
 
@@ -363,6 +377,14 @@
 }
 .hero-bg-fade {
   background: var(--color-canvas);
+}
+
+/* Defer layout/paint work for long marketing pages until a section is near
+   the viewport. The intrinsic size prevents the browser from shifting the
+   page while it defers the section. */
+.marketing-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 720px;
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-bg-radial { animation: none !important; }
