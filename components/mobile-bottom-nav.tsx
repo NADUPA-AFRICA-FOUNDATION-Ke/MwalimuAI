@@ -2,60 +2,56 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Sparkles, Wand2, BookMarked, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProfile } from '@/context/profile-context'
 import { getT } from '@/lib/i18n'
+import { TAB_ROUTES, isImmersiveScreen } from '@/lib/nav'
 
-const NAV_ITEMS = [
-  { href: '/dashboard',           icon: Home,       labelKey: 'nav.dashboard' as const },
-  { href: '/dashboard/learning',  icon: BookMarked, labelKey: 'nav.learning'  as const },
-  { href: '/dashboard/ai-coach',  icon: Sparkles,   labelKey: 'nav.aiCoach'  as const },
-  { href: '/dashboard/tools',     icon: Wand2,      labelKey: 'nav.tools'    as const },
-  { href: '/dashboard/community', icon: Users,      labelKey: 'nav.community' as const },
-]
-
+/**
+ * Phone tab bar: five destinations, each icon + one-line label. The active tab changes the icon
+ * (heavier stroke, tinted pill) and the label (colour and weight), not colour alone.
+ * Opaque, so nothing shows through, and it clears the home indicator by at least 8px.
+ */
 export function MobileBottomNav() {
   const pathname = usePathname()
   const { lang } = useProfile()
   const t = getT(lang)
 
+  // Lessons and assessments take the whole screen; their own action bar replaces the tabs.
+  if (isImmersiveScreen(pathname)) return null
+
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border/50"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[max(8px,env(safe-area-inset-bottom))]"
       aria-label="Primary navigation"
     >
-      <div className="flex items-stretch justify-around">
-        {NAV_ITEMS.map(({ href, icon: Icon, labelKey }) => {
-          const isActive =
-            pathname === href ||
-            (href !== '/dashboard' && pathname.startsWith(href))
+      <ul className="flex items-stretch justify-around">
+        {TAB_ROUTES.map(({ href, icon: Icon, labelKey, shortKey }) => {
+          const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
           return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={isActive ? 'page' : undefined}
-              className={cn(
-                'flex flex-col items-center justify-center gap-1 flex-1 min-h-11 py-2 px-1 transition-colors duration-150',
-                isActive ? 'text-primary' : 'text-muted-foreground'
-              )}
-            >
-              <div
-                className={cn(
-                  'w-10 h-7 flex items-center justify-center rounded-full transition-all duration-200',
-                  isActive && 'bg-primary/10'
-                )}
+            <li key={href} className="flex-1">
+              <Link
+                href={href}
+                aria-current={isActive ? 'page' : undefined}
+                aria-label={t(labelKey)}
+                className="flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-1.5 touch-manipulation"
               >
-                <Icon className="w-5 h-5" aria-hidden="true" />
-              </div>
-              <span className={cn('text-xs leading-none', isActive ? 'font-semibold' : 'font-medium')}>
-                {t(labelKey)}
-              </span>
-            </Link>
+                <span
+                  className={cn(
+                    'flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-150',
+                    isActive ? 'bg-primary/12 text-primary' : 'text-muted-foreground',
+                  )}
+                >
+                  <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 1.75} aria-hidden="true" />
+                </span>
+                <span className={cn('text-xs leading-tight', isActive ? 'font-semibold text-primary' : 'font-medium text-muted-foreground')}>
+                  {t(shortKey)}
+                </span>
+              </Link>
+            </li>
           )
         })}
-      </div>
+      </ul>
     </nav>
   )
 }

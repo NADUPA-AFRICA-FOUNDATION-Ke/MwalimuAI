@@ -46,11 +46,7 @@ export default function LearningPage() {
     <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-8">
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-semibold mb-4">
-          <BookMarked className="w-3.5 h-3.5" />
-          Learning Paths
-        </div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">Professional Development Programs</h1>
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight mb-2">Professional development programs</h1>
         <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
           Structured professional development for teachers working with Kenya’s competency-based curriculum and education system.
           Each available program combines lessons, classroom application, practical assignments and assessments.
@@ -58,14 +54,14 @@ export default function LearningPage() {
       </div>
 
       {/* Track filter */}
-      <div className="flex flex-wrap gap-2 mb-7">
+      <div className="-mx-4 mb-6 flex snap-x gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [scrollbar-width:none]" role="group" aria-label="Filter by track">
           <button
             type="button"
             onClick={() => setActiveTrack('all')}
-            className={`min-h-11 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-150 ${
+            className={`min-h-11 shrink-0 snap-start px-4 py-2 rounded-xl text-sm font-medium border transition-colors duration-150 ${
             activeTrack === 'all'
-              ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
-              : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/40'
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'border-border bg-card text-foreground hover:bg-secondary'
           }`}
         >
           All Programs ({PROGRAMS.length})
@@ -77,13 +73,13 @@ export default function LearningPage() {
               type="button"
               key={track.id}
               onClick={() => setActiveTrack(track.id)}
-              className={`min-h-11 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-150 ${
+              className={`min-h-11 shrink-0 snap-start flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border transition-colors duration-150 ${
                 activeTrack === track.id
-                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
-                  : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/40'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border bg-card text-foreground hover:bg-secondary'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-4 h-4" />
               {track.label} ({track.count})
             </button>
           )

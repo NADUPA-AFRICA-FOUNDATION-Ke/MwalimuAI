@@ -20,13 +20,13 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   CheckCircle2, ChevronLeft, ChevronRight, Play, BookOpen,
   PenLine, MessageCircle, Send, Clock, Lightbulb, Video, Sparkles,
-  Volume2, VolumeX, Share2, Check,
+  Volume2, VolumeX, Share2, Check, type LucideIcon,
 } from 'lucide-react'
 
 const LESSON_CONTEXT_KEY = 'mwalimu_current_lesson'
 
 type Tab = 'lesson' | 'reading' | 'reflect' | 'discuss'
-const TABS: { id: Tab; label: string; icon: React.FC<{ className?: string }> }[] = [
+const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'lesson',  label: 'Lesson',      icon: Video        },
   { id: 'reading', label: 'Reading',     icon: BookOpen     },
   { id: 'reflect', label: 'Reflection',  icon: PenLine      },
@@ -132,7 +132,7 @@ export default function LessonPage() {
   return (
     <div className="max-w-[var(--reading-max)]">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+      <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground mb-4">
         <Link href={`/dashboard/learning/${program.id}`} className="hover:text-foreground transition-colors">{program.shortTitle}</Link>
         <ChevronRight className="w-3 h-3" />
         <span>{mod.title}</span>
@@ -164,19 +164,21 @@ export default function LessonPage() {
       </div>
 
       {/* Tab navigation */}
-      <div className="flex gap-1 p-1 bg-muted/50 rounded-xl mb-5">
+      <div role="tablist" aria-label="Lesson sections" className="flex gap-1 p-1 bg-muted rounded-xl mb-5">
         {TABS.map(t => {
           const Icon = t.icon
           return (
             <button
               key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                tab === t.id ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+              className={`flex-1 flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-xs font-semibold transition-colors sm:min-h-11 sm:flex-row sm:gap-1.5 sm:text-sm ${
+                tab === t.id ? 'bg-background shadow-xs text-primary' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t.label}</span>
+              <Icon className="w-5 h-5 sm:w-4 sm:h-4" strokeWidth={tab === t.id ? 2.5 : 1.75} aria-hidden="true" />
+              <span>{t.label}</span>
             </button>
           )
         })}
@@ -375,35 +377,28 @@ export default function LessonPage() {
         )}
       </div>
 
-      {/* Navigation footer */}
-      <div className="flex items-center justify-between mt-5 gap-3">
-        <div>
+      {/* Lesson actions: pinned to the bottom of the phone screen (thumb zone); inline from md up */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background pb-[max(8px,env(safe-area-inset-bottom))] md:static md:z-auto md:mt-6 md:border-0 md:bg-transparent md:pb-0">
+        <div className="mx-auto flex max-w-[var(--reading-max)] items-center gap-3 px-4 py-3 md:px-0 md:py-0">
           {prevLesson ? (
-            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+            <Button asChild variant="outline" size="lg" className="shrink-0 rounded-xl gap-1.5" aria-label="Previous lesson">
               <Link href={`/dashboard/learning/${program.id}/${prevLesson.moduleId}/${prevLesson.lessonId}`}>
-                <ChevronLeft className="w-4 h-4" /> Previous
+                <ChevronLeft className="w-5 h-5" aria-hidden="true" /><span className="max-sm:sr-only">Previous</span>
               </Link>
             </Button>
           ) : (
-            <Button asChild variant="outline" size="sm" className="rounded-xl gap-1.5">
+            <Button asChild variant="outline" size="lg" className="shrink-0 rounded-xl gap-1.5" aria-label="Program overview">
               <Link href={`/dashboard/learning/${program.id}`}>
-                <ChevronLeft className="w-4 h-4" /> Program Overview
+                <ChevronLeft className="w-5 h-5" aria-hidden="true" /><span className="max-sm:sr-only">Program overview</span>
               </Link>
             </Button>
           )}
-        </div>
 
-        <Button
-          onClick={handleComplete}
-          className={`rounded-xl gap-2 font-semibold ${lessonDone ? 'bg-primary/20 text-primary hover:bg-primary/30' : ''}`}
-          size="sm"
-        >
-          {lessonDone ? (
-            <><CheckCircle2 className="w-4 h-4" /> {nextLesson ? 'Next Lesson' : 'Finish Module'}</>
-          ) : (
-            <><CheckCircle2 className="w-4 h-4" /> Mark Complete & Continue</>
-          )}
-        </Button>
+          <Button onClick={handleComplete} size="lg" className="flex-1 rounded-xl gap-2 font-semibold md:flex-none md:ml-auto">
+            <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
+            {lessonDone ? (nextLesson ? 'Next lesson' : 'Finish module') : 'Mark complete & continue'}
+          </Button>
+        </div>
       </div>
     </div>
   )

@@ -83,7 +83,7 @@
   --content-max: 72rem;           /* dashboard content column (1152px) */
   --reading-max: 44rem;           /* long-form reading column (704px, ~70 characters) */
   --app-header-h: 3.5rem;         /* 56px; plus the top safe area in the installed app */
-  --bottom-nav-h: 3.5rem;         /* 56px; plus the bottom safe area */
+  --bottom-nav-h: 3.9rem;         /* ~62px tab row; plus the bottom safe area (min 8px) */
 
   --shadow-xs: 0 1px 2px rgb(18 49 43 / 0.04);
   --shadow-sm: 0 1px 2px rgb(18 49 43 / 0.06);
@@ -474,6 +474,11 @@
 ══════════════════════════════════════════════════════════ */
 /* Space below page content so the fixed bottom tab bar never covers it. */
 .pb-safe-nav { padding-bottom: calc(var(--bottom-nav-h) + max(8px, env(safe-area-inset-bottom, 0px)) + 16px); }
+
+/* Lessons: the tab bar steps aside for a sticky action bar (about 72px + safe area). */
+.pb-safe-action { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
+/* Desktop has no bottom bar. These are unlayered, so state the desktop value here, not with md:pb-*. */
+@media (min-width: 768px) { .pb-safe-nav, .pb-safe-action { padding-bottom: 2rem; } }
 
 /* Fill exactly the space between the app header and the bottom tab bar (chat-style screens).
    Uses dvh so the browser's collapsing toolbar cannot push content off screen. */

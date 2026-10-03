@@ -15,6 +15,12 @@ const translations = {
     'nav.achievements':'Achievements',
     'nav.progress':    'My Progress',
     'nav.settings':    'Settings',
+    // Short labels for the phone tab bar (must fit on one line at 12px)
+    'nav.tabHome':     'Home',
+    'nav.tabLearn':    'Learn',
+    'nav.tabCoach':    'Coach',
+    'nav.tabTools':    'Tools',
+    'nav.tabCommunity':'Community',
 
     // Header
     'header.logout':   'Logout',
@@ -127,6 +133,11 @@ const translations = {
     'nav.achievements':'Mafanikio',
     'nav.progress':    'Maendeleo Yangu',
     'nav.settings':    'Mipangilio',
+    'nav.tabHome':     'Nyumbani',
+    'nav.tabLearn':    'Jifunze',
+    'nav.tabCoach':    'Kocha',
+    'nav.tabTools':    'Zana',
+    'nav.tabCommunity':'Jamii',
 
     // Header
     'header.logout':   'Toka',

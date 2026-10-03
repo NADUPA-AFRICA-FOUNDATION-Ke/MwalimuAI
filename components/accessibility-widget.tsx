@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useId } from 'react'
+import { OPEN_A11Y_EVENT } from '@/lib/nav'
 import { useTheme } from 'next-themes'
 import {
   Accessibility, X, Type, Contrast, ZapOff, AlignJustify,
@@ -121,6 +122,13 @@ export function AccessibilityWidget() {
     }
   }, [open])
 
+  // Other screens (account sheet, marketing menu) open the panel through this event.
+  useEffect(() => {
+    const openPanel = () => setOpen(true)
+    window.addEventListener(OPEN_A11Y_EVENT, openPanel)
+    return () => window.removeEventListener(OPEN_A11Y_EVENT, openPanel)
+  }, [])
+
   // Trap Tab within the panel while open
   useFocusTrap(panelRef, open)
 
@@ -199,9 +207,8 @@ export function AccessibilityWidget() {
         {announcement}
       </div>
 
-      {/* Floating trigger button
-          bottom-20 on mobile to clear the 64px MobileBottomNav;
-          bottom-6 on md+ where the bottom nav is hidden */}
+      {/* Floating trigger: desktop only. On phones it would cover content and the tab bar, so the
+          panel opens from the account sheet / menu (OPEN_A11Y_EVENT) as a bottom sheet instead. */}
       <button
         type="button"
         ref={btnRef}
@@ -215,7 +222,7 @@ export function AccessibilityWidget() {
         aria-controls="a11y-panel"
         aria-haspopup="dialog"
         title="Accessibility options (Alt+A)"
-        className={`fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 rounded-full shadow-xl flex items-center justify-center transition-[background-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:scale-110 group ${
+        className={`max-md:hidden fixed md:bottom-6 md:right-6 z-50 rounded-full shadow-xl flex items-center justify-center transition-[background-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:scale-110 group ${
           open
             ? 'bg-foreground text-background scale-110'
             : 'bg-primary text-primary-foreground hover:shadow-primary/40'
@@ -236,6 +243,7 @@ export function AccessibilityWidget() {
       </button>
 
       {/* Panel */}
+      {open && <div className="fixed inset-0 z-40 bg-black/40 md:hidden" aria-hidden="true" onClick={() => setOpen(false)} />}
       {open && (
         <div
           id="a11y-panel"
@@ -245,7 +253,7 @@ export function AccessibilityWidget() {
           aria-label="Accessibility options"
           aria-describedby="a11y-panel-desc"
           /* Responsive: fills most of the viewport width on mobile, fixed 296px on md+ */
-          className="fixed bottom-[136px] right-4 left-4 md:left-auto md:right-6 md:w-[296px] z-50 bg-background border border-border/60 rounded-2xl shadow-2xl shadow-black/20 overflow-hidden"
+          className="fixed inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl pb-[max(16px,env(safe-area-inset-bottom))] md:inset-x-auto md:bottom-24 md:right-6 md:w-[296px] md:max-h-none md:rounded-2xl md:pb-0 z-50 bg-background border border-border shadow-2xl overflow-hidden"
           style={{ animation: 'a11yPanelIn 0.18s cubic-bezier(0.16,1,0.3,1)' }}
         >
           {/* Header */}

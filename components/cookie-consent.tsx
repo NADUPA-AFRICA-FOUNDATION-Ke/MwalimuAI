@@ -42,18 +42,19 @@ export function CookieConsent() {
     <aside
       role="region"
       aria-label="Cookie preferences"
-      className="fixed inset-x-3 bottom-3 z-[100] rounded-2xl border border-border bg-background p-4 shadow-2xl md:inset-x-auto md:right-5 md:max-w-md"
+      className="fixed inset-x-0 bottom-0 z-[100] rounded-t-2xl border-t border-border bg-background px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] shadow-lg md:inset-x-auto md:bottom-5 md:right-5 md:max-w-md md:rounded-2xl md:border md:pb-4"
     >
-      <h2 className="mb-1 text-sm font-semibold text-foreground">Privacy choices</h2>
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        We use essential storage to keep the app secure and remember settings. With your permission, anonymous analytics help us improve Mwalimu AI. Read our <Link className="font-medium text-primary underline underline-offset-2" href="/privacy">Privacy Policy</Link>.
+      <h2 className="mb-1 text-base font-semibold text-foreground">Privacy choices</h2>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        We store only what the app needs to stay secure and remember your settings. Anonymous analytics are optional.{' '}
+        <Link className="font-medium text-primary underline underline-offset-2" href="/privacy">Privacy policy</Link>
       </p>
-      <div className="mt-3 flex flex-wrap justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => { saveConsent('declined'); setConsent('declined') }}>
-          Decline analytics
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <Button type="button" variant="outline" size="lg" onClick={() => { saveConsent('declined'); setConsent('declined') }}>
+          Decline
         </Button>
-        <Button type="button" size="sm" onClick={() => { saveConsent('accepted'); setConsent('accepted') }}>
-          Accept analytics
+        <Button type="button" size="lg" onClick={() => { saveConsent('accepted'); setConsent('accepted') }}>
+          Accept
         </Button>
       </div>
     </aside>

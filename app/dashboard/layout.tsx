@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { isImmersiveScreen } from '@/lib/nav'
 import { DashboardHeader } from '@/components/dashboard-header'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
@@ -33,6 +34,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const router = useRouter()
+  const pathname = usePathname()
   const { user, authLoading, profile, mounted, signOut } = useProfile()
   const { isAuthenticated } = useConvexAuth()
   const updatePreferences = useMutation(api.preferences.update)
@@ -110,7 +112,6 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     >
       <DashboardHeader
         onLogout={handleLogout}
-        onMenuToggle={() => setSidebarOpen(v => !v)}
         sidebarCollapsed={sidebarCollapsed}
         onToggleCollapse={handleToggleCollapse}
       />
@@ -129,7 +130,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         tabIndex={-1}
         className="layout-main flex-1 min-w-0 overflow-x-hidden"
       >
-        <div className="layout-inner mx-auto w-full max-w-[var(--content-max)] px-4 pt-4 pb-safe-nav md:px-6 md:pt-6 md:pb-8">
+        <div className={`layout-inner mx-auto w-full max-w-[var(--content-max)] px-4 pt-4 md:px-6 md:pt-6 md:pb-8 ${isImmersiveScreen(pathname) ? 'pb-safe-action' : 'pb-safe-nav'}`}>
           {children}
         </div>
       </main>

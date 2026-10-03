@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { BackButton } from '@/components/back-button'
 import {
   Send, Lightbulb, AlertCircle, RefreshCw, Wifi, WifiOff,
-  Cpu, BookMarked, X, Globe, Plus, Trash2, MessageSquare, Menu,
+  Cpu, BookMarked, X, Globe, Plus, Trash2, MessageSquare, History,
 } from 'lucide-react'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { useProfile } from '@/context/profile-context'
@@ -354,18 +354,16 @@ function ChatPanel({
       {/* Top bar */}
       <div className="px-4 pt-4 pb-2 shrink-0 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {/* Mobile only: sidebar toggle */}
+          {/* Phones: chat history opens as a side panel. (Desktop keeps it in the sidebar. The app bar
+              already provides navigation, so no second Back/Menu control here.) */}
           <button
             onClick={onToggleSidebar}
-            className="md:hidden min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground"
-            aria-label="Toggle chat history"
+            className="md:hidden min-h-11 inline-flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary"
+            aria-label="Chat history"
           >
-            <Menu className="w-4 h-4" />
+            <History className="w-5 h-5" aria-hidden="true" />
+            History
           </button>
-          {/* Desktop: back button lives in sidebar; mobile: show it here */}
-          <div className="md:hidden">
-            <BackButton fallbackHref="/dashboard" label="Back" />
-          </div>
         </div>
 
         {/* Backend indicator */}
@@ -426,7 +424,7 @@ function ChatPanel({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 space-y-5" aria-live="polite" aria-busy={isLoading}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center pb-8">
+          <div className="flex flex-col items-center justify-center min-h-full text-center py-6">
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-5">
               <Lightbulb className="w-8 h-8 text-primary" />
             </div>
@@ -490,7 +488,7 @@ function ChatPanel({
       </div>
 
       {/* Input bar */}
-      <div className="shrink-0 border-t border-border/50 bg-background/80 backdrop-blur-md px-4 md:px-8 py-4 pb-20 md:pb-4">
+      <div className="shrink-0 border-t border-border bg-background px-4 md:px-8 py-3 md:py-4">
         {error && (
           <div className="flex justify-end mb-2">
             <button

@@ -1,112 +1,77 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { LogOut, Menu, Sun, Moon, Monitor, PanelLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { usePathname, useRouter } from 'next/navigation'
+import { ArrowLeft, PanelLeft } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 import { NotificationCenter } from '@/components/notification-center'
-import { useTheme } from 'next-themes'
+import { AccountSheet } from '@/components/account-sheet'
 import { useProfile } from '@/context/profile-context'
 import { getT } from '@/lib/i18n'
-import { useEffect, useState } from 'react'
+import { isRootScreen, parentRoute, screenTitle } from '@/lib/nav'
 import { cn } from '@/lib/utils'
 
 interface DashboardHeaderProps {
   onLogout: () => void
-  onMenuToggle?: () => void
   sidebarCollapsed?: boolean
   onToggleCollapse?: () => void
 }
 
-const AVATAR_COLORS = [
-  '#16a34a', '#d97706', '#2563eb', '#9333ea',
-  '#e11d48', '#0891b2', '#c2410c', '#0d9488',
-]
-
-function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  if (!mounted) return <div className="w-8 h-8" />
-  const cycle = { light: 'dark', dark: 'system', system: 'light' } as const
-  const next = cycle[theme as keyof typeof cycle] ?? 'light'
-  const Icon = { light: Sun, dark: Moon, system: Monitor }[theme as keyof typeof cycle] ?? Monitor
-  return (
-    <button type="button" onClick={() => setTheme(next)}
-      className="w-11 h-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all duration-150"
-      aria-label={`Switch to ${next} mode`}>
-      <Icon className="w-4 h-4" aria-hidden="true" />
-    </button>
-  )
-}
-
-export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onToggleCollapse }: DashboardHeaderProps) {
-  const { profile, lang, toggleLang, mounted } = useProfile()
+/**
+ * App bar. Phones: a back control and the screen title on every sub-screen (an installed app has no
+ * browser back button), the product mark on tab screens. It reserves the top safe area so it never
+ * sits under the status bar or notch. Desktop keeps the sidebar toggle and product name.
+ */
+export function DashboardHeader({ onLogout, sidebarCollapsed, onToggleCollapse }: DashboardHeaderProps) {
+  const { profile, lang, mounted } = useProfile()
   const t = getT(lang)
+  const pathname = usePathname()
+  const router = useRouter()
+  const [accountOpen, setAccountOpen] = useState(false)
 
-  const displayName = mounted && profile?.name ? profile.name : 'Teacher'
-  const initials    = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-  const avatarBg    = AVATAR_COLORS[(displayName.charCodeAt(0) || 84) % AVATAR_COLORS.length]
+  const name = mounted && profile?.name ? profile.name : 'Teacher'
+  const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+  const showBack = !isRootScreen(pathname)
+  const title = screenTitle(pathname, t)
+
+  // History may be empty (deep link, refresh, freshly installed app): fall back to the parent screen.
+  const goBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back()
+    else router.push(parentRoute(pathname))
+  }
 
   return (
-    <header className="sticky top-0 z-40 h-[calc(var(--app-header-h)+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] border-b border-border bg-background">
-      <div className="flex items-center h-full px-3 md:px-4 gap-1">
-
+    <header className="sticky top-0 z-40 h-[calc(var(--app-header-h)+env(safe-area-inset-top,0px))] border-b border-border bg-background pt-[env(safe-area-inset-top,0px)]">
+      <div className="flex h-full items-center gap-1 px-2 md:px-4">
         {/* Left */}
-        <div className="flex items-center gap-1 shrink-0">
-          {onMenuToggle && (
-            <button type="button" onClick={onMenuToggle}
-              className="md:hidden w-11 h-11 flex items-center justify-center hover:bg-muted/70 rounded-lg transition-colors"
-              aria-label="Open navigation">
-              <Menu className="w-4.5 h-4.5" aria-hidden="true" />
-            </button>
-          )}
-          {onToggleCollapse && (
-            <button type="button" onClick={onToggleCollapse}
-              className="hidden md:flex w-11 h-11 items-center justify-center hover:bg-muted/70 rounded-lg transition-colors text-muted-foreground hover:text-foreground"
-              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              aria-pressed={sidebarCollapsed}>
-              <PanelLeft className={cn('w-4 h-4 transition-transform duration-200', sidebarCollapsed && 'rotate-180')} aria-hidden="true" />
-            </button>
-          )}
-          <Link href="/dashboard" className="flex items-center gap-2 ml-1 group">
-            <BrandMark className="w-7 h-7 transition-transform duration-150 group-hover:scale-105" />
-            <span className="font-bold text-sm hidden sm:inline tracking-tight">Mwalimu AI</span>
-          </Link>
-        </div>
+        {showBack && (
+          <button type="button" onClick={goBack} aria-label="Back" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-foreground hover:bg-secondary md:hidden">
+            <ArrowLeft className="h-6 w-6" aria-hidden="true" />
+          </button>
+        )}
+        {onToggleCollapse && (
+          <button type="button" onClick={onToggleCollapse} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-pressed={sidebarCollapsed}
+            className="hidden h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground md:flex">
+            <PanelLeft className={cn('h-5 w-5 transition-transform duration-200', sidebarCollapsed && 'rotate-180')} aria-hidden="true" />
+          </button>
+        )}
+        <Link href="/dashboard" aria-label="Mwalimu AI home" className={cn('flex items-center gap-2 px-1', showBack && 'max-md:hidden')}>
+          <BrandMark className="h-8 w-8" />
+          <span className="hidden text-base font-bold tracking-tight md:inline">Mwalimu AI</span>
+        </Link>
+        <p className="min-w-0 flex-1 truncate px-1 text-lg font-semibold md:hidden">{title}</p>
 
         {/* Right */}
-        <div className="flex items-center gap-1 ml-auto">
-          {/* Language toggle */}
-          <button type="button" onClick={toggleLang}
-            className="hidden sm:flex min-h-11 items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
-            title={t('header.langToggle')}>
-            {t('header.langToggle')}
-          </button>
-
-          <ThemeToggle />
+        <div className="ml-auto flex items-center gap-1">
           <NotificationCenter />
-
-          {/* Avatar */}
-          <div className="flex items-center gap-2 pl-2 ml-1 border-l border-border/40">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-white"
-              style={{ background: avatarBg, fontSize: '10px', fontWeight: 800 }}>
-              {initials}
-            </div>
-            <span className="font-medium text-sm hidden md:block truncate max-w-[150px] text-foreground">
-              {displayName}
-            </span>
-          </div>
-
-          <button type="button" onClick={onLogout}
-            className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-150 ml-0.5"
-            title={t('header.logout')}
-            aria-label={t('header.logout')}>
-            <LogOut className="w-4 h-4" aria-hidden="true" />
+          <button type="button" onClick={() => setAccountOpen(true)} aria-label="Account and settings" aria-haspopup="dialog"
+            className="flex h-11 w-11 items-center justify-center rounded-full">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground" aria-hidden="true">{initials}</span>
           </button>
         </div>
-
       </div>
+      <AccountSheet open={accountOpen} onOpenChange={setAccountOpen} onLogout={onLogout} />
     </header>
   )
 }
