@@ -4,13 +4,14 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  getProgramById, getLessonById, getNextLesson, getPrevLesson,
+  getLessonById, getNextLesson, getPrevLesson,
 } from '@/lib/learning-paths-data'
 import {
   getProgress, completeLesson, saveReflection, isLessonComplete,
   getDiscussions, addDiscussionPost, type DiscussionPost, type ProgramProgress,
 } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
+import { usePrograms } from '@/context/content-context'
 import { recordActivity } from '@/lib/streak'
 import { getLowBandwidth, speak, stopSpeaking, canSpeak } from '@/lib/accessibility'
 import { renderReading, stripMd } from '@/lib/render-md'
@@ -37,6 +38,7 @@ export default function LessonPage() {
   const router = useRouter()
   const { profile, lang, user, syncReady } = useProfile()
 
+  const { getProgramById } = usePrograms()
   const program = getProgramById(params.programId)
   const found   = program ? getLessonById(program, params.moduleId, params.lessonId) : null
   const { module: mod, lesson } = found ?? {}

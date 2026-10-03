@@ -57,6 +57,12 @@ export async function getCurrentProfile(ctx: DatabaseCtx) {
   return { identity, profile };
 }
 
+export function assertProfileActive(profile: { status?: "active" | "suspended" | "deactivated" }) {
+  if (profile.status === "suspended" || profile.status === "deactivated") {
+    throw new ConvexError({ code: "ACCOUNT_SUSPENDED", message: "This account is suspended. Please contact support." });
+  }
+}
+
 export async function requireCurrentProfile(ctx: DatabaseCtx) {
   const { profile } = await getCurrentProfile(ctx);
   if (profile === null) {
@@ -65,5 +71,7 @@ export async function requireCurrentProfile(ctx: DatabaseCtx) {
       message: "Create the authenticated user's profile before using this feature",
     });
   }
+  // Suspension is enforced here so every learner function honours it, not just the UI.
+  assertProfileActive(profile);
   return profile;
 }

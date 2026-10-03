@@ -2,11 +2,14 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentProfile } from "./lib/auth";
 import { boundedLimit, requireDateKey } from "./lib/validation";
+import { addDays, eatDateKey } from "./lib/streakMath";
+import { fail } from "./lib/errors";
 
 const activityType = v.union(v.literal("lesson"), v.literal("tool"), v.literal("journal"), v.literal("community"), v.literal("login"), v.literal("assessment"));
 const activityDoc = v.object({
   _id: v.id("activityLog"), _creationTime: v.number(), userId: v.id("profiles"), legacyId: v.optional(v.string()),
   date: v.string(), type: activityType, metadata: v.optional(v.any()), createdAt: v.number(),
+  source: v.optional(v.union(v.literal("user"), v.literal("restored"))), adjustmentId: v.optional(v.id("streakAdjustments")),
 });
 
 export const listMine = query({
@@ -31,6 +34,12 @@ export const record = mutation({
   returns: v.id("activityLog"),
   handler: async (ctx, args) => {
     const profile = await requireCurrentProfile(ctx); const date = requireDateKey(args.date);
+    // Learners can't backfill or pre-fill streak days; gaps are repaired by staff (with an audit trail).
+    // One day of slack either side covers device clock and timezone skew.
+    const today = eatDateKey(Date.now());
+    if (date < addDays(today, -1) || date > addDays(today, 1)) {
+      throw fail("INVALID_ARGUMENT", "Activity can only be recorded for today");
+    }
     const existing = await ctx.db.query("activityLog").withIndex("by_user_date_and_type", (q) =>
       q.eq("userId", profile._id).eq("date", date).eq("type", args.type)).unique();
     if (existing) {

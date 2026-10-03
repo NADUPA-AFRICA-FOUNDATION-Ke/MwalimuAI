@@ -33,6 +33,14 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // The console must never be indexed or framed, wherever it is served.
+        source: '/admin/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+          { key: 'Cache-Control', value: 'no-store' },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           { key: 'Content-Security-Policy', value: csp },

@@ -7,7 +7,8 @@ import { SidebarNav } from '@/components/sidebar-nav'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { OfflineIndicator } from '@/components/offline-indicator'
 import { useProfile, ProfileProvider } from '@/context/profile-context'
-import { useMutation } from 'convex/react'
+import { ContentProvider } from '@/context/content-context'
+import { useMutation, useQuery } from 'convex/react'
 import { useConvexAuth } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 
@@ -18,7 +19,9 @@ const COLLAPSE_KEY = 'mwalimu_sidebar_collapsed'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProfileProvider>
-      <DashboardShell>{children}</DashboardShell>
+      <ContentProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </ContentProvider>
     </ProfileProvider>
   )
 }
@@ -33,6 +36,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, authLoading, profile, mounted, signOut } = useProfile()
   const { isAuthenticated } = useConvexAuth()
   const updatePreferences = useMutation(api.preferences.update)
+  const account = useQuery(api.profiles.me, isAuthenticated ? {} : 'skip')
 
   // Restore desktop collapsed preference from localStorage on mount
   useEffect(() => {
@@ -81,6 +85,22 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const handleLogout = async () => {
     await signOut()
     router.push('/auth/login')
+  }
+
+  // Staff can suspend an account; the server already refuses its requests, this explains why.
+  if (account && (account.status === 'suspended' || account.status === 'deactivated')) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center p-6">
+        <div role="alert" className="max-w-md text-center">
+          <h1 className="text-xl font-bold">Your account is suspended</h1>
+          <p className="mt-2 text-sm text-muted-foreground">You can&apos;t use Mwalimu AI right now. Your progress and certificates are safe. Please contact support to find out more.</p>
+          <div className="mt-5 flex justify-center gap-3">
+            <a href="/support" className="rounded-xl border px-4 py-2 text-sm font-medium">Contact support</a>
+            <button type="button" onClick={handleLogout} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Sign out</button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

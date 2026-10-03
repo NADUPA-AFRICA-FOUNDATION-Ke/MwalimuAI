@@ -56,6 +56,20 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     googleProvider,
   ],
   callbacks: {
+    // Same rules as Convex Auth's default (relative paths or SITE_URL), plus the admin
+    // console origins listed in ADMIN_ORIGINS, so sign-in on the admin host returns there.
+    async redirect({ redirectTo }) {
+      const siteUrl = process.env.SITE_URL?.replace(/\/$/, "");
+      const allowed = [siteUrl, ...(process.env.ADMIN_ORIGINS ?? "").split(",").map((o) => o.trim().replace(/\/$/, ""))].filter(Boolean) as string[];
+      if (redirectTo.startsWith("?") || redirectTo.startsWith("/")) return `${siteUrl}${redirectTo}`;
+      for (const origin of allowed) {
+        if (redirectTo.startsWith(origin)) {
+          const rest = redirectTo.slice(origin.length);
+          if (rest === "" || /^[/?#]/.test(rest)) return redirectTo;
+        }
+      }
+      throw new Error(`Invalid redirectTo ${redirectTo}`);
+    },
     async createOrUpdateUser(ctx, args) {
       const email = normalizedEmail(args.profile.email);
       const emailIsTrusted = email !== undefined && trustedProviderEmail(args.provider, args.profile);
@@ -76,7 +90,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       if (!userId && email && emailIsTrusted) {
         const matches = await ctx.db
           .query("users")
-          .filter((q) => q.eq(q.field("email"), email))
+          .withIndex("email" as never, (q: any) => q.eq("email", email))
           .take(2);
 
         if (matches.length > 1) {
@@ -91,7 +105,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       if (!userId && args.type === "credentials" && email) {
         const existingEmailUser = await ctx.db
           .query("users")
-          .filter((q) => q.eq(q.field("email"), email))
+          .withIndex("email" as never, (q: any) => q.eq("email", email))
           .take(1);
         if (existingEmailUser.length > 0) {
           throw new Error("An account with this email already exists. Sign in with your existing provider or reset your password.");

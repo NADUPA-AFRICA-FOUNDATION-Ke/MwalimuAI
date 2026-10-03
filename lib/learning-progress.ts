@@ -1,5 +1,11 @@
 import type { Program } from './learning-paths-data'
 import { PROGRAMS } from './learning-paths-data'
+
+// Catalogue used by the eligibility helpers below. ContentProvider swaps in CMS content;
+// until then (and on the server) the bundled curriculum applies.
+let programCatalog: Program[] = PROGRAMS
+export function setProgramCatalog(programs: Program[]) { programCatalog = programs }
+const findProgram = (id: string) => programCatalog.find(pr => pr.id === id)
 import { makeFunctionReference } from 'convex/server'
 import { getConvexClient } from '@/lib/convex/client'
 
@@ -84,7 +90,7 @@ function cloudSync(programId: string, p: ProgramProgress): Promise<unknown> {
   // locally, the very next unrelated write from that browser would otherwise
   // silently re-upload the stale certificate fields and resurrect it. Re-derive
   // eligibility from the current progress on every sync instead.
-  const program = PROGRAMS.find(pr => pr.id === programId)
+  const program = findProgram(programId)
   const eligible = !!program && isProgramComplete(program, p)
   if (!eligible && p.certificateSerial) {
     // Local cache still holds a serial for a now-ineligible program — make
@@ -247,7 +253,7 @@ function registerCertificate(serial: string, programId: string, teacherName: str
 export function earnCertificate(programId: string, teacherName = '', programTitle = ''): string {
   const all = read()
   const p   = all[programId] ?? { completedLessons: [], reflections: {} }
-  const program = PROGRAMS.find(pr => pr.id === programId)
+  const program = findProgram(programId)
   if (!program || !isProgramComplete(program, p)) return p.certificateSerial ?? ''
   if (!p.certificateEarnedAt) {
     p.certificateEarnedAt = new Date().toLocaleDateString()
@@ -275,7 +281,7 @@ export function syncCertificatesToRegistry(teacherName: string) {
   const all = read()
   for (const [programId, p] of Object.entries(all)) {
     if (!p.certificateSerial) continue
-    const program = PROGRAMS.find(pr => pr.id === programId)
+    const program = findProgram(programId)
     if (!program || !isProgramComplete(program, p)) continue
     registerCertificate(p.certificateSerial, programId, teacherName, program.title)
   }

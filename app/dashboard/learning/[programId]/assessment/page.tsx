@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { getProgramById } from '@/lib/learning-paths-data'
 import { getProgress, saveAssessment, earnCertificate, isProgramComplete, clearAssessment } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
+import { usePrograms } from '@/context/content-context'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { BackButton } from '@/components/back-button'
@@ -18,6 +18,7 @@ export default function AssessmentPage() {
   const { syncReady, profile } = useProfile()
   const type = (searchParams.get('type') ?? 'pre') as 'pre' | 'post'
 
+  const { getProgramById } = usePrograms()
   const program = getProgramById(params.programId)
   const questions = program?.[type === 'pre' ? 'preAssessment' : 'postAssessment'] ?? []
 

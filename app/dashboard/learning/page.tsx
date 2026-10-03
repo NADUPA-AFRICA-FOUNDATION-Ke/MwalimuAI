@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PROGRAMS, TRACKS, type Track } from '@/lib/learning-paths-data'
+import { type Track } from '@/lib/learning-paths-data'
 import { getProgress, getProgramCompletionPct } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
+import { usePrograms } from '@/context/content-context'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -23,19 +24,22 @@ const TRACK_ICONS: Record<Track, React.FC<{ className?: string }>> = {
 
 export default function LearningPage() {
   const { syncReady } = useProfile()
+  const { allPrograms, archivedIds, tracks: TRACKS } = usePrograms()
   const [activeTrack, setActiveTrack] = useState<Track | 'all'>('all')
   const [progresses, setProgresses] = useState<Record<string, number>>({})
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const map: Record<string, number> = {}
-    for (const p of PROGRAMS) {
+    for (const p of allPrograms) {
       if (p.available) map[p.id] = getProgramCompletionPct(p, getProgress(p.id))
     }
     setProgresses(map)
     setMounted(true)
-  }, [syncReady])
+  }, [syncReady, allPrograms])
 
+  // Archived programs leave the catalogue for new learners but stay for anyone who started them.
+  const PROGRAMS = allPrograms.filter(p => !archivedIds.has(p.id) || (progresses[p.id] ?? 0) > 0 || getProgress(p.id).completedLessons.length > 0)
   const visible = PROGRAMS.filter(p => activeTrack === 'all' || p.track === activeTrack)
 
   return (

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { getCurrentProfile, requireIdentity } from "./lib/auth";
+import { assertProfileActive, getCurrentProfile, requireIdentity } from "./lib/auth";
+import { buildSearchText } from "./lib/profileSearch";
 
 const profileFields = {
   name: v.optional(v.string()),
@@ -38,6 +39,7 @@ export const provisionMigrated = internalMutation({
       migrationStatus: "pending", email: email.toLowerCase(), subjects: [], grades: [], cbcLevel: "beginner", lang: "en", completed: false,
       a11ySettings: { textSize: "normal", highContrast: false, reduceMotion: false, dyslexiaFont: false, wideSpacing: false },
       lowBandwidth: false, notificationsState: { read: [], dismissed: [] }, sidebarCollapsed: false, updatedAt: Date.now(),
+      searchText: buildSearchText({ email }),
     });
   },
 });
@@ -46,6 +48,7 @@ export const upsert = mutation({
   args: profileFields,
   handler: async (ctx, args) => {
     const { identity, profile: existing } = await getCurrentProfile(ctx);
+    if (existing) assertProfileActive(existing);
     const now = Date.now();
     const values = {
       tokenIdentifier: identity.tokenIdentifier,
@@ -66,8 +69,11 @@ export const upsert = mutation({
       ...(args.county !== undefined ? { county: args.county } : existing?.county !== undefined ? { county: existing.county } : {}),
       ...(args.activeSessionId !== undefined ? { activeSessionId: args.activeSessionId } : existing?.activeSessionId !== undefined ? { activeSessionId: existing.activeSessionId } : {}),
     };
-    if (existing) { await ctx.db.patch(existing._id, values); return existing._id; }
-    return await ctx.db.insert("profiles", values);
+    const withSearch = { ...values, searchText: buildSearchText({
+      name: values.name, email: values.email, school: values.school, phoneNormalized: existing?.phoneNormalized,
+    }) };
+    if (existing) { await ctx.db.patch(existing._id, withSearch); return existing._id; }
+    return await ctx.db.insert("profiles", withSearch);
   },
 });
 
@@ -100,6 +106,7 @@ export const updatePreferences = mutation({
     const profile = await requireIdentity(ctx).then(async (identity) =>
       (await getCurrentProfile(ctx)).profile ??
       (() => { throw new Error("Profile not provisioned") })());
+    assertProfileActive(profile);
     await ctx.db.patch(profile._id, { ...args, updatedAt: Date.now() });
     return profile._id;
   },

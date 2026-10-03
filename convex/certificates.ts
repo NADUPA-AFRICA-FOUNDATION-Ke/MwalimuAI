@@ -1,7 +1,10 @@
-import { ConvexError, v } from "convex/values";
+import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentProfile } from "./lib/auth";
 import { requireNonEmpty } from "./lib/validation";
+import { isProgramCompleteServer, loadProgramDef } from "./lib/eligibility";
+import { programTitleFor } from "./lib/contentRead";
+import { fail } from "./lib/errors";
 
 const certificateDoc = v.object({
   _id: v.id("certificates"), _creationTime: v.number(), serial: v.string(), userId: v.id("profiles"), legacyId: v.optional(v.string()),
@@ -42,17 +45,19 @@ export const issueMine = mutation({
     const profile = await requireCurrentProfile(ctx); const serial = normalizeSerial(args.serial);
     const progress = await ctx.db.query("learningProgress").withIndex("by_user_and_program", (q) =>
       q.eq("userId", profile._id).eq("programId", args.programId)).unique();
-    if (!progress?.certificateEarnedAt || progress.certificateSerial?.toUpperCase() !== serial) {
-      throw new ConvexError({ code: "NOT_ELIGIBLE", message: "Completed program progress is required before certificate issuance" });
+    if (!progress?.certificateEarnedAt || progress.certificateSerial?.toUpperCase() !== serial
+      || !isProgramCompleteServer(await loadProgramDef(ctx, args.programId), progress)) {
+      throw fail("NOT_ELIGIBLE", "Completed program progress is required before certificate issuance");
     }
+    const programTitle = (await programTitleFor(ctx, args.programId)) ?? args.programTitle;
     const existing = await ctx.db.query("certificates").withIndex("by_serial", (q) => q.eq("serial", serial)).unique();
     if (existing) {
-      if (existing.userId !== profile._id) throw new ConvexError({ code: "SERIAL_IN_USE", message: "Certificate serial is already registered" });
+      if (existing.userId !== profile._id) throw fail("SERIAL_IN_USE", "Certificate serial is already registered");
       return existing._id;
     }
     return await ctx.db.insert("certificates", {
       serial, userId: profile._id, programId: requireNonEmpty(args.programId, "programId", 100),
-      programTitle: requireNonEmpty(args.programTitle, "programTitle", 300),
+      programTitle: requireNonEmpty(programTitle, "programTitle", 300),
       teacherName: requireNonEmpty(args.teacherName ?? profile.name ?? "Teacher", "teacherName", 300),
       earnedAt: Date.parse(progress.certificateEarnedAt) || Date.now(),
     });
@@ -64,18 +69,37 @@ export const upsertMine = mutation({
   handler: async (ctx, args) => {
     const profile = await requireCurrentProfile(ctx);
     const serial = normalizeSerial(args.serial);
+    // Registration is only allowed for the serial the server already accepted on
+    // this user's own, eligible progress (see learningProgress.save).
+    const progress = await ctx.db.query("learningProgress").withIndex("by_user_and_program", (q) =>
+      q.eq("userId", profile._id).eq("programId", args.programId)).unique();
+    const programTitle = await programTitleFor(ctx, args.programId);
+    if (!programTitle || !progress?.certificateSerial || progress.certificateSerial.toUpperCase() !== serial
+      || !isProgramCompleteServer(await loadProgramDef(ctx, args.programId), progress)) {
+      throw fail("NOT_ELIGIBLE", "Completed program progress is required before certificate issuance");
+    }
+    const owner = await ctx.db.query("certificates").withIndex("by_serial", (q) => q.eq("serial", serial)).unique();
+    if (owner && owner.userId !== profile._id) throw fail("SERIAL_IN_USE", "Certificate serial is already registered");
     const existing = await ctx.db.query("certificates").withIndex("by_user_and_program", (q) => q.eq("userId", profile._id).eq("programId", args.programId)).unique();
-    if (existing) { await ctx.db.patch(existing._id, { serial, teacherName: args.teacherName || existing.teacherName, programTitle: args.programTitle || existing.programTitle }); return existing._id; }
-    return await ctx.db.insert("certificates", { serial, userId: profile._id, programId: args.programId, programTitle: args.programTitle, teacherName: args.teacherName || profile.name || "Teacher", earnedAt: Date.now() });
+    const teacherName = requireNonEmpty(args.teacherName || profile.name || "Teacher", "teacherName", 300);
+    if (existing) {
+      // Serial and revocation state are staff-controlled once issued; only the display name may update.
+      await ctx.db.patch(existing._id, { teacherName });
+      return existing._id;
+    }
+    return await ctx.db.insert("certificates", {
+      serial, userId: profile._id, programId: args.programId, programTitle, teacherName,
+      earnedAt: Date.parse(progress.certificateEarnedAt ?? "") || Date.now(),
+    });
   },
 });
 
+// Kept for client compatibility. Learners can no longer delete or revoke issued certificates:
+// a content edit or a retake must never silently invalidate a credential. Staff revoke, with an audit trail.
 export const removeMine = mutation({
   args: { programId: v.string() }, returns: v.null(),
-  handler: async (ctx, { programId }) => {
-    const profile = await requireCurrentProfile(ctx);
-    const existing = await ctx.db.query("certificates").withIndex("by_user_and_program", (q) => q.eq("userId", profile._id).eq("programId", programId)).unique();
-    if (existing) await ctx.db.delete(existing._id);
+  handler: async (ctx) => {
+    await requireCurrentProfile(ctx);
     return null;
   },
 });

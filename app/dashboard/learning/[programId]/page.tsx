@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { getProgramById, getTotalLessons, TRACKS } from '@/lib/learning-paths-data'
+import { getTotalLessons } from '@/lib/learning-paths-data'
 import { getModuleGuide } from '@/lib/curriculum-guidance'
 import {
   getProgress, getProgramCompletionPct, isProgramComplete,
   isLessonComplete, joinCohort, type ProgramProgress,
 } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
+import { usePrograms } from '@/context/content-context'
 import { ModuleImplementationGuide } from '@/components/module-implementation-guide'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ export default function ProgramPage() {
   const params = useParams<{ programId: string }>()
   const router  = useRouter()
   const { syncReady } = useProfile()
+  const { getProgramById, tracks: TRACKS } = usePrograms()
   const program = getProgramById(params.programId)
 
   const [progress, setProgress]   = useState<ProgramProgress>({ completedLessons: [], reflections: {} })

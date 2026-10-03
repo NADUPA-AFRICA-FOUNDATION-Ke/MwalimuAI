@@ -75,12 +75,22 @@ export default defineSchema({
     notificationPreferences: v.optional(notificationPreferences),
     sidebarCollapsed: v.boolean(),
     activeSessionId: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    phoneNormalized: v.optional(v.string()),
+    // Absent means "active" so existing rows need no backfill to keep working.
+    status: v.optional(v.union(v.literal("active"), v.literal("suspended"), v.literal("deactivated"))),
+    statusReason: v.optional(v.string()),
+    statusChangedAt: v.optional(v.number()),
+    searchText: v.optional(v.string()),
     updatedAt: v.number(),
   })
     .index("by_token_identifier", ["tokenIdentifier"])
     .index("by_auth_subject", ["authSubject"])
     .index("by_legacy_supabase_user_id", ["legacySupabaseUserId"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_phone_normalized", ["phoneNormalized"])
+    .index("by_status", ["status"])
+    .searchIndex("search_profiles", { searchField: "searchText", filterFields: ["county", "status"] }),
 
   modules: defineTable({
     legacyId: v.optional(v.string()),
@@ -313,10 +323,14 @@ export default defineSchema({
       v.literal("assessment"),
     ),
     metadata: v.optional(v.any()),
+    // Rows written by staff restoration are flagged so analytics can exclude them.
+    source: v.optional(v.union(v.literal("user"), v.literal("restored"))),
+    adjustmentId: v.optional(v.id("streakAdjustments")),
     createdAt: v.number(),
   })
     .index("by_user_and_date", ["userId", "date"])
     .index("by_user_date_and_type", ["userId", "date", "type"])
+    .index("by_date_and_type", ["date", "type"])
     .index("by_legacy_id", ["legacyId"]),
 
   toolsUsed: defineTable({
@@ -409,10 +423,160 @@ export default defineSchema({
     earnedAt: v.number(),
     revokedAt: v.optional(v.number()),
     revocationReason: v.optional(v.string()),
+    reissuedFrom: v.optional(v.id("certificates")),
   })
     .index("by_serial", ["serial"])
     .index("by_user", ["userId"])
     .index("by_user_and_program", ["userId", "programId"]),
+
+  // ── Admin console ──────────────────────────────────────────────────────
+  staff: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    role: v.union(
+      v.literal("super_admin"),
+      v.literal("content_manager"),
+      v.literal("support_agent"),
+      v.literal("viewer"),
+    ),
+    status: v.union(v.literal("active"), v.literal("disabled")),
+    createdBy: v.optional(v.id("staff")),
+    // TOTP secret is AES-GCM encrypted (ADMIN_MFA_ENC_KEY); never returned to clients.
+    totpSecretEnc: v.optional(v.string()),
+    mfaEnrolledAt: v.optional(v.number()),
+    mfaFailedAttempts: v.optional(v.number()),
+    mfaLockedUntil: v.optional(v.number()),
+    lastTotpStep: v.optional(v.number()),
+    updatedAt: v.number(),
+  }).index("by_email", ["email"]),
+
+  // One row per Convex Auth session that completed the MFA challenge.
+  staffSessions: defineTable({
+    staffId: v.id("staff"),
+    authSessionId: v.string(),
+    verifiedAt: v.number(),
+  })
+    .index("by_session", ["authSessionId"])
+    .index("by_staff", ["staffId"]),
+
+  // Append-only. Only convex/lib/audit.ts inserts; nothing patches or deletes.
+  auditLog: defineTable({
+    actorStaffId: v.id("staff"),
+    actorEmail: v.string(),
+    actorRole: v.string(),
+    action: v.string(),
+    targetType: v.string(),
+    targetId: v.string(),
+    targetLabel: v.optional(v.string()),
+    before: v.optional(v.any()),
+    after: v.optional(v.any()),
+    reason: v.optional(v.string()),
+    incidentId: v.optional(v.id("incidents")),
+    prevHash: v.string(),
+    hash: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_target", ["targetType", "targetId", "createdAt"])
+    .index("by_actor", ["actorStaffId", "createdAt"])
+    .index("by_action", ["action", "createdAt"])
+    .index("by_created_at", ["createdAt"]),
+
+  streakAdjustments: defineTable({
+    profileId: v.id("profiles"),
+    dates: v.array(v.string()),
+    reason: v.string(),
+    ticketRef: v.optional(v.string()),
+    incidentId: v.optional(v.id("incidents")),
+    staffId: v.id("staff"),
+    revokedAt: v.optional(v.number()),
+    revokedBy: v.optional(v.id("staff")),
+    createdAt: v.number(),
+  })
+    .index("by_profile", ["profileId", "createdAt"])
+    .index("by_incident", ["incidentId"]),
+
+  incidents: defineTable({
+    title: v.string(),
+    description: v.string(),
+    windowStart: v.string(), // YYYY-MM-DD, inclusive (EAT)
+    windowEnd: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("pending_approval"),
+      v.literal("approved"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+    ),
+    createdBy: v.id("staff"),
+    approvedBy: v.optional(v.id("staff")),
+    executedBy: v.optional(v.id("staff")),
+    overrideLookback: v.optional(v.boolean()),
+    executeReason: v.optional(v.string()),
+    // Candidate set is frozen at preview time so the run is deterministic.
+    candidateCount: v.optional(v.number()),
+    candidatesReady: v.boolean(),
+    processedCount: v.number(),
+    restoredCount: v.number(),
+    skippedCount: v.number(),
+    cursor: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_status", ["status", "createdAt"]),
+
+  incidentTargets: defineTable({
+    incidentId: v.id("incidents"),
+    profileId: v.id("profiles"),
+    outcome: v.optional(v.union(v.literal("restored"), v.literal("skipped"), v.literal("failed"))),
+    note: v.optional(v.string()),
+    datesRestored: v.optional(v.array(v.string())),
+  })
+    .index("by_incident", ["incidentId"])
+    .index("by_incident_and_profile", ["incidentId", "profileId"]),
+
+  // ── Content management ─────────────────────────────────────────────────
+  cmsItems: defineTable({
+    kind: v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz")),
+    // Stable id the learner app and learningProgress refer to (e.g. "cbc-foundations", "m1", "l1").
+    key: v.string(),
+    parentId: v.optional(v.id("cmsItems")),
+    programKey: v.string(),
+    title: v.string(),
+    orderIndex: v.number(),
+    cbcLevels: v.array(v.string()),
+    subjects: v.array(v.string()),
+    counties: v.array(v.string()),
+    draftVersionId: v.optional(v.id("cmsVersions")),
+    publishedVersionId: v.optional(v.id("cmsVersions")),
+    archivedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_kind_and_program", ["kind", "programKey", "orderIndex"])
+    .index("by_parent", ["parentId", "orderIndex"])
+    .index("by_program_and_key", ["programKey", "kind", "key"])
+    .index("by_published_kind", ["publishedVersionId", "kind"]),
+
+  cmsVersions: defineTable({
+    itemId: v.id("cmsItems"),
+    version: v.number(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("in_review"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("published"),
+      v.literal("superseded"),
+    ),
+    data: v.any(),
+    authorId: v.optional(v.id("staff")),
+    submittedBy: v.optional(v.id("staff")),
+    reviewedBy: v.optional(v.id("staff")),
+    reviewComment: v.optional(v.string()),
+    createdAt: v.number(),
+    publishedAt: v.optional(v.number()),
+  })
+    .index("by_item", ["itemId", "version"])
+    .index("by_status", ["status", "createdAt"]),
 
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;

@@ -22,8 +22,10 @@ const recordCloudTool = makeFunctionReference<'mutation', { toolId: string }, un
 const listCloudTools = makeFunctionReference<'query', Record<string, never>, string[]>('activity:toolsUsed')
 const countCloudCommunityPosts = makeFunctionReference<'query', Record<string, never>, number>('activity:communityPostCount')
 
+// Streak days follow Kenya time (EAT, UTC+3) so a day rolls over at local midnight, not 03:00.
+// Must match convex/lib/streakMath.ts eatDateKey.
 function todayStr(): string {
-  return new Date().toISOString().slice(0, 10)
+  return new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
 
 function loadActivity(): ActivityEntry[] {

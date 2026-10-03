@@ -4,11 +4,11 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getProgramById } from '@/lib/learning-paths-data'
 import { getProgress, earnCertificate, isProgramComplete, type ProgramProgress } from '@/lib/learning-progress'
 import { downloadCertificatePDF } from '@/lib/certificate-pdf'
 import { makeQR } from '@/lib/qr'
 import { useProfile } from '@/context/profile-context'
+import { usePrograms } from '@/context/content-context'
 import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/back-button'
 import { Award, Printer, Share2, CheckCircle2, Lock, ShieldCheck, RotateCw } from 'lucide-react'
@@ -18,6 +18,7 @@ import { getSiteUrl } from '@/lib/site-url'
 export default function CertificatePage() {
   const params  = useParams<{ programId: string }>()
   const { profile, syncReady } = useProfile()
+  const { getProgramById } = usePrograms()
   const program = getProgramById(params.programId)
 
   const [progress, setProgress] = useState<ProgramProgress>({ completedLessons: [], reflections: {} })

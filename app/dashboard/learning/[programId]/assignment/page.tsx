@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { getProgramById } from '@/lib/learning-paths-data'
 import { getProgress, saveAssignment } from '@/lib/learning-progress'
 import { PEER_SUBMISSIONS } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
+import { usePrograms } from '@/context/content-context'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { BackButton } from '@/components/back-button'
@@ -19,6 +19,7 @@ import {
 export default function AssignmentPage() {
   const params  = useParams<{ programId: string }>()
   const { lang, profile, syncReady } = useProfile()
+  const { getProgramById } = usePrograms()
   const program = getProgramById(params.programId)
   const assignment = program?.assignment
 
