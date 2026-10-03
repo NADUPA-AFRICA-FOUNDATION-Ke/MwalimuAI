@@ -80,7 +80,12 @@ codes cannot be replayed. Authenticator secrets are AES-GCM encrypted with `ADMI
 
 1. `npx convex env set ADMIN_MFA_ENC_KEY "<32+ random chars>"` and, for a separate admin host,
    `npx convex env set ADMIN_ORIGINS https://admin.example.com`.
-2. Set `ADMIN_HOSTS=admin.example.com` on the web host and point the subdomain at the same deployment.
+2. Choose how the console is reached:
+   - **Separate hostname:** set `ADMIN_HOSTS=admin.example.com` on the web host and point that subdomain at the
+     same deployment. `/admin` is then a 404 on the main site.
+   - **No extra domain** (e.g. the host plan limits custom domains): set `ADMIN_PATH_ENABLED=true` on the web host.
+     The console is then at `https://<your-site>/admin`, unlinked and `noindex`. Access is still enforced by the
+     Convex staff role and MFA, not by the hostname, so this is safe, just less hidden.
 3. Deploy the Convex schema/functions (`npx convex deploy`).
 4. Create the first Super Admin (refuses to run once any staff exist):
    `npx convex run admin/staff:bootstrapSuperAdmin '{"email":"you@example.com"}'`

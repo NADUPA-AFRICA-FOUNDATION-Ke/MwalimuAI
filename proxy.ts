@@ -17,7 +17,12 @@ const adminHosts = (process.env.ADMIN_HOSTS ?? '')
   .map((h) => h.trim().toLowerCase())
   .filter(Boolean)
 
+// ADMIN_PATH_ENABLED=true serves the console at /admin on the normal site, for deployments that cannot add a
+// separate admin hostname. Security is unchanged: it is enforced by the Convex staff role + MFA, not by the host.
+const adminPathEnabled = process.env.ADMIN_PATH_ENABLED === 'true'
+
 function isAdminHost(host: string) {
+  if (adminPathEnabled) return true
   const bare = host.toLowerCase()
   if (adminHosts.includes(bare)) return true
   return (

@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { makeQR } from '@/lib/qr'
+import { getSiteUrl } from '@/lib/site-url'
 import { Loading, StaffProvider, errorMessage } from './common'
 import { Shell } from './shell'
 
@@ -99,66 +100,74 @@ function Gate({ children }: { children: ReactNode }) {
 
 function SignIn() {
   const { signIn } = useAuthActions()
+  const [mode, setMode] = useState<'signin' | 'forgot' | 'sent'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
+    e.preventDefault(); setBusy(true); setError(null)
     try {
       const r = await signIn('password', { flow: 'signIn', email: email.trim().toLowerCase(), password })
       if (!r.signingIn) throw new Error('bad')
-    } catch {
-      setError('Incorrect email or password.')
-    } finally {
-      setBusy(false)
-    }
+    } catch { setError('Incorrect email or password.') } finally { setBusy(false) }
   }
+
+  // Same reset flow as the main site: an emailed single-use link. Opening it also marks the email
+  // as verified, which staff access requires.
+  const sendReset = async (e: FormEvent) => {
+    e.preventDefault(); setBusy(true); setError(null)
+    try {
+      await signIn('password', { flow: 'reset', email: email.trim().toLowerCase(), redirectTo: '/auth/reset-password' })
+      setMode('sent') // always say "sent": never reveal whether the address has an account
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      setError(/not enabled|configured/i.test(msg)
+        ? 'Password reset email is not set up on this deployment yet. Use Google sign-in, or ask a Super Admin for help.'
+        : 'We could not send the email. Check the address and try again, or use Google sign-in.')
+    } finally { setBusy(false) }
+  }
+
+  if (mode === 'sent') {
+    return (
+      <div className="space-y-4" role="status">
+        <h1 className="text-lg font-semibold">Check your email</h1>
+        <p className="text-sm text-muted-foreground">If <b className="text-foreground">{email.trim().toLowerCase()}</b> has an account, a reset link is on its way (check spam too). Set a new password from that link, then come back to this page and sign in.</p>
+        <Button type="button" className="w-full" onClick={() => { setMode('signin'); setPassword('') }}>Back to sign in</Button>
+      </div>
+    )
+  }
+
+  if (mode === 'forgot') {
+    return (
+      <form onSubmit={sendReset} className="space-y-4">
+        <div><h1 className="text-lg font-semibold">Reset your password</h1><p className="text-sm text-muted-foreground">Enter the email you were invited with and we will send a reset link.</p></div>
+        <div className="space-y-1.5"><Label htmlFor="reset-email">Email</Label><Input id="reset-email" type="email" autoComplete="username" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" className="w-full" disabled={busy}>{busy && <Spinner className="mr-2 h-4 w-4" />}Send reset link</Button>
+        <Button type="button" variant="ghost" className="w-full" onClick={() => { setMode('signin'); setError(null) }}>Back to sign in</Button>
+      </form>
+    )
+  }
+
   return (
     <form onSubmit={submit} className="space-y-4">
+      <div className="space-y-1.5"><Label htmlFor="email">Email</Label><Input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="username"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <button type="button" onClick={() => { setMode('forgot'); setError(null) }} className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">Forgot password?</button>
+        </div>
+        <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-      <Button type="submit" className="w-full" disabled={busy}>
-        {busy && <Spinner className="mr-2 h-4 w-4" />}Sign in
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={() => void signIn('google', { redirectTo: '/admin' })}
-      >
-        Continue with Google
-      </Button>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" className="w-full" disabled={busy}>{busy && <Spinner className="mr-2 h-4 w-4" />}Sign in</Button>
+      <Button type="button" variant="outline" className="w-full" onClick={() => void signIn('google', { redirectTo: '/admin' })}>Continue with Google</Button>
       <p className="text-xs text-muted-foreground">
-        Staff accounts only. You will be asked for a two-factor code next.
+        Staff accounts only. No account yet?{' '}
+        <a className="font-medium text-primary underline underline-offset-2" href={`${getSiteUrl()}/auth/sign-up`}>Create one on the main site</a>{' '}
+        with your invited email, then come back. You will be asked for a two-factor code next.
       </p>
     </form>
   )
