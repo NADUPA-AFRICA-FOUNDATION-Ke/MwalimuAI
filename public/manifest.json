@@ -1,15 +1,21 @@
 {
+  "id": "/dashboard",
   "name": "Mwalimu AI",
   "short_name": "Mwalimu AI",
   "description": "AI-powered professional development for Kenyan CBC teachers",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
   "orientation": "portrait-primary",
-  "background_color": "#f9fcfb",
-  "theme_color": "#f9fcfb",
+  "background_color": "#F8FBF9",
+  "theme_color": "#F8FBF9",
   "lang": "en",
-  "categories": ["education"],
+  "categories": [
+    "education"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {
@@ -49,6 +55,12 @@
       "short_name": "Tools",
       "url": "/dashboard/tools",
       "description": "Lesson plans, assessments, and more"
+    },
+    {
+      "name": "Learning Paths",
+      "short_name": "Learn",
+      "url": "/dashboard/learning",
+      "description": "Continue your programs"
     }
   ]
 }

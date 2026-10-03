@@ -147,7 +147,7 @@ function Sidebar({ conversations, selectedId, loading, onSelect, onNewChat, onDe
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain-y px-2 pb-4 space-y-4">
         {loading ? (
           <div className="text-xs text-muted-foreground px-3 py-4" role="status" aria-live="polite">Loading conversations…</div>
         ) : groups.length === 0 ? (
@@ -422,7 +422,7 @@ function ChatPanel({
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 space-y-5" aria-live="polite" aria-busy={isLoading}>
+      <div className="flex-1 overflow-y-auto overscroll-contain-y px-4 md:px-8 py-4 space-y-5" aria-live="polite" aria-busy={isLoading}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-full text-center py-6">
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-5">

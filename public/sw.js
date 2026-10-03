@@ -1,13 +1,16 @@
 // Mwalimu AI — Service Worker
 // Strategy: cache-first for immutable assets, network-first for pages.
 // Increment CACHE_VERSION whenever a breaking schema change needs a clean slate.
-const CACHE_VERSION = '3'
+const CACHE_VERSION = '4'
 const STATIC_CACHE  = `mwalimu-static-v${CACHE_VERSION}`
 const PAGES_CACHE   = `mwalimu-pages-v${CACHE_VERSION}`
 const ALL_CACHES    = [STATIC_CACHE, PAGES_CACHE]
 
 // ── Install: take control immediately ──────────────────────────────────────
-self.addEventListener('install', () => self.skipWaiting())
+// Precache the offline page so a cold start with no connection still shows something useful.
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(PAGES_CACHE).then(cache => cache.add('/offline')).catch(() => {}).then(() => self.skipWaiting()))
+})
 
 // ── Activate: delete caches from old versions ──────────────────────────────
 self.addEventListener('activate', event => {
@@ -117,6 +120,8 @@ async function networkFirst(request, cacheName) {
     if (request.mode === 'navigate') {
       const shell = await caches.match('/dashboard')
       if (shell) return shell
+      const offline = await caches.match('/offline')
+      if (offline) return offline
     }
 
     return new Response('', { status: 503, statusText: 'Offline' })

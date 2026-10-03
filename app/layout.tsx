@@ -48,6 +48,9 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   applicationName: 'Mwalimu AI',
   manifest: '/manifest.json',
+  // Installed (home-screen) app on iOS: standalone window, light status bar to match the light theme.
+  appleWebApp: { capable: true, title: 'Mwalimu AI', statusBarStyle: 'default' },
+  formatDetection: { telephone: false },
   icons: {
     icon: [
       { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
