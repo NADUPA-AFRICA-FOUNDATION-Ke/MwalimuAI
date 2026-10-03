@@ -13,13 +13,11 @@ import {
   Building2,
   ArrowRight,
   BookOpen,
-  Menu,
-  X,
-  Zap,
 } from 'lucide-react'
 import { MarketingHeader } from '@/components/marketing-header'
 import { MarketingFooter } from '@/components/marketing-footer'
 import { useProfile } from '@/context/profile-context'
+import { describePaymentFailure, type PaymentFailure } from '@/lib/payment-errors'
 import { cn } from '@/lib/utils'
 
 const plans = [
@@ -218,33 +216,39 @@ function PricingContent() {
   const searchParams = useSearchParams()
   const { user } = useProfile()
   const [loading, setLoading] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [failure, setFailure] = useState<PaymentFailure | null>(null)
+  const [lastPlan, setLastPlan] = useState<string | null>(null)
 
   const canceled = searchParams.get('canceled') === 'true'
 
   useEffect(() => {
-    if (canceled) setError("Payment was canceled. Try again whenever you're ready.")
+    if (canceled) setFailure(describePaymentFailure({ canceled: true }))
   }, [canceled])
 
   const handleCheckout = async (planId: string) => {
-    setError(null)
+    setFailure(null)
+    setLastPlan(planId)
+    // Payment is tied to the account: say so up front instead of failing after a round trip.
+    if (!user) {
+      setFailure(describePaymentFailure({ code: 'unauthenticated' }))
+      return
+    }
     setLoading(planId)
     try {
       const res = await authedFetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: planId,
-          email: user?.email ?? undefined,
-        }),
+        body: JSON.stringify({ plan: planId, email: user?.email ?? undefined }),
       })
-      const data = await res.json() as { url?: string; error?: string }
+      const data = await res.json().catch(() => ({})) as { url?: string; code?: string }
       if (!res.ok || !data.url) {
-        throw new Error(data.error ?? 'Could not create checkout session.')
+        setFailure(describePaymentFailure({ status: res.status, code: data.code }))
+        setLoading(null)
+        return
       }
       window.location.href = data.url
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } catch {
+      setFailure(describePaymentFailure({ offline: typeof navigator !== 'undefined' && !navigator.onLine }))
       setLoading(null)
     }
   }
@@ -258,28 +262,46 @@ function PricingContent() {
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-secondary border-b border-border/70" aria-labelledby="pricing-heading">
         <div className="max-w-4xl mx-auto px-4 md:px-8 pt-20 pb-20 text-center">
-          <div className="inline-flex items-center gap-2.5 glass-subtle border-primary/25 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-8 animate-fade-in-up">
-            <Zap className="w-3.5 h-3.5" />
-            Simple, transparent pricing
-          </div>
-
-          <h1 id="pricing-heading" className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] tracking-tight mb-5 animate-fade-in animation-delay-100">
+          <h1 id="pricing-heading" className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] tracking-tight mb-5">
             Plans for individual teachers<br />
             <span className="text-primary">and school teams.</span>
           </h1>
 
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Review the current access options, then choose the plan that fits how you want to use Mwalimu AI.
           </p>
         </div>
       </section>
 
-      {/* ── Error banner ── */}
-      {error && (
+      {/* ── Checkout notice: what happened, whether money moved, what to do next ── */}
+      {failure && (
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6">
-          <div role="alert" aria-live="assertive" className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0" aria-hidden="true" />
-            <p>{error}</p>
+          <div
+            role={failure.tone === 'error' ? 'alert' : 'status'}
+            className={cn('rounded-xl border p-4 md:p-5', failure.tone === 'error' ? 'border-destructive/40 bg-destructive/5' : 'border-border bg-secondary')}
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className={cn('mt-0.5 h-5 w-5 shrink-0', failure.tone === 'error' ? 'text-destructive' : 'text-muted-foreground')} aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-foreground">{failure.title}</p>
+                <p className="mt-1 text-base text-muted-foreground">{failure.message}</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {failure.action === 'signin' && (
+                    <Button asChild size="lg" className="rounded-xl"><Link href="/auth/login">Sign in</Link></Button>
+                  )}
+                  {failure.action === 'retry' && lastPlan && lastPlan !== 'free' && (
+                    <Button size="lg" className="rounded-xl" onClick={() => handleCheckout(lastPlan)} disabled={loading !== null}>Try again</Button>
+                  )}
+                  {failure.action === 'support' && (
+                    <Button asChild size="lg" className="rounded-xl"><Link href="/support">Contact support</Link></Button>
+                  )}
+                  {failure.action !== 'support' && failure.tone === 'error' && (
+                    <Button asChild size="lg" variant="outline" className="rounded-xl"><Link href="/support">Contact support</Link></Button>
+                  )}
+                  <Button size="lg" variant="ghost" className="rounded-xl" onClick={() => setFailure(null)}>Dismiss</Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

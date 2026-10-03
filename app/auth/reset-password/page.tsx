@@ -76,6 +76,15 @@ function ResetPasswordContent() {
 
   return (
     <main className="relative flex min-h-svh w-full items-center justify-center overflow-hidden p-6 md:p-10">
+      {/* Background accents */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full"
+          style={{ background: 'radial-gradient(circle, oklch(0.52 0.20 160 / 0.15) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/3 -right-24 h-96 w-96 rounded-full"
+          style={{ background: 'radial-gradient(circle, oklch(0.70 0.20 55 / 0.12) 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-32 left-1/4 h-72 w-72 rounded-full"
+          style={{ background: 'radial-gradient(circle, oklch(0.52 0.20 160 / 0.10) 0%, transparent 70%)' }} />
+      </div>
 
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-6">
@@ -107,7 +116,7 @@ function ResetPasswordContent() {
               <>
                 <CardHeader className="text-center space-y-3">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                    <CheckCircle className="h-7 w-7 text-green-700 dark:text-green-400" aria-hidden="true" />
+                    <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" aria-hidden="true" />
                   </div>
                   <CardTitle className="text-2xl"><h1>Password updated</h1></CardTitle>
                   <CardDescription>

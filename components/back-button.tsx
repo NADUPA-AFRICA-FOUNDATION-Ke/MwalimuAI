@@ -18,8 +18,8 @@ export function BackButton({
   variant = 'default',
 }: BackButtonProps) {
   const router = useRouter()
-  // Inside the signed-in app the app bar already provides Back on phones; don't show a second one.
-  const hideOnPhone = usePathname().startsWith('/dashboard')
+  // Inside the signed-in app the app bar already provides Back on every screen; don't show a second one.
+  const inApp = usePathname().startsWith('/dashboard')
 
   const handleBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -46,7 +46,7 @@ export function BackButton({
       type="button"
       onClick={handleBack}
       aria-label={`Go back to previous page${label !== 'Back' ? `: ${label}` : ''}`}
-      className={cn(baseStyles, 'min-h-11', variantStyles[variant], hideOnPhone && 'max-md:hidden', className)}
+      className={cn(baseStyles, 'min-h-11', variantStyles[variant], inApp && 'hidden', className)}
     >
       <ArrowLeft
         className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1"

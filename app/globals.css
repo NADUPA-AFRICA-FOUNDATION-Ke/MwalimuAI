@@ -92,7 +92,7 @@
   --shadow-xl: var(--shadow-lg);
   --shadow-primary: 0 4px 16px rgb(0 125 66 / 0.20), 0 2px 6px rgb(0 125 66 / 0.12);
 
-  --hero-bg: var(--color-brand-soft);
+  --hero-bg: #0E201B;
 }
 
 /* Dark: neutral surfaces in the #121212-#1E1E1E range (never pure black), off-white text (never #FFF),
@@ -120,7 +120,7 @@
   --color-border-strong: #6E7C75;
   --color-input: #6E7C75;
   --color-focus: #6FD1A9;
-  --hero-bg: var(--color-surface);
+  --hero-bg: #0E201B;
   --shadow-xs: none;
   --shadow-sm: none;
   --shadow-md: 0 0 0 1px var(--color-border);

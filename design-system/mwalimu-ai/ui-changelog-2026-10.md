@@ -1,5 +1,27 @@
 # UI/UX overhaul: changelog, results and open items (October 2026)
 
+## Revision after review (read this first)
+
+The first pass rebuilt the landing, features and about pages and the public header and footer. On review those
+were judged worse than the originals, so **that part was reverted**: the original landing look (dark hero, the
+Learn / Ask / Share / Track strip, the original header and footer, features and about pages, auth side panels) is
+back, with the defects fixed on top of it:
+
+- The large empty band between the hero and the stat strip is gone (a leftover fade block).
+- Header: Sign in and Create account are now the same height and aligned on one centre line (Sign in was a
+  block element sitting higher than the filled button).
+- Phone email field no longer collapses to a sliver.
+- **Back on every page.** Public header, footer pages (privacy, terms, docs, FAQ, support, contact, about), verify,
+  pricing, blog, auth, onboarding, offline, 404/error screens, and every signed-in screen except the dashboard home.
+  The landing page and dashboard home have none: they are where Back lands.
+- **Payment failures** now explain what happened, that no money moved, and one next step (sign in / try again /
+  contact support). Raw server text such as "Stripe is not configured. Add STRIPE_SECRET_KEY to .env.local" and
+  "Unauthorized" no longer reaches users. Cancelled checkout is a calm notice, not a red error.
+- Kept from the first pass: restored brand palette, loaded fonts, the signed-in app shell and navigation, PWA
+  work, and the accessibility fixes (landmarks, headings, 44px targets, visible control borders).
+
+The per-page notes below describe the first pass; where they conflict with this section, this section wins.
+
 Companion to `ui-audit-2026-10.md`. Five commits, grouped by concern so each can be reviewed or reverted alone:
 **tokens → layout → navigation → PWA → polish.**
 

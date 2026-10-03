@@ -112,7 +112,7 @@ export default function DashboardPage() {
       {showPaymentSuccess && (
         <div className="flex items-center gap-3 p-4 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
-          <p className="text-sm font-medium flex-1">Payment successful. Welcome to the Professional tier.</p>
+          <p className="text-sm font-medium flex-1">Thank you, your payment went through. Your plan updates within a minute. If it still shows Free after that, contact support and we will fix it.</p>
           <button type="button" onClick={() => setShowPaymentSuccess(false)} aria-label="Dismiss payment confirmation" className="shrink-0 min-w-11 min-h-11 inline-flex items-center justify-center rounded hover:bg-green-100 dark:hover:bg-green-900/40">
             <X className="w-4 h-4" aria-hidden="true" />
           </button>

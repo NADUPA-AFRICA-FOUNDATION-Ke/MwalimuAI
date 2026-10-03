@@ -185,7 +185,7 @@ export function FeaturesSection() {
                     key={title}
                     className="group flex items-start gap-5 py-8 border-b border-border last:border-0 hover:bg-muted/60 -mx-4 px-4 rounded-xl transition-colors duration-150"
                   >
-                    <span className="text-xs font-black text-gray-200 tabular-nums mt-1 w-5 shrink-0 select-none">
+                    <span className="text-xs font-black text-muted-foreground tabular-nums mt-1 w-5 shrink-0 select-none">
                       {num}
                     </span>
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${accent === 'primary' ? 'bg-primary/10' : 'bg-accent/10'}`}>
@@ -305,7 +305,7 @@ export function ComparisonSection() {
               {[learn, plan, reflect].map((val, j) => (
                 <div key={j} className={`p-4 flex items-center justify-center border-l border-border ${j === 0 ? 'bg-primary/3' : ''}`}>
                   {val === true      && <CheckCircle2 className="w-5 h-5 text-primary" />}
-                  {val === false     && <XCircle className="w-5 h-5 text-gray-200" />}
+                  {val === false     && <XCircle className="w-5 h-5 text-muted-foreground" />}
                 </div>
               ))}
             </div>

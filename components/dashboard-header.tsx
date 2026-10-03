@@ -9,7 +9,7 @@ import { NotificationCenter } from '@/components/notification-center'
 import { AccountSheet } from '@/components/account-sheet'
 import { useProfile } from '@/context/profile-context'
 import { getT } from '@/lib/i18n'
-import { isRootScreen, parentRoute, screenTitle } from '@/lib/nav'
+import { parentRoute, screenTitle } from '@/lib/nav'
 import { cn } from '@/lib/utils'
 
 interface DashboardHeaderProps {
@@ -32,7 +32,8 @@ export function DashboardHeader({ onLogout, sidebarCollapsed, onToggleCollapse }
 
   const name = mounted && profile?.name ? profile.name : 'Teacher'
   const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-  const showBack = !isRootScreen(pathname)
+  // Every screen except the dashboard home offers Back, tab screens included.
+  const showBack = pathname.replace(/\/$/, '') !== '/dashboard'
   const title = screenTitle(pathname, t)
 
   // History may be empty (deep link, refresh, freshly installed app): fall back to the parent screen.
@@ -46,7 +47,7 @@ export function DashboardHeader({ onLogout, sidebarCollapsed, onToggleCollapse }
       <div className="flex h-full items-center gap-1 px-2 md:px-4">
         {/* Left */}
         {showBack && (
-          <button type="button" onClick={goBack} aria-label="Back" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-foreground hover:bg-secondary md:hidden">
+          <button type="button" onClick={goBack} aria-label="Back" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-foreground hover:bg-secondary">
             <ArrowLeft className="h-6 w-6" aria-hidden="true" />
           </button>
         )}

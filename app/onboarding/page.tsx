@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useProfile, type TeacherProfile } from '@/context/profile-context'
 import { ArrowRight, ArrowLeft, CheckCircle2, Sparkles, BookMarked, Check } from 'lucide-react'
+import { HeaderBack } from '@/components/header-back'
 import { BrandMark } from '@/components/brand-mark'
 import { getT } from '@/lib/i18n'
 
@@ -231,6 +232,8 @@ export default function OnboardingPage() {
       </div>
 
       <div className="w-full max-w-lg">
+        {/* Back: previous step, or leave onboarding from step 1 */}
+        <HeaderBack className="-ml-2 mb-2" onClick={() => (step > 1 ? setStep((step - 1) as typeof step) : router.back())} />
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <BrandMark className="w-12 h-12" />

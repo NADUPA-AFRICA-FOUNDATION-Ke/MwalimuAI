@@ -13,6 +13,7 @@ import { OAuthButtons } from '@/components/oauth-buttons'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 
+const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
   if (msg.includes('already registered') || msg.includes('already exists'))
@@ -66,23 +67,32 @@ function SignUpContent() {
   return (
     <main className="flex min-h-svh w-full">
 
-      {/* ── Left panel — tonal brand panel ─────────────────────── */}
-      <div className="hidden lg:flex lg:w-[42%] flex-col justify-between p-10 relative overflow-hidden bg-secondary">
+      {/* ── Left panel — dark brand ─────────────────────── */}
+      <div className="hidden lg:flex lg:w-[42%] flex-col justify-between p-10 relative overflow-hidden"
+        style={{ background: DARK }}>
+
+        {/* Radial highlight */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 20% 10%, oklch(0.54 0.14 163 / 0.30) 0%, transparent 60%)' }} />
+
+        {/* Lightweight brand detail: avoids making authentication wait for a
+            third-party photograph to download before the form is usable. */}
+        <div className="absolute -right-24 top-1/4 h-80 w-80 rounded-full border-[28px] border-accent/15" aria-hidden="true" />
 
         {/* Logo */}
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-2.5 w-fit">
             <BrandMark className="w-9 h-9" />
-            <span className="font-bold text-base text-foreground tracking-tight">Mwalimu AI</span>
+            <span className="font-bold text-base text-white tracking-tight">Mwalimu AI</span>
           </Link>
         </div>
 
         {/* Centre copy */}
         <div className="relative z-10">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
-          <h2 className="text-[2.4rem] font-black text-foreground leading-[1.1] tracking-tight mb-6">
+          <p className="text-xs font-bold text-white/75 uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
+          <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
             Learn, plan,<br />and reflect<br />
-            <span className="text-accent">in one place.</span>
+            <span style={{ color: 'var(--color-accent-bright)' }}>in one place.</span>
           </h2>
           <ul className="space-y-3.5">
             {[
@@ -91,10 +101,10 @@ function SignUpContent() {
               'Teacher tools and progress tracking',
               'Community discussions and resources',
             ].map(item => (
-              <li key={item} className="flex items-center gap-3 text-muted-foreground text-sm">
+              <li key={item} className="flex items-center gap-3 text-white/65 text-sm">
                 <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                   style={{ background: 'oklch(0.54 0.14 163 / 0.40)', border: '1px solid oklch(0.54 0.14 163 / 0.35)' }}>
-                  <Check className="w-3 h-3 text-foreground" />
+                  <Check className="w-3 h-3 text-white" />
                 </span>
                 {item}
               </li>
@@ -104,7 +114,7 @@ function SignUpContent() {
 
         {/* Product summary */}
         <div className="relative z-10 flex items-center gap-3">
-          <p className="text-muted-foreground text-sm">Create a profile to start using the platform.</p>
+          <p className="text-white/80 text-sm">Create a profile to start using the platform.</p>
         </div>
       </div>
 
@@ -120,11 +130,11 @@ function SignUpContent() {
           {/* Mobile logo */}
           <Link href="/" className="flex min-h-11 items-center gap-2 lg:hidden">
             <BrandMark className="w-7 h-7" />
-            <span className="font-bold text-sm tracking-tight">Mwalimu AI</span>
+            <span className="whitespace-nowrap font-bold text-sm tracking-tight">Mwalimu AI</span>
           </Link>
-          <p className="text-sm text-muted-foreground">
-            Have an account?{' '}
-            <Link href="/auth/login" className="text-primary font-semibold hover:underline underline-offset-4">
+          <p className="text-sm text-muted-foreground max-[420px]:text-right">
+            <span className="max-[420px]:hidden">Have an account?{' '}</span>
+            <Link href="/auth/login" className="inline-flex min-h-11 items-center text-primary font-semibold hover:underline underline-offset-4">
               Sign in
             </Link>
           </p>

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ShieldCheck, ShieldX, Loader2, Search } from 'lucide-react'
+import { HeaderBack } from '@/components/header-back'
 import { BrandMark } from '@/components/brand-mark'
 
 interface VerifiedCert {
@@ -61,10 +62,13 @@ export default function VerifyPage() {
       {/* Header */}
       <header className="border-b border-border/40">
         <div className="max-w-2xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 font-semibold">
-            <BrandMark className="w-8 h-8" />
-            Mwalimu AI
-          </Link>
+          <div className="flex items-center gap-1">
+            <HeaderBack />
+            <Link href="/" className="flex min-h-11 items-center gap-2.5 font-semibold">
+              <BrandMark className="w-8 h-8" />
+              Mwalimu AI
+            </Link>
+          </div>
           <span className="text-xs text-muted-foreground">Certificate Verification</span>
         </div>
       </header>

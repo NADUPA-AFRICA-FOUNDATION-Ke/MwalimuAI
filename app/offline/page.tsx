@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { WifiOff } from 'lucide-react'
+import { HeaderBack } from '@/components/header-back'
 import { BrandMark } from '@/components/brand-mark'
 import { OfflineRetry } from './retry'
 
@@ -9,7 +10,8 @@ export const metadata: Metadata = { title: 'You are offline', robots: { index: f
 /** Shown by the service worker when a page is not cached and there is no connection. */
 export default function OfflinePage() {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center px-6 py-[max(24px,env(safe-area-inset-top))] text-center">
+    <main className="relative flex min-h-svh flex-col items-center justify-center px-6 py-[max(24px,env(safe-area-inset-top))] text-center">
+      <HeaderBack fallbackHref="/dashboard" className="absolute left-3 top-[max(12px,env(safe-area-inset-top))]" />
       <BrandMark className="mb-6 h-12 w-12" alt="" />
       <WifiOff className="mb-3 h-8 w-8 text-muted-foreground" aria-hidden="true" />
       <h1 className="text-2xl font-bold">You are offline</h1>

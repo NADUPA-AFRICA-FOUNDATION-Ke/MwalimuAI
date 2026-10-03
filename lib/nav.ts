@@ -34,9 +34,6 @@ export const MORE_ROUTES: { href: string; labelKey: TranslationKey }[] = [
 
 const segments = (pathname: string) => pathname.split('?')[0].split('/').filter(Boolean)
 
-/** A root screen is a tab: nothing to go back to, so the header shows the product, not a back arrow. */
-export const isRootScreen = (pathname: string) => TAB_ROUTES.some((t) => t.href === pathname.replace(/\/$/, ''))
-
 /**
  * Lessons and assessments get the whole screen: the tab bar steps aside and a sticky action bar
  * (previous / complete / next) sits in the thumb zone instead.

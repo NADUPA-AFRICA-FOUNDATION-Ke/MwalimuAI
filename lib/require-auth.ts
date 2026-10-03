@@ -2,7 +2,7 @@ import { ConvexHttpClient } from 'convex/browser'
 import { api } from '@/convex/_generated/api'
 
 function unauthorized() {
-  return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+  return new Response(JSON.stringify({ error: 'Unauthorized', code: 'unauthenticated' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
 }
 
 export async function requireAuth(req: Request): Promise<Response | null> {

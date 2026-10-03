@@ -34,8 +34,10 @@ export async function POST(req: NextRequest) {
   if (!limit.ok) return rateLimitResponse(limit)
 
   if (!stripe) {
+    // Operators see the real reason in the server log; learners get a plain message.
+    console.error('[stripe/checkout] STRIPE_SECRET_KEY is not set, so checkout is unavailable.')
     return NextResponse.json(
-      { error: 'Stripe is not configured. Add STRIPE_SECRET_KEY to .env.local.' },
+      { error: 'Online payment is not available right now.', code: 'payments_unavailable' },
       { status: 503 },
     )
   }
@@ -47,12 +49,12 @@ export async function POST(req: NextRequest) {
     plan = body.plan
     customerEmail = body.email
   } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid request body.', code: 'invalid_request' }, { status: 400 })
   }
 
   const planConfig = PLANS[plan]
   if (!planConfig) {
-    return NextResponse.json({ error: 'Unknown plan.' }, { status: 400 })
+    return NextResponse.json({ error: 'Unknown plan.', code: 'invalid_request' }, { status: 400 })
   }
 
   try {
@@ -83,6 +85,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     // Log the detail server-side; never echo Stripe internals to the client
     console.error('[stripe/checkout] session creation failed:', err)
-    return NextResponse.json({ error: 'Could not start checkout. Please try again shortly.' }, { status: 500 })
+    return NextResponse.json({ error: 'Could not start checkout.', code: 'checkout_failed' }, { status: 500 })
   }
 }

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Compass, Home, LayoutDashboard, RefreshCw, SearchX, ShieldAlert } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, ArrowRight, Compass, Home, LayoutDashboard, RefreshCw, SearchX, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 type ErrorVariant = 'not-found' | 'server' | 'dashboard' | 'auth'
@@ -44,6 +45,16 @@ const COPY: Record<ErrorVariant, {
   },
 }
 
+function BackAction() {
+  const router = useRouter()
+  return (
+    <Button type="button" variant="outline" className="gap-2 rounded-xl" onClick={() => (window.history.length > 1 ? router.back() : router.push('/'))}>
+      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+      Go back
+    </Button>
+  )
+}
+
 export function AppErrorState({
   variant = 'server',
   reset,
@@ -82,6 +93,7 @@ export function AppErrorState({
         <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">{content.description}</p>
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <BackAction />
           {reset && (
             <Button type="button" onClick={retry} disabled={retrying} className="gap-2 rounded-xl">
               <RefreshCw className={retrying ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} aria-hidden="true" />
