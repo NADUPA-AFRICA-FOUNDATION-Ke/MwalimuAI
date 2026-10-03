@@ -3,32 +3,40 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Mwalimu AI shared design tokens. The palette intentionally stays close to
-   the original orange, green, and white experience: warm enough to feel
-   human, with darker text colors reserved for readable UI labels. */
+/* Mwalimu AI design tokens. Roots: the logo's mint-green and orange, kept bright and warm.
+   Every pairing below is verified (WCAG AA): text >= 4.5:1, large text/UI >= 3:1.
+   Rule of use: brand green for primary actions and links, orange as one sparing accent,
+   everything else tonal greens/greys. Light is the default; dark follows the system
+   (or the in-app toggle) and uses neutral #121212-range surfaces. */
 :root {
-  --color-canvas: #FAFCFB;
+  /* surfaces */
+  --color-canvas: #F8FBF9;
   --color-surface: #FFFFFF;
-  --color-surface-subtle: #F1F8F4;
-  --color-ink: #17352C;
-  --color-ink-muted: #49635A;
-  --color-brand: #057A5B;
+  --color-surface-subtle: #EEF6F1;
+  /* text */
+  --color-ink: #1B3A31;          /* 11.9:1 on canvas */
+  --color-ink-muted: #4F665C;    /* 5.9:1 on canvas, 5.6:1 on subtle */
+  /* brand green */
+  --color-brand: #007D42;        /* 5.2:1 with white; 5.0:1 as text on canvas; 4.6:1 on brand-soft */
   --color-on-brand: #FFFFFF;
-  --color-brand-hover: #045E48;
-  --color-brand-soft: #DDF5EB;
-  /* A richer burnt orange keeps the original warmth while giving primary
-     calls to action more energy and a clearer visual hierarchy. */
-  --brand-accent: #C2410C;
-  --color-accent-bright: #F59E0B;
-  --color-accent-text: #9A3412;
+  --color-brand-hover: #00652F;
+  --color-brand-soft: #E1F5EA;
+  /* accent orange (the logo's orange) */
+  --brand-accent: #F97316;       /* fills only; text on it is --color-on-accent (6.5:1) */
+  --color-on-accent: #1F1300;
+  --color-accent-bright: #F97316;
+  --color-accent-text: #B34700;  /* orange as text on light surfaces: 5.3:1 */
   --color-accent-soft: #FFF1E6;
+  /* status */
   --color-success: #0B6B43;
   --color-on-success: #FFFFFF;
   --color-danger: #B42318;
   --color-on-danger: #FFFFFF;
-  --color-border: #C6D6CE;
-  --color-border-strong: #728B82;
-  --color-focus: #0B6B5B;
+  /* lines: --color-border is decorative (cards, dividers); control edges use --color-input (3.5:1) */
+  --color-border: #D3E3DA;
+  --color-border-strong: #6F8B7E;
+  --color-input: #6F8B7E;
+  --color-focus: #00652F;
 
   --background: var(--color-canvas);
   --foreground: var(--color-ink);
@@ -44,11 +52,11 @@
   --muted: var(--color-surface-subtle);
   --muted-foreground: var(--color-ink-muted);
   --accent: var(--brand-accent);
-  --accent-foreground: #FFFFFF;
+  --accent-foreground: var(--color-on-accent);
   --destructive: var(--color-danger);
   --destructive-foreground: var(--color-on-danger);
   --border: var(--color-border);
-  --input: var(--color-border);
+  --input: var(--color-input);
   --ring: var(--color-focus);
   --chart-1: var(--color-brand);
   --chart-2: var(--color-accent-text);
@@ -56,7 +64,7 @@
   --chart-4: #9A3D74;
   --chart-5: #6D4C1D;
   --radius: 0.5rem;
-  --sidebar: var(--color-surface-subtle);
+  --sidebar: var(--color-surface);
   --sidebar-foreground: var(--color-ink);
   --sidebar-primary: var(--color-brand);
   --sidebar-primary-foreground: var(--color-on-brand);
@@ -65,61 +73,65 @@
   --sidebar-border: var(--color-border);
   --sidebar-ring: var(--color-focus);
 
-  --hero-bg: #0E201B;
-  --font-family-display: 'Lexend', ui-sans-serif, system-ui, sans-serif;
-  --font-family-body: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+  /* Typography: Lexend (display) + Source Sans 3 (body), self-hosted via next/font in app/layout.tsx. */
+  --font-family-display: var(--font-display-loaded), 'Lexend', ui-sans-serif, system-ui, sans-serif;
+  --font-family-body: var(--font-body-loaded), 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+
+  /* Spacing scale (8px base): 4 8 12 16 24 32 48 64 -> Tailwind 1 2 3 4 6 8 12 16. */
+  --space-gutter: 1rem;           /* page gutter on phones */
+  --space-gutter-lg: 1.5rem;      /* page gutter from md up */
+  --content-max: 72rem;           /* dashboard content column (1152px) */
+  --reading-max: 44rem;           /* long-form reading column (704px, ~70 characters) */
+  --app-header-h: 3.5rem;         /* 56px; plus the top safe area in the installed app */
+  --bottom-nav-h: 3.5rem;         /* 56px; plus the bottom safe area */
 
   --shadow-xs: 0 1px 2px rgb(18 49 43 / 0.04);
   --shadow-sm: 0 1px 2px rgb(18 49 43 / 0.06);
   --shadow-md: 0 8px 24px rgb(18 49 43 / 0.10);
   --shadow-lg: 0 16px 40px rgb(18 49 43 / 0.14);
   --shadow-xl: var(--shadow-lg);
-  --shadow-primary: 0 4px 16px rgb(5 122 91 / 0.20), 0 2px 6px rgb(5 122 91 / 0.12);
+  --shadow-primary: 0 4px 16px rgb(0 125 66 / 0.20), 0 2px 6px rgb(0 125 66 / 0.12);
+
+  --hero-bg: #0E201B; /* removed in the polish commit, with the dark hero panels */
 }
 
-/* Keep the common muted utility text readable on the light marketing cards.
-   These values meet WCAG AA normal-text contrast against white/background. */
-.text-gray-300,
-.text-gray-400,
-.text-gray-500 { color: var(--color-ink-muted) !important; }
-
-/* Accent is used as both an icon/text color and a solid status/background
-   color. Keep the semantic utility readable on light surfaces while allowing
-   the hero to use the brighter orange against the dark green background. */
-.text-accent { color: var(--color-accent-text) !important; }
-.hero-bg .text-accent,
-.hero-bg .text-accent-foreground { color: var(--color-accent-bright) !important; }
-
+/* Dark: neutral surfaces in the #121212-#1E1E1E range (never pure black), off-white text (never #FFF),
+   elevation by lighter surface steps, and accents desaturated so they do not glow. */
 .dark {
-  --color-canvas: #0E201B;
-  --color-surface: #142A24;
-  --color-surface-subtle: #1C372F;
-  --color-ink: #F3FAF7;
-  --color-ink-muted: #C0D1CA;
-  --color-brand: #49D7B1;
-  --color-on-brand: #0E201B;
-  --color-brand-hover: #79E5C8;
-  --color-brand-soft: #1A4639;
-  --brand-accent: #F5A623;
-  --color-accent-bright: #F8BD57;
-  --color-accent-text: #F8BD57;
-  --color-accent-soft: #4A3212;
+  --color-canvas: #131715;
+  --color-surface: #1B201E;
+  --color-surface-subtle: #242A27;
+  --color-ink: #E2E7E4;
+  --color-ink-muted: #A9B5AF;
+  --color-brand: #43BE8C;
+  --color-on-brand: #0B1F17;
+  --color-brand-hover: #6FD1A9;
+  --color-brand-soft: #1E3A2F;
+  --brand-accent: #E8964A;
+  --color-on-accent: #1F1300;
+  --color-accent-bright: #E8964A;
+  --color-accent-text: #F0A25A;
+  --color-accent-soft: #3A2A18;
   --color-success: #62D39F;
-  --color-on-success: #0E201B;
-  --color-danger: #FF8A80;
-  --color-on-danger: #0E201B;
-  --color-border: #45675B;
-  --color-border-strong: #75958A;
-  --color-focus: #79E5C8;
+  --color-on-success: #0B1F17;
+  --color-danger: #F08A82;
+  --color-on-danger: #1A0907;
+  --color-border: #3A4440;
+  --color-border-strong: #6E7C75;
+  --color-input: #6E7C75;
+  --color-focus: #6FD1A9;
   --hero-bg: #0E201B;
-  --accent: var(--brand-accent);
-  --accent-foreground: #2D1B00;
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.15);
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.20);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.20);
-  --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.28);
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: 0 0 0 1px var(--color-border);
+  --shadow-lg: 0 0 0 1px var(--color-border);
   --shadow-xl: var(--shadow-lg);
+  --shadow-primary: none;
 }
+
+/* Orange as *text* on light surfaces must use the darker accent-text; the bright orange is for fills. */
+.text-accent { color: var(--color-accent-text); }
+.hero-bg .text-accent, .hero-bg .text-accent-foreground { color: var(--color-accent-bright); }
 
 @theme inline {
   --font-sans: var(--font-family-body);
@@ -173,8 +185,9 @@
     font-size: 16px;
     line-height: 1.6;
   }
-  :root { color-scheme: light; }
-  .dark  { color-scheme: dark;  }
+  :root { color-scheme: light dark; }
+  :root:not(.dark) { color-scheme: light; }
+  .dark { color-scheme: dark; }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-family-display);
     text-wrap: balance;

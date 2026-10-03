@@ -73,7 +73,7 @@ export default function AboutPage() {
   const { ref: statsRef, visible: statsVisible } = useFadeIn<HTMLElement>(0.15)
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <MarketingHeader activePath="/about" />
 
       <main>
@@ -93,14 +93,14 @@ export default function AboutPage() {
       </section>
 
       {/* Stats */}
-      <section ref={statsRef} className="bg-white border-b border-gray-100">
+      <section ref={statsRef} className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-5 md:px-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
             {stats.map(({ value, label }) => (
               <div key={label}
                 className={`py-10 px-6 text-center transition-all duration-700 ${statsVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
                 <span className="block text-[2.6rem] md:text-[3rem] font-black text-primary tabular-nums leading-none mb-1.5">{value}</span>
-                <span className="block text-sm text-gray-400 font-medium">{label}</span>
+                <span className="block text-sm text-muted-foreground font-medium">{label}</span>
               </div>
             ))}
           </div>
@@ -108,7 +108,7 @@ export default function AboutPage() {
       </section>
 
       {/* Story / Mission */}
-      <section ref={storyRef} className="py-20 md:py-28 bg-white overflow-hidden">
+      <section ref={storyRef} className="py-20 md:py-28 bg-card overflow-hidden">
         <div className="max-w-6xl mx-auto px-5 md:px-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
             <div className={`transition-all duration-700 ${storyVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
@@ -116,7 +116,7 @@ export default function AboutPage() {
               <h2 className="text-3xl md:text-[2.5rem] font-black tracking-tight text-foreground mb-5 leading-tight">
                 Why we built<br />Mwalimu AI
               </h2>
-              <div className="space-y-4 text-gray-400 text-base leading-relaxed">
+              <div className="space-y-4 text-muted-foreground text-base leading-relaxed">
                 <p>
                   Teachers often need help with planning, assessment, and classroom decisions while the work is already under way.
                 </p>
@@ -143,7 +143,7 @@ export default function AboutPage() {
                 <div className="absolute bottom-5 left-5 right-5">
                   <div className="rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(8px)' }}>
                     <p className="text-xs font-bold text-foreground">Learning support for real classroom work</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Modules, tools, coaching, and progress in one place</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Modules, tools, coaching, and progress in one place</p>
                   </div>
                 </div>
               </div>
@@ -153,7 +153,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section ref={valuesRef} className="py-20 bg-gray-50/60">
+      <section ref={valuesRef} className="py-20 bg-muted/60">
         <div className="max-w-6xl mx-auto px-5 md:px-10">
           <div className={`text-center mb-14 transition-all duration-700 ${valuesVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
             <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Our Values</p>
@@ -170,7 +170,7 @@ export default function AboutPage() {
                   <value.icon className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="font-bold text-[15px] text-foreground mb-2 tracking-tight">{value.title}</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">{value.desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{value.desc}</p>
               </div>
             ))}
           </div>
@@ -178,14 +178,14 @@ export default function AboutPage() {
       </section>
 
       {/* Team */}
-      <section ref={teamRef} className="py-20 bg-white">
+      <section ref={teamRef} className="py-20 bg-card">
         <div className="max-w-6xl mx-auto px-5 md:px-10">
           <div className={`text-center mb-14 transition-all duration-700 ${teamVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
             <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Inside the platform</p>
             <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
               A place for ongoing practice
             </h2>
-            <p className="text-gray-400 text-base max-w-md mx-auto">
+            <p className="text-muted-foreground text-base max-w-md mx-auto">
               The platform brings these parts together so teachers can move from a question to useful work.
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="font-bold text-[15px] text-foreground mb-1 tracking-tight">{member.name}</h3>
                 <p className="text-sm font-semibold text-primary mb-3">{member.role}</p>
-                <p className="text-sm text-gray-400 leading-relaxed">{member.bio}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{member.bio}</p>
               </div>
             ))}
           </div>
@@ -218,12 +218,12 @@ export default function AboutPage() {
             Create an account to explore the modules, Coach, tools, community, and progress records.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
+            <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
               <Link href="/auth/sign-up">
                 Create an account <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-[14px] px-5 py-3 rounded-xl">
+            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-card/10 text-[14px] px-5 py-3 rounded-xl">
               <Link href="/contact">
                 Contact us
               </Link>

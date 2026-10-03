@@ -52,7 +52,7 @@ function Indicator({ on }: { on: boolean }) {
       }`}
       style={{ padding: '2px' }}
     >
-      <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+      <div className="w-4 h-4 rounded-full bg-card shadow-sm" />
     </div>
   )
 }
@@ -260,7 +260,7 @@ export function AccessibilityWidget() {
               type="button"
               ref={closeBtnRef}
               onClick={() => setOpen(false)}
-              className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="min-w-11 min-h-11 inline-flex items-center justify-center rounded-lg hover:bg-card/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               aria-label="Close accessibility panel"
             >
               <X className="w-3.5 h-3.5" aria-hidden="true" />

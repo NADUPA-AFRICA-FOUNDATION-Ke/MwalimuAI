@@ -17,7 +17,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider
       attribute="class"
       defaultTheme="light"
-      enableSystem={false}
+      enableSystem
       disableTransitionOnChange
     >
       {/* ProfileProvider (Supabase auth + cloud sync, ~350 KB of JS) is NOT

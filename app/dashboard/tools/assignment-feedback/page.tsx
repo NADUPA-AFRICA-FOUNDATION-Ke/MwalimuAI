@@ -53,7 +53,7 @@ function DetectionBanner({ result, onDismiss }: { result: DetectionResult; onDis
             </span>
           </div>
           {/* Score bar */}
-          <div className="mt-1.5 w-full bg-black/5 dark:bg-white/5 rounded-full h-1.5">
+          <div className="mt-1.5 w-full bg-black/5 dark:bg-card/5 rounded-full h-1.5">
             <div className={`h-1.5 rounded-full ${c.bar} transition-all duration-700`} style={{ width: `${result.score}%` }} />
           </div>
         </div>

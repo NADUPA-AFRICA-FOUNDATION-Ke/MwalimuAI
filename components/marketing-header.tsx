@@ -54,8 +54,8 @@ export function MarketingHeader({ activePath, overlay = false }: MarketingHeader
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative px-4 py-2.5 text-sm font-medium rounded-lg transition-colors group ${
                   isActive
-                    ? `${lightHeader ? 'text-foreground bg-primary/8' : 'text-white bg-white/10'}`
-                    : `${lightHeader ? 'text-muted-foreground hover:text-foreground hover:bg-primary/5' : 'text-white/75 hover:text-white hover:bg-white/10'}`
+                    ? `${lightHeader ? 'text-foreground bg-primary/8' : 'text-white bg-card/10'}`
+                    : `${lightHeader ? 'text-muted-foreground hover:text-foreground hover:bg-primary/5' : 'text-white/75 hover:text-white hover:bg-card/10'}`
                 }`}
               >
                 {label}
@@ -71,7 +71,7 @@ export function MarketingHeader({ activePath, overlay = false }: MarketingHeader
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className={`hidden md:block font-medium rounded-xl transition-all ${lightHeader ? 'hover:text-primary hover:bg-primary/8' : 'text-white/80 hover:text-white hover:bg-white/10'}`}>
+          <Button asChild variant="ghost" size="sm" className={`hidden md:block font-medium rounded-xl transition-all ${lightHeader ? 'hover:text-primary hover:bg-primary/8' : 'text-white/80 hover:text-white hover:bg-card/10'}`}>
             <Link href="/auth/login">
               Sign in
             </Link>
@@ -84,7 +84,7 @@ export function MarketingHeader({ activePath, overlay = false }: MarketingHeader
           <button
             type="button"
             onClick={() => setMenuOpen(v => !v)}
-            className={`md:hidden min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl transition-colors ${lightHeader ? 'hover:bg-muted text-foreground' : 'text-white hover:bg-white/10'}`}
+            className={`md:hidden min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl transition-colors ${lightHeader ? 'hover:bg-muted text-foreground' : 'text-white hover:bg-card/10'}`}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             aria-controls="mobile-navigation"
@@ -102,7 +102,7 @@ export function MarketingHeader({ activePath, overlay = false }: MarketingHeader
               href={href}
               onClick={() => setMenuOpen(false)}
               tabIndex={menuOpen ? 0 : -1}
-              className={`px-4 py-3 text-sm font-medium rounded-xl transition-colors ${lightHeader ? 'hover:bg-primary/8 hover:text-foreground text-muted-foreground' : 'text-white/80 hover:bg-white/10 hover:text-white'}`}
+              className={`px-4 py-3 text-sm font-medium rounded-xl transition-colors ${lightHeader ? 'hover:bg-primary/8 hover:text-foreground text-muted-foreground' : 'text-white/80 hover:bg-card/10 hover:text-white'}`}
             >
               {label}
             </Link>

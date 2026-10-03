@@ -22,7 +22,7 @@ const CTASection          = dynamic(() => sections().then(m => m.CTASection))
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white">
+    <div className="min-h-screen overflow-x-hidden bg-card">
       <link rel="preconnect" href="https://images.unsplash.com" />
 
       <MarketingHeader overlay />
@@ -76,7 +76,7 @@ export default function LandingPage() {
               aria-describedby="homepage-email-help"
               required
               placeholder="Enter your email"
-              className="flex-1 h-12 rounded-xl px-4 text-[14px] font-medium text-foreground placeholder:text-gray-400 bg-white border-0 outline-none focus:ring-2 focus:ring-accent"
+              className="flex-1 h-12 rounded-xl px-4 text-[14px] font-medium text-foreground placeholder:text-muted-foreground bg-card border-0 outline-none focus:ring-2 focus:ring-accent"
             />
             <button type="submit"
               className="h-11 px-5 rounded-xl font-semibold text-[13px] text-white whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"

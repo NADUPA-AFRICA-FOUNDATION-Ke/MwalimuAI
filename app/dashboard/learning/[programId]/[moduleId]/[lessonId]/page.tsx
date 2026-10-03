@@ -214,7 +214,7 @@ export default function LessonPage() {
               <button type="button" aria-label="Continue to lesson reading" className="relative w-full bg-gray-900 dark:bg-gray-950 rounded-xl overflow-hidden aspect-video flex items-center justify-center mb-5 group cursor-pointer" onClick={() => setTab('reading')}>
                 <span className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/10" />
                 <span className="relative z-10 text-center">
-                  <span className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-white/30 transition-colors">
+                  <span className="w-16 h-16 bg-card/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-card/30 transition-colors">
                     <Play className="w-7 h-7 text-white fill-white ml-0.5" />
                   </span>
                   <span className="block text-white font-semibold text-sm mb-1">{lesson.videoTitle}</span>

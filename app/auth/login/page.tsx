@@ -136,11 +136,11 @@ function LoginContent() {
       </div>
 
       {/* ── Right panel — form ──────────────────────────── */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 flex flex-col bg-card">
 
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-gray-100">
-          <Link href="/" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors">
+        <div className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-border">
+          <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
@@ -149,7 +149,7 @@ function LoginContent() {
             <BrandMark className="w-7 h-7" />
             <span className="font-bold text-sm tracking-tight">Mwalimu AI</span>
           </Link>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             No account?{' '}
             <Link href="/auth/sign-up" className="text-primary font-semibold hover:underline underline-offset-4">
               Sign up
@@ -162,27 +162,27 @@ function LoginContent() {
           <div className="w-full max-w-[380px]">
 
             <div className="mb-8">
-              <h1 className="text-[1.8rem] font-black tracking-tight text-gray-900 mb-2">Welcome back</h1>
-              <p className="text-gray-400 text-[15px]">Sign in to return to your learning workspace.</p>
+              <h1 className="text-[1.8rem] font-black tracking-tight text-foreground mb-2">Welcome back</h1>
+              <p className="text-muted-foreground text-[15px]">Sign in to return to your learning workspace.</p>
             </div>
 
             <form onSubmit={handleLogin} noValidate className="space-y-5">
 
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[13px] font-semibold text-gray-700">Email address</Label>
+                <Label htmlFor="email" className="text-[13px] font-semibold text-foreground">Email address</Label>
                 <Input
                   id="email" type="email" inputMode="email" autoComplete="email" spellCheck={false}
                   placeholder="you@school.ac.ke" required
                   aria-invalid={!!error}
                   aria-describedby={error ? 'login-error' : undefined}
                   value={email} onChange={e => setEmail(e.target.value)}
-                  className="h-11 rounded-xl border-gray-200 bg-gray-50 text-[14px] focus:border-primary focus:ring-primary/20 placeholder:text-gray-300"
+                  className="h-11 rounded-xl border-border bg-muted text-[14px] focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-[13px] font-semibold text-gray-700">Password</Label>
+                  <Label htmlFor="password" className="text-[13px] font-semibold text-foreground">Password</Label>
                   <Link href="/auth/forgot-password" className="text-[12px] text-primary hover:underline underline-offset-4">
                     Forgot password?
                   </Link>
@@ -193,11 +193,11 @@ function LoginContent() {
                     aria-invalid={!!error}
                     aria-describedby={error ? 'login-error' : undefined}
                     value={password} onChange={e => setPassword(e.target.value)}
-                    className="h-11 rounded-xl border-gray-200 bg-gray-50 text-[14px] pr-10 focus:border-primary focus:ring-primary/20"
+                    className="h-11 rounded-xl border-border bg-muted text-[14px] pr-10 focus:border-primary focus:ring-primary/20"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -226,12 +226,12 @@ function LoginContent() {
               <OAuthButtons />
             </div>
 
-            <p className="text-center text-[12px] text-gray-300 mt-8">
+            <p className="text-center text-[12px] text-muted-foreground mt-8">
               By signing in you agree to our{' '}
-              <Link href="/privacy" className="text-gray-400 hover:text-gray-600 underline underline-offset-4 transition-colors">
+              <Link href="/privacy" className="text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
                 Privacy Policy
               </Link>{' '}and{' '}
-              <Link href="/terms" className="text-gray-400 hover:text-gray-600 underline underline-offset-4 transition-colors">
+              <Link href="/terms" className="text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
                 Terms &amp; Conditions
               </Link>
             </p>

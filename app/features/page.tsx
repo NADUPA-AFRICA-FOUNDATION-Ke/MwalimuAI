@@ -39,7 +39,7 @@ export default function FeaturesPage() {
   const { ref: gridRef, visible: gridVisible } = useFadeIn<HTMLElement>(0.04)
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
 
       <MarketingHeader activePath="/features" />
 
@@ -57,12 +57,12 @@ export default function FeaturesPage() {
             Mwalimu AI brings together learning modules, AI coaching, teacher tools, community discussions, and progress tracking.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
+            <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
               <Link href="/auth/sign-up">
                 Create an account <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-[14px] px-5 py-3 rounded-xl">
+            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-card/10 text-[14px] px-5 py-3 rounded-xl">
               <Link href="/pricing">
                 View pricing
               </Link>
@@ -80,14 +80,14 @@ export default function FeaturesPage() {
       </section>
 
       {/* Features Grid */}
-      <section ref={gridRef} className="py-20 bg-white">
+      <section ref={gridRef} className="py-20 bg-card">
         <div className="max-w-7xl mx-auto px-5 md:px-10">
           <div className={`text-center mb-14 transition-all duration-700 ${gridVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
             <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Platform Features</p>
             <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
               Tools built for the way you teach
             </h2>
-            <p className="text-gray-400 text-base max-w-lg mx-auto">
+            <p className="text-muted-foreground text-base max-w-lg mx-auto">
               Explore the platform areas available to you.
             </p>
           </div>
@@ -103,7 +103,7 @@ export default function FeaturesPage() {
                   <feature.icon className="w-5.5 h-5.5 text-primary" />
                 </div>
                 <h3 className="font-bold text-[15px] text-foreground mb-2 tracking-tight">{feature.title}</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">{feature.desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -121,7 +121,7 @@ export default function FeaturesPage() {
           <p className="text-white/80 text-base leading-relaxed mb-8 max-w-lg mx-auto">
             Create an account to explore the platform.
           </p>
-          <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
+          <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
             <Link href="/auth/sign-up">
               Create an account <ArrowRight className="w-5 h-5 ml-2" />
             </Link>

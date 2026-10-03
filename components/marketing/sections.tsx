@@ -77,15 +77,15 @@ export function StatsSection() {
   ]
 
   return (
-    <section ref={ref} className="bg-white border-b border-gray-100">
+    <section ref={ref} className="bg-card border-b border-border">
       <div className="max-w-4xl mx-auto px-5 md:px-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
           {stats.map(({ value, label, delay }) => (
             <div key={label}
               className={`py-10 px-6 text-center transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
               style={{ transitionDelay: `${delay}ms` }}>
               <span className="block text-[2.6rem] md:text-[3rem] font-black text-primary tabular-nums leading-none mb-1.5">{value}</span>
-              <span className="block text-sm text-gray-400 font-medium">{label}</span>
+              <span className="block text-sm text-muted-foreground font-medium">{label}</span>
             </div>
           ))}
         </div>
@@ -121,14 +121,14 @@ export function ProductShowcase() {
   }
 
   return (
-    <section ref={ref} className="py-24 bg-white">
+    <section ref={ref} className="py-24 bg-card">
       <div className="max-w-5xl mx-auto px-5 md:px-10">
         <div className={`text-center mb-12 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
           <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Product Preview</p>
           <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-4">
             See it in action
           </h2>
-          <p className="text-gray-400 text-base max-w-md mx-auto">
+          <p className="text-muted-foreground text-base max-w-md mx-auto">
             A focused view of the modules, Coach, and progress tools in the app.
           </p>
         </div>
@@ -140,7 +140,7 @@ export function ProductShowcase() {
               className={`min-h-11 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 activeTab === i
                   ? 'bg-primary text-white'
-                  : 'bg-gray-50 border border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'bg-muted border border-border text-muted-foreground hover:text-foreground hover:border-gray-300'
               }`}>
               {tab}
             </button>
@@ -161,7 +161,7 @@ export function FeaturesSection() {
   const { ref, visible } = useFadeIn(0.04)
 
   return (
-    <section ref={ref} className="py-24 bg-white border-y border-gray-100">
+    <section ref={ref} className="py-24 bg-card border-y border-border">
       <div className="max-w-6xl mx-auto px-5 md:px-10">
         <div className={`flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
           <div>
@@ -170,12 +170,12 @@ export function FeaturesSection() {
               Everything you need<br className="hidden md:block" /> to excel at CBC
             </h2>
           </div>
-          <p className="text-gray-400 text-[15px] leading-relaxed max-w-xs md:text-right">
+          <p className="text-muted-foreground text-[15px] leading-relaxed max-w-xs md:text-right">
             Tools designed specifically for the way Kenyan teachers learn and grow.
           </p>
         </div>
 
-        <div className={`grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-gray-100 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
+        <div className={`grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-border transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
           {[features.slice(0, 3), features.slice(3)].map((col, colIdx) => (
             <div key={colIdx} className={colIdx === 1 ? 'lg:pl-12' : 'lg:pr-12'}>
               {col.map(({ icon: Icon, title, desc, href, accent }, rowIdx) => {
@@ -183,7 +183,7 @@ export function FeaturesSection() {
                 return (
                   <div
                     key={title}
-                    className="group flex items-start gap-5 py-8 border-b border-gray-100 last:border-0 hover:bg-gray-50/60 -mx-4 px-4 rounded-xl transition-colors duration-150"
+                    className="group flex items-start gap-5 py-8 border-b border-border last:border-0 hover:bg-muted/60 -mx-4 px-4 rounded-xl transition-colors duration-150"
                   >
                     <span className="text-[11px] font-black text-gray-200 tabular-nums mt-1 w-5 shrink-0 select-none">
                       {num}
@@ -193,7 +193,7 @@ export function FeaturesSection() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-[15px] text-foreground mb-1.5 tracking-tight">{title}</h3>
-                      <p className="text-sm text-gray-400 leading-relaxed mb-3">{desc}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-3">{desc}</p>
                       <Link
                         href={href}
                         className={`inline-flex items-center gap-1 text-[12px] font-semibold group-hover:gap-2 transition-all duration-200 ${accent === 'primary' ? 'text-primary' : 'text-accent'}`}
@@ -216,7 +216,7 @@ export function SplitSection() {
   const { ref, visible } = useFadeIn(0.08)
 
   return (
-    <section ref={ref} className="py-24 bg-white overflow-hidden">
+    <section ref={ref} className="py-24 bg-card overflow-hidden">
       <div className="max-w-6xl mx-auto px-5 md:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className={`transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
@@ -233,7 +233,7 @@ export function SplitSection() {
               <div className="absolute bottom-5 left-5 rounded-2xl px-4 py-3"
                 style={{ background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(8px)' }}>
                 <p className="text-xs font-bold text-foreground">Learning support for Kenyan teachers</p>
-                <p className="text-[11px] text-gray-400 mt-0.5">for planning, practice, and reflection</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">for planning, practice, and reflection</p>
               </div>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function SplitSection() {
             <h2 className="text-3xl md:text-[2.5rem] font-black tracking-tight text-foreground mb-5 leading-tight">
               Designed around the<br />real challenges of CBC
             </h2>
-            <p className="text-gray-400 text-base leading-relaxed mb-8">
+            <p className="text-muted-foreground text-base leading-relaxed mb-8">
               Mwalimu AI brings learning, planning, and reflection tools into one workspace
               for Kenyan teachers working with CBC content.
             </p>
@@ -254,7 +254,7 @@ export function SplitSection() {
                 'Teacher discussions and shared resources',
                 'Progress tracking from your dashboard',
               ].map(item => (
-                <li key={item} className="flex items-start gap-3 text-sm text-gray-500">
+                <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
                   <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="w-3 h-3 text-primary" />
                   </div>
@@ -278,32 +278,32 @@ export function ComparisonSection() {
   const { ref, visible } = useFadeIn(0.08)
 
   return (
-    <section ref={ref} className="py-24 bg-gray-50/60">
+    <section ref={ref} className="py-24 bg-muted/60">
       <div className="max-w-4xl mx-auto px-5 md:px-10">
         <div className={`text-center mb-12 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
             <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
             One workspace for ongoing learning
             </h2>
-          <p className="text-gray-400 text-base max-w-md mx-auto">
+          <p className="text-muted-foreground text-base max-w-md mx-auto">
             Move between learning, planning, discussion, and progress review as your work requires.
           </p>
         </div>
 
-        <div className={`bg-white rounded-3xl overflow-hidden border border-gray-100 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
+        <div className={`bg-card rounded-3xl overflow-hidden border border-border transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
           style={{ boxShadow: 'var(--shadow-md)' }}>
-          <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-100">
+          <div className="grid grid-cols-4 bg-muted border-b border-border">
             <div className="p-5" />
             {['Learn', 'Plan', 'Reflect'].map((h, i) => (
-              <div key={h} className={`p-5 text-center border-l border-gray-100 ${i === 0 ? 'bg-primary/4' : ''}`}>
-                <p className={`text-sm font-bold ${i === 0 ? 'text-primary' : 'text-gray-400'}`}>{h}</p>
+              <div key={h} className={`p-5 text-center border-l border-border ${i === 0 ? 'bg-primary/4' : ''}`}>
+                <p className={`text-sm font-bold ${i === 0 ? 'text-primary' : 'text-muted-foreground'}`}>{h}</p>
               </div>
             ))}
           </div>
           {comparison.map(({ feature, learn, plan, reflect }, i) => (
-            <div key={feature} className={`grid grid-cols-4 border-b border-gray-50 last:border-0 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
-              <div className="p-4 text-sm text-gray-500 font-medium">{feature}</div>
+            <div key={feature} className={`grid grid-cols-4 border-b border-border last:border-0 ${i % 2 === 1 ? 'bg-muted/50' : ''}`}>
+              <div className="p-4 text-sm text-muted-foreground font-medium">{feature}</div>
               {[learn, plan, reflect].map((val, j) => (
-                <div key={j} className={`p-4 flex items-center justify-center border-l border-gray-50 ${j === 0 ? 'bg-primary/3' : ''}`}>
+                <div key={j} className={`p-4 flex items-center justify-center border-l border-border ${j === 0 ? 'bg-primary/3' : ''}`}>
                   {val === true      && <CheckCircle2 className="w-5 h-5 text-primary" />}
                   {val === false     && <XCircle className="w-5 h-5 text-gray-200" />}
                 </div>
@@ -326,18 +326,18 @@ export function HowItWorksSection() {
   ]
 
   return (
-    <section ref={ref} className="py-24 bg-white">
+    <section ref={ref} className="py-24 bg-card">
       <div className="max-w-4xl mx-auto px-5 md:px-10">
         <div className={`text-center mb-16 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
           <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Getting Started</p>
           <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
             A clear place to begin
           </h2>
-          <p className="text-gray-400 text-base">Create a profile, choose a starting point, and keep your work together.</p>
+          <p className="text-muted-foreground text-base">Create a profile, choose a starting point, and keep your work together.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          <div className="hidden md:block absolute top-9 left-[calc(16.67%+44px)] right-[calc(16.67%+44px)] h-px border-t-2 border-dashed border-gray-100" />
+          <div className="hidden md:block absolute top-9 left-[calc(16.67%+44px)] right-[calc(16.67%+44px)] h-px border-t-2 border-dashed border-border" />
           {steps.map(({ num, icon: Icon, title, desc }, i) => (
             <div key={title}
               className={`text-center transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
@@ -352,7 +352,7 @@ export function HowItWorksSection() {
                 </span>
               </div>
               <h3 className="font-bold text-[15px] mb-2.5 tracking-tight text-foreground">{title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-[220px] mx-auto">{desc}</p>
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-[220px] mx-auto">{desc}</p>
             </div>
           ))}
         </div>
@@ -365,13 +365,13 @@ export function TestimonialsSection() {
   const { ref, visible } = useFadeIn(0.04)
 
   return (
-    <section ref={ref} className="py-24 bg-gray-50/60">
+    <section ref={ref} className="py-24 bg-muted/60">
       <div className="max-w-6xl mx-auto px-5 md:px-10">
         <div className={`mb-12 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
           <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground">
             Ways to use the platform
           </h2>
-          <p className="text-gray-400 text-base mt-3 max-w-xl">
+          <p className="text-muted-foreground text-base mt-3 max-w-xl">
             Start with the part of your professional learning that needs attention today.
           </p>
         </div>
@@ -379,11 +379,11 @@ export function TestimonialsSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {useCases.map(({ title, description, link, href }, i) => (
             <div key={title}
-              className={`bg-white rounded-3xl p-7 flex flex-col border border-gray-100 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
+              className={`bg-card rounded-3xl p-7 flex flex-col border border-border transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
               style={{ transitionDelay: `${i * 100}ms` }}>
               <div className="mb-5 flex-1">
                 <p className="text-lg font-bold text-foreground mb-3">{title}</p>
-                <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
               </div>
               <Link href={href} className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary hover:gap-2 transition-all duration-200">
                 {link} <ChevronRight className="w-3.5 h-3.5" />
@@ -401,16 +401,16 @@ export function FaqSection() {
   const [openIdx, setOpenIdx] = useState<number | null>(null)
 
   return (
-    <section ref={ref} className="py-24 bg-white">
+    <section ref={ref} className="py-24 bg-card">
       <div className="max-w-3xl mx-auto px-5 md:px-10">
         <div className={`text-center mb-12 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
           <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
             Frequently asked questions
           </h2>
-          <p className="text-gray-400 text-base">Everything you need to know before getting started.</p>
+          <p className="text-muted-foreground text-base">Everything you need to know before getting started.</p>
         </div>
 
-        <div className={`bg-white rounded-3xl px-8 py-2 border border-gray-100 transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
+        <div className={`bg-card rounded-3xl px-8 py-2 border border-border transition-all duration-700 ${visible ? 'animate-section-visible' : 'animate-section-hidden'}`}
           style={{ boxShadow: 'var(--shadow-md)' }}>
           {faqs.map(({ q, a }, idx) => {
             const isOpen = openIdx === idx
@@ -435,7 +435,7 @@ export function FaqSection() {
         </div>
 
         <div className={`text-center mt-8 transition-all duration-700 delay-200 ${visible ? 'animate-section-visible' : 'opacity-0'}`}>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Still have questions?{' '}
             <Link href="/contact" className="text-primary font-semibold hover:underline underline-offset-4">
               Contact our team →
@@ -471,7 +471,7 @@ export function CTASection() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button asChild size="lg"
-              className="text-[14px] px-6 py-3 rounded-xl font-bold bg-white text-primary hover:bg-white/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
+              className="text-[14px] px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
             <Link href="/auth/sign-up">
               Create an account
               <ArrowRight className="w-5 h-5 ml-2" />

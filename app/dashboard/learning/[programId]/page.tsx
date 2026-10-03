@@ -153,7 +153,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
         <div className="relative z-10">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 bg-white/20 text-white px-3 py-1 rounded-full text-xs font-semibold mb-3">
+              <div className="inline-flex items-center gap-1.5 bg-card/20 text-white px-3 py-1 rounded-full text-xs font-semibold mb-3">
                 <Zap className="w-3 h-3" />
                 {track?.label} · {program.kicdAlignment}
               </div>
@@ -161,15 +161,15 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
               <p className="text-white/80 text-sm max-w-xl leading-relaxed">{program.description}</p>
             </div>
             <div className="flex gap-2 shrink-0">
-              <div className="text-center bg-white/15 rounded-xl px-4 py-3">
+              <div className="text-center bg-card/15 rounded-xl px-4 py-3">
                 <p className="text-xl font-bold text-white">{program.hours}h</p>
                 <p className="text-xs text-white/70">Content</p>
               </div>
-              <div className="text-center bg-white/15 rounded-xl px-4 py-3">
+              <div className="text-center bg-card/15 rounded-xl px-4 py-3">
                 <p className="text-xl font-bold text-white">{total}</p>
                 <p className="text-xs text-white/70">Lessons</p>
               </div>
-              <div className="text-center bg-white/15 rounded-xl px-4 py-3">
+              <div className="text-center bg-card/15 rounded-xl px-4 py-3">
                 <p className="text-xl font-bold text-white">{program.modules.length}</p>
                 <p className="text-xs text-white/70">Modules</p>
               </div>
@@ -183,8 +183,8 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
                 <span>{done}/{total} lessons complete</span>
                 <span className="font-bold">{pct}%</span>
               </div>
-              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-2 bg-card/20 rounded-full overflow-hidden">
+                <div className="h-full bg-card rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
               </div>
             </div>
           )}

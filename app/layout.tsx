@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Lexend, Source_Sans_3 } from 'next/font/google'
 import { Providers } from '@/components/providers'
 import { GradientBackground } from '@/components/gradient-background'
 import { SWRegister } from '@/components/sw-register'
@@ -6,11 +7,15 @@ import { AnalyticsConsent } from '@/components/analytics-consent'
 import { CookieConsent } from '@/components/cookie-consent'
 import './globals.css'
 
+// Self-hosted at build time (no runtime request to Google), latin subset, swap so text shows immediately.
+const display = Lexend({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-display-loaded', display: 'swap' })
+const body = Source_Sans_3({ subsets: ['latin'], weight: ['400', '600', '700'], variable: '--font-body-loaded', display: 'swap' })
+
 export const viewport: Viewport = {
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FAFCFB' },
-    { media: '(prefers-color-scheme: dark)',  color: '#0E201B' },
+    { media: '(prefers-color-scheme: light)', color: '#F8FBF9' },
+    { media: '(prefers-color-scheme: dark)',  color: '#131715' },
   ],
 }
 
@@ -59,7 +64,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="bg-background">
+    <html lang="en" suppressHydrationWarning className={`bg-background ${display.variable} ${body.variable}`}>
       <style href="mwalimu-layout" precedence="default">{`
         body { font-family: var(--font-family-body); }
         h1, h2, h3, h4, h5, h6 { text-wrap: balance; }

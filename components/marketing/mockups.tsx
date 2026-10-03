@@ -16,14 +16,14 @@ export function DashboardMockup() {
           <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
           <span className="w-3 h-3 rounded-full bg-green-500/70" />
         </div>
-        <div className="flex-1 mx-2 bg-white/8 rounded-md px-3 py-1 flex items-center gap-1.5">
+        <div className="flex-1 mx-2 bg-card/8 rounded-md px-3 py-1 flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-primary/60" />
           <span className="text-[11px] text-white/75 font-mono">app.mwalimuai.com/dashboard</span>
         </div>
       </div>
 
       <div className="flex bg-[#f8faf9]" style={{ height: '440px' }}>
-        <div className="w-14 bg-white border-r border-gray-100 flex flex-col items-center py-4 gap-1.5 shrink-0">
+        <div className="w-14 bg-card border-r border-border flex flex-col items-center py-4 gap-1.5 shrink-0">
           <BrandMark className="w-9 h-9 mb-3" />
           {[
             { Icon: HomeIcon,      active: true  },
@@ -34,7 +34,7 @@ export function DashboardMockup() {
             { Icon: Settings,      active: false },
           ].map(({ Icon, active }, i) => (
             <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-              active ? 'bg-primary/10 text-primary' : 'text-gray-300'
+              active ? 'bg-primary/10 text-primary' : 'text-muted-foreground'
             }`}>
               <Icon className="w-4 h-4" />
             </div>
@@ -44,8 +44,8 @@ export function DashboardMockup() {
         <div className="flex-1 p-5 flex flex-col gap-3.5 overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[13px] font-bold text-gray-900">Good morning, Jane</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">Your AI coach is ready — continue CBC journey.</p>
+              <p className="text-[13px] font-bold text-foreground">Good morning, Jane</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Your AI coach is ready — continue CBC journey.</p>
             </div>
             <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center text-[11px] font-black text-primary">JM</div>
           </div>
@@ -56,19 +56,19 @@ export function DashboardMockup() {
               { label: 'AI Sessions', value: '12', color: 'text-amber-500' },
               { label: 'Progress', value: '67%', color: 'text-primary' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-white rounded-xl p-2.5 border border-gray-100">
+              <div key={label} className="bg-card rounded-xl p-2.5 border border-border">
                 <p className={`text-[17px] font-black leading-none ${color}`}>{value}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{label}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{label}</p>
               </div>
             ))}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 p-3.5 flex-1 flex flex-col">
-            <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-gray-50">
+          <div className="bg-card rounded-xl border border-border p-3.5 flex-1 flex flex-col">
+            <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-border">
               <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
                 <Sparkles className="w-3 h-3 text-white" />
               </div>
-              <span className="text-[11px] font-bold text-gray-800">AI Coach</span>
+              <span className="text-[11px] font-bold text-foreground">AI Coach</span>
               <span className="ml-auto text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                 Online
@@ -76,32 +76,32 @@ export function DashboardMockup() {
             </div>
             <div className="space-y-2 flex-1">
               <div className="bg-primary/6 rounded-xl rounded-tl-sm px-3 py-2">
-                <p className="text-[11px] text-gray-700 leading-relaxed">
+                <p className="text-[11px] text-foreground leading-relaxed">
                   &ldquo;Great work on CBC Foundations! Ready to practice writing formative assessment rubrics for Grade 4?&rdquo;
                 </p>
               </div>
-              <div className="bg-gray-50 rounded-xl rounded-tr-sm px-3 py-2 self-end ml-8">
-                <p className="text-[11px] text-gray-500">Yes! Show me an example.</p>
+              <div className="bg-muted rounded-xl rounded-tr-sm px-3 py-2 self-end ml-8">
+                <p className="text-[11px] text-muted-foreground">Yes! Show me an example.</p>
               </div>
             </div>
             <div className="flex gap-1.5 mt-2.5 flex-wrap">
               {['View example →', 'Practice more'].map(s => (
-                <span key={s} className="text-[10px] bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-gray-500">
+                <span key={s} className="text-[10px] bg-muted border border-border rounded-full px-2.5 py-1 text-muted-foreground">
                   {s}
                 </span>
               ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 p-3">
+          <div className="bg-card rounded-xl border border-border p-3">
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[11px] font-bold text-gray-800">CBC Foundations Program</p>
+              <p className="text-[11px] font-bold text-foreground">CBC Foundations Program</p>
               <span className="text-[11px] font-black text-primary">67%</span>
             </div>
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full" style={{ width: '67%' }} />
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">Module 4 of 6 · Assessment Strategies</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Module 4 of 6 · Assessment Strategies</p>
           </div>
         </div>
       </div>
