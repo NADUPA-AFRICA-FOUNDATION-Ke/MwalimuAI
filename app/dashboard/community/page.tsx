@@ -21,7 +21,7 @@ export default function CommunityPage() {
   const [category, setCategory] = useState<typeof categories[number]>('Ask a Question')
   const [reply, setReply] = useState<Record<string, string>>({})
 
-  return <div className="max-w-3xl mx-auto space-y-6">
+  return <div className="max-w-3xl space-y-6">
     <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
     <div><h1 className="text-2xl font-bold">Teacher Community</h1><p className="text-muted-foreground">Share ideas and learn from fellow teachers.</p></div>
     <form className="glass rounded-2xl p-5 space-y-3" onSubmit={async e => { e.preventDefault(); if (!title.trim() || !content.trim()) return; await createPost({ title: title.trim(), content: content.trim(), category }); setTitle(''); setContent('') }}>

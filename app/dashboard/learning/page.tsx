@@ -43,7 +43,7 @@ export default function LearningPage() {
   const visible = PROGRAMS.filter(p => activeTrack === 'all' || p.track === activeTrack)
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-8">
         <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-semibold mb-4">

@@ -82,7 +82,6 @@ export default function RootLayout({
           .stagger-1, .stagger-2, .stagger-3, .stagger-4 { animation: none; }
         }
 
-        .pb-safe-nav { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
         .sidebar-nav  { width: 16rem; }
         .layout-main  { transition: margin-left 250ms ease-out; }
         @media (min-width: 768px) {

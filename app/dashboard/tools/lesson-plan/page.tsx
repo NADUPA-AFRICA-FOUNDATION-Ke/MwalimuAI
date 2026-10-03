@@ -150,7 +150,7 @@ export default function LessonPlanPage() {
   const set = (key: keyof typeof form) => (value: string) => setForm(f => ({ ...f, [key]: value }))
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-6">
         <BackButton fallbackHref="/dashboard/tools" label="Back to Teacher Tools" />

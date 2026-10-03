@@ -99,7 +99,7 @@ export default function AssignmentPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       <div className="mb-6">
         <BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" />
         <div className="flex items-center gap-3 mt-4">

@@ -118,12 +118,12 @@ function LoginContent() {
 
         {/* Centre copy */}
         <div className="relative z-10">
-          <p className="text-[11px] font-bold text-white/75 uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
+          <p className="text-xs font-bold text-white/75 uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
             Professional learning<br />for Kenyan CBC<br />
             <span style={{ color: 'var(--color-accent-bright)' }}>teachers.</span>
           </h2>
-          <p className="text-white/80 text-[15px] leading-relaxed max-w-xs">
+          <p className="text-white/80 text-base leading-relaxed max-w-xs">
             Access learning modules, an AI Coach, teacher tools, community discussions, and progress tracking.
           </p>
         </div>
@@ -163,27 +163,27 @@ function LoginContent() {
 
             <div className="mb-8">
               <h1 className="text-[1.8rem] font-black tracking-tight text-foreground mb-2">Welcome back</h1>
-              <p className="text-muted-foreground text-[15px]">Sign in to return to your learning workspace.</p>
+              <p className="text-muted-foreground text-base">Sign in to return to your learning workspace.</p>
             </div>
 
             <form onSubmit={handleLogin} noValidate className="space-y-5">
 
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[13px] font-semibold text-foreground">Email address</Label>
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground">Email address</Label>
                 <Input
                   id="email" type="email" inputMode="email" autoComplete="email" spellCheck={false}
                   placeholder="you@school.ac.ke" required
                   aria-invalid={!!error}
                   aria-describedby={error ? 'login-error' : undefined}
                   value={email} onChange={e => setEmail(e.target.value)}
-                  className="h-11 rounded-xl border-border bg-muted text-[14px] focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
+                  className="h-11 rounded-xl border-border bg-muted text-sm focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-[13px] font-semibold text-foreground">Password</Label>
-                  <Link href="/auth/forgot-password" className="text-[12px] text-primary hover:underline underline-offset-4">
+                  <Label htmlFor="password" className="text-sm font-semibold text-foreground">Password</Label>
+                  <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline underline-offset-4">
                     Forgot password?
                   </Link>
                 </div>
@@ -193,7 +193,7 @@ function LoginContent() {
                     aria-invalid={!!error}
                     aria-describedby={error ? 'login-error' : undefined}
                     value={password} onChange={e => setPassword(e.target.value)}
-                    className="h-11 rounded-xl border-border bg-muted text-[14px] pr-10 focus:border-primary focus:ring-primary/20"
+                    className="h-11 rounded-xl border-border bg-muted text-sm pr-10 focus:border-primary focus:ring-primary/20"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -204,19 +204,19 @@ function LoginContent() {
               </div>
 
               {deviceNotice && !error && (
-                <div role="status" className="flex items-start gap-2.5 text-[13px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+                <div role="status" className="flex items-start gap-2.5 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
                   <MonitorSmartphone className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
                   <span>You were signed out because your account signed in on another device. Mwalimu AI allows one active device at a time.</span>
                 </div>
               )}
               {error && (
-                <div id="login-error" role="alert" aria-live="assertive" className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                <div id="login-error" role="alert" aria-live="assertive" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
                   {error}
                 </div>
               )}
 
               <Button type="submit" disabled={isLoading}
-                className="w-full h-11 rounded-xl text-[14px] font-semibold btn-primary-glow">
+                className="w-full h-11 rounded-xl text-sm font-semibold btn-primary-glow">
                 {isLoading ? <><Spinner className="mr-2 size-4" />Signing in…</> : 'Sign in →'}
               </Button>
 
@@ -226,7 +226,7 @@ function LoginContent() {
               <OAuthButtons />
             </div>
 
-            <p className="text-center text-[12px] text-muted-foreground mt-8">
+            <p className="text-center text-xs text-muted-foreground mt-8">
               By signing in you agree to our{' '}
               <Link href="/privacy" className="text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
                 Privacy Policy

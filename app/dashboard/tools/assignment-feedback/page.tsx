@@ -85,7 +85,7 @@ function DetectionBanner({ result, onDismiss }: { result: DetectionResult; onDis
               </ul>
             </div>
           )}
-          <p className="text-[10px] text-muted-foreground/60 pt-1">
+          <p className="text-xs text-muted-foreground/60 pt-1">
             AI detection is an indicator only — not proof. Use professional judgement before any action.
           </p>
         </div>
@@ -211,7 +211,7 @@ export default function AssignmentFeedbackPage() {
   const showDetection = detection && !detectionDismissed
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       <div className="mb-6">
         <BackButton fallbackHref="/dashboard/tools" label="Back to Teacher Tools" />
         <div className="flex items-center gap-3 mt-4">

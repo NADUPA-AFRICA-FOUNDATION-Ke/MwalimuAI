@@ -95,7 +95,7 @@ function ToolCard({ href, icon: Icon, accent, title, desc, tags, badge }: {
           <Icon className={`w-5 h-5 ${accent === 'primary' ? 'text-primary' : 'text-accent'}`} />
         </div>
         {badge && (
-          <span className="text-[10px] font-bold uppercase tracking-wide bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+          <span className="text-xs font-bold uppercase tracking-wide bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
             {badge}
           </span>
         )}
@@ -122,7 +122,7 @@ function ToolCard({ href, icon: Icon, accent, title, desc, tags, badge }: {
 
 export default function ToolsPage() {
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-8">
         <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-semibold mb-4">

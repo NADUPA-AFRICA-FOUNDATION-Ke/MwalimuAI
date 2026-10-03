@@ -79,7 +79,7 @@ function BadgeCard({ badge, progress }: { badge: BadgeStatus; progress: BadgePro
         </div>
         <h3 className="font-bold text-sm mb-1">{badge.name}</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">{badge.desc}</p>
-        <div className={`inline-flex items-center gap-1 mt-2 text-[10px] font-bold uppercase tracking-wide ${color.text}`}>
+        <div className={`inline-flex items-center gap-1 mt-2 text-xs font-bold uppercase tracking-wide ${color.text}`}>
           <Check className="w-3 h-3" /> Earned
         </div>
       </div>
@@ -106,7 +106,7 @@ function BadgeCard({ badge, progress }: { badge: BadgeStatus; progress: BadgePro
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="text-[10px] text-muted-foreground/70">{progress.label}</p>
+          <p className="text-xs text-muted-foreground/70">{progress.label}</p>
         </div>
       )}
     </div>
@@ -131,7 +131,7 @@ export default function AchievementsPage() {
   const pct       = badges.length ? Math.round((earned.length / badges.length) * 100) : 0
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl space-y-8">
       <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
 
       <div className="flex items-center gap-3">

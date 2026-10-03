@@ -92,7 +92,7 @@ export default function CertificatePage() {
 
   if (mounted && !isUnlocked) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl">
         <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
         <div className="glass rounded-2xl p-12 text-center">
           <Lock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
@@ -107,7 +107,7 @@ export default function CertificatePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl">
       {/* Controls — hidden on print */}
       <div className="mb-6 print:hidden">
         <BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" />
@@ -257,7 +257,7 @@ export default function CertificatePage() {
                 : <div className="w-40 h-40 bg-gray-50 rounded" />}
             </div>
 
-            <p className="text-[11px] font-semibold tracking-[0.15em] text-gray-400 uppercase mt-5">Scan to verify this certificate</p>
+            <p className="text-xs font-semibold tracking-[0.15em] text-gray-400 uppercase mt-5">Scan to verify this certificate</p>
             <p className="font-mono font-bold text-gray-800 tracking-wide mt-1">{serial || '—'}</p>
             <p className="text-xs text-primary font-medium mt-1">mwalimu.ai/verify</p>
 

@@ -80,8 +80,8 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
       <nav
         className={cn(
           'sidebar-nav fixed top-0 left-0 z-30',
-          'md:top-[60px]',
-          'h-[100dvh] md:h-[calc(100dvh-60px)]',
+          'md:top-[var(--app-header-h)]',
+          'h-[100dvh] md:h-[calc(100dvh-var(--app-header-h))]',
           'flex flex-col',
           'bg-background border-r border-border/40',
           'overflow-x-hidden transition-transform duration-300 ease-in-out',
@@ -92,7 +92,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
         {/* Scrollable nav list */}
         <div className={cn(
           'flex-1 overflow-y-auto py-3 scrollbar-none',
-          'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-3',
+          'pb-[calc(var(--bottom-nav-h)+max(8px,env(safe-area-inset-bottom,0px)))] md:pb-3',
           isCollapsed ? 'px-2' : 'px-2.5',
         )}>
           {isCollapsed
@@ -120,7 +120,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
             /* Expanded: grouped list */
             : NAV_GROUPS.map(({ label: groupLabel, items }) => (
                 <div key={groupLabel} className="mb-4">
-                  <p className="px-3 mb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <p className="px-3 mb-1 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                     {groupLabel}
                   </p>
                   {items.map(({ href, labelKey, icon: Icon }) => {
@@ -129,7 +129,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
                     return (
                       <Link key={href} href={href} onClick={onClose} aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                          'relative flex items-center gap-2.5 min-h-11 px-3 rounded-lg text-[13px] font-medium mb-0.5',
+                          'relative flex items-center gap-2.5 min-h-11 px-3 rounded-lg text-sm font-medium mb-0.5',
                           'transition-all duration-150',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                           isActive

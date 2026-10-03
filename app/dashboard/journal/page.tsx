@@ -180,7 +180,7 @@ export default function JournalPage() {
   })()
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl space-y-6">
       <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
 
       {/* Header */}
@@ -265,7 +265,7 @@ export default function JournalPage() {
                   }`}
                 >
                   <m.icon className={`w-5 h-5 ${mood === m.value ? m.color : 'text-muted-foreground'}`} aria-hidden="true" />
-                  <span className={`text-[10px] font-medium mt-0.5 ${mood === m.value ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <span className={`text-xs font-medium mt-0.5 ${mood === m.value ? 'text-primary' : 'text-muted-foreground'}`}>
                     {m.label}
                   </span>
                 </button>

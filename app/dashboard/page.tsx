@@ -124,12 +124,12 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             {streak.current >= 3 && (
-              <div className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 bg-accent/10 text-accent rounded-full text-[11px] font-semibold">
+              <div className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 bg-accent/10 text-accent rounded-full text-xs font-semibold">
                 <Flame className="w-3 h-3" />
                 {streak.current}-day streak
               </div>
             )}
-            <h1 className="text-[26px] md:text-3xl font-bold tracking-tight leading-snug">
+            <h1 className="text-xl md:text-3xl font-bold tracking-tight leading-snug">
               {greeting}, {teacherName}.
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5">
@@ -138,17 +138,17 @@ export default function DashboardPage() {
                 : 'Your AI coaching session is ready when you are.'}
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
-            <Button asChild size="sm" className="gap-2 rounded-xl px-5 shadow-sm shadow-primary/15 active:scale-[0.97] transition-transform">
-              <Link href="/dashboard/ai-coach">
-                <MessageSquare className="w-3.5 h-3.5" />
-                AI Coach
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button asChild size="lg" className="gap-2 rounded-xl px-5">
+              <Link href="/dashboard/learning">
+                <BookOpen className="w-4 h-4" aria-hidden="true" />
+                Continue learning
               </Link>
             </Button>
-            <Button asChild size="sm" variant="outline" className="gap-2 rounded-xl px-5 border-border/70 active:scale-[0.97] transition-transform">
-              <Link href="/dashboard/modules">
-                <BookOpen className="w-3.5 h-3.5" />
-                Modules
+            <Button asChild size="lg" variant="outline" className="gap-2 rounded-xl px-5">
+              <Link href="/dashboard/ai-coach">
+                <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                Ask AI Coach
               </Link>
             </Button>
           </div>
@@ -156,54 +156,31 @@ export default function DashboardPage() {
         <div className="mt-6 h-px bg-border/50" />
       </div>
 
-      {/* ── Stats ────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-
-        <div className="glass rounded-xl p-4 stagger-1">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Lessons</p>
-          <p className="text-[32px] font-bold gradient-text tabular-nums leading-none">{completedLessons}</p>
-          <p className="text-xs text-muted-foreground mt-1.5">of 36 completed</p>
-          <Progress value={Math.min(100, (completedLessons / 36) * 100)} className="h-0.5 mt-3" />
-        </div>
-
-        <div className="glass rounded-xl p-4 stagger-2">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Tools</p>
-          <p className="text-[32px] font-bold text-accent tabular-nums leading-none">{toolsUsed}</p>
-          <p className="text-xs text-muted-foreground mt-1.5">
-            {toolsUsed === 0 ? 'none tried yet' : `of 7 available`}
-          </p>
-          <div className="flex gap-0.5 mt-3">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className={`flex-1 h-0.5 rounded-full transition-colors ${i < toolsUsed ? 'bg-accent' : 'bg-border'}`} />
-            ))}
+      {/* ── Progress at a glance: one panel, four figures (not four identical cards) ── */}
+      <section aria-label="Your progress" className="rounded-2xl border border-border bg-card">
+        <dl className="grid grid-cols-2 md:grid-cols-4 max-md:[&>div:nth-child(odd)]:border-r max-md:[&>div:nth-child(n+3)]:border-t md:divide-x divide-border [&>div]:border-border [&>div]:p-4 md:[&>div]:p-6">
+          <div>
+            <dt className="text-sm font-semibold text-muted-foreground">Lessons</dt>
+            <dd className="mt-1 text-3xl font-bold tabular-nums text-primary">{completedLessons}<span className="ml-1.5 text-sm font-normal text-muted-foreground">of 36</span></dd>
+            <Progress value={Math.min(100, (completedLessons / 36) * 100)} className="mt-3 h-1.5" aria-label="Lessons completed" />
           </div>
-        </div>
-
-        <div className="glass rounded-xl p-4 stagger-3">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Posts</p>
-          <p className="text-[32px] font-bold gradient-text tabular-nums leading-none">{communityPosts}</p>
-          <p className="text-xs text-muted-foreground mt-1.5">
-            {communityPosts === 0 ? 'share with colleagues' : 'contributions'}
-          </p>
-          <div className="flex gap-0.5 mt-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className={`flex-1 h-0.5 rounded-full transition-colors ${i < Math.min(communityPosts, 5) ? 'bg-primary' : 'bg-border'}`} />
-            ))}
+          <div>
+            <dt className="text-sm font-semibold text-muted-foreground">Tools tried</dt>
+            <dd className="mt-1 text-3xl font-bold tabular-nums">{toolsUsed}<span className="ml-1.5 text-sm font-normal text-muted-foreground">of 7</span></dd>
+            <Progress value={(toolsUsed / 7) * 100} className="mt-3 h-1.5" aria-label="Tools tried" />
           </div>
-        </div>
-
-        <div className="glass rounded-xl p-4 stagger-4">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Badges</p>
-          <p className="text-[32px] font-bold text-accent tabular-nums leading-none">{badgesEarned}</p>
-          <p className="text-xs text-muted-foreground mt-1.5">of 12 earned</p>
-          <div className="flex gap-0.5 mt-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className={`flex-1 h-0.5 rounded-full transition-colors ${i < Math.min(badgesEarned, 6) ? 'bg-accent' : 'bg-border'}`} />
-            ))}
+          <div>
+            <dt className="text-sm font-semibold text-muted-foreground">Community posts</dt>
+            <dd className="mt-1 text-3xl font-bold tabular-nums">{communityPosts}<span className="ml-1.5 text-sm font-normal text-muted-foreground">of 5</span></dd>
+            <Progress value={(Math.min(communityPosts, 5) / 5) * 100} className="mt-3 h-1.5" aria-label="Community posts toward five" />
           </div>
-        </div>
-
-      </div>
+          <div>
+            <dt className="text-sm font-semibold text-muted-foreground">Badges</dt>
+            <dd className="mt-1 text-3xl font-bold tabular-nums text-accent">{badgesEarned}<span className="ml-1.5 text-sm font-normal text-muted-foreground">of 12</span></dd>
+            <Progress value={(badgesEarned / 12) * 100} className="mt-3 h-1.5" aria-label="Badges earned" />
+          </div>
+        </dl>
+      </section>
 
       {/* ── Continue Learning ────────────────────────────── */}
       <div>
@@ -226,11 +203,11 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${learningProgress > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${learningProgress > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                     {learningProgress > 0 ? 'In Progress' : 'Start Here'}
                   </span>
                   {learningProgress > 0 && (
-                    <span className="text-[10px] font-semibold text-primary tabular-nums">{learningProgress}%</span>
+                    <span className="text-xs font-semibold text-primary tabular-nums">{learningProgress}%</span>
                   )}
                 </div>
                 <h3 className="font-semibold text-sm tracking-tight">CBC Foundations Program</h3>
@@ -256,7 +233,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="mb-1.5">
-                  <span className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-semibold">Recommended</span>
+                  <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full font-semibold">Recommended</span>
                 </div>
                 <h3 className="font-semibold text-sm tracking-tight">Learner-Centered Pedagogy</h3>
                 <p className="text-xs text-muted-foreground mt-1">Student-focused teaching approaches for CBC classrooms</p>
@@ -308,7 +285,7 @@ export default function DashboardPage() {
               <span
                 key={m.days}
                 title={m.flavour}
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent/10 text-accent rounded-full text-[11px] font-semibold select-none"
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent/10 text-accent rounded-full text-xs font-semibold select-none"
               >
                 <m.Icon className="w-3 h-3" aria-hidden="true" /> {m.name}
               </span>
@@ -346,7 +323,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Mon→Sun fixed week grid */}
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">This week</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">This week</p>
           <div className="flex gap-2 mb-5">
             {weekGridDays.map(({ label, active, isToday: isTodayCell, isFuture }, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
@@ -366,7 +343,7 @@ export default function DashboardPage() {
                       : <span className="w-1 h-1 rounded-full bg-muted-foreground/20 inline-block" />
                   }
                 </div>
-                <span className={`text-[9px] font-semibold w-full text-center truncate ${
+                <span className={`text-xs font-semibold w-full text-center truncate ${
                   isTodayCell ? 'text-accent' : isFuture ? 'text-muted-foreground/40' : 'text-muted-foreground'
                 }`}>
                   {label}
@@ -384,19 +361,19 @@ export default function DashboardPage() {
                 </span>
                 <div>
                   <p className="text-xs font-bold tracking-tight">{nextMilestone.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{nextMilestone.days}-day milestone</p>
+                  <p className="text-xs text-muted-foreground">{nextMilestone.days}-day milestone</p>
                 </div>
               </div>
               {streak.current < nextMilestone.days ? (
-                <span className="text-[11px] font-bold text-muted-foreground tabular-nums shrink-0">
+                <span className="text-xs font-bold text-muted-foreground tabular-nums shrink-0">
                   {nextMilestone.days - streak.current} to go
                 </span>
               ) : (
-                <span className="text-[11px] font-bold text-accent shrink-0">Achieved!</span>
+                <span className="text-xs font-bold text-accent shrink-0">Achieved!</span>
               )}
             </div>
             <Progress value={goalProgress} className="h-1.5" />
-            <p className="text-[10px] text-muted-foreground mt-1.5 italic">{nextMilestone.flavour}</p>
+            <p className="text-xs text-muted-foreground mt-1.5 italic">{nextMilestone.flavour}</p>
           </div>
 
         </div>

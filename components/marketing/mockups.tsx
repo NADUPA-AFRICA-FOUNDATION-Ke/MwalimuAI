@@ -18,7 +18,7 @@ export function DashboardMockup() {
         </div>
         <div className="flex-1 mx-2 bg-card/8 rounded-md px-3 py-1 flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-primary/60" />
-          <span className="text-[11px] text-white/75 font-mono">app.mwalimuai.com/dashboard</span>
+          <span className="text-xs text-white/75 font-mono">app.mwalimuai.com/dashboard</span>
         </div>
       </div>
 
@@ -44,10 +44,10 @@ export function DashboardMockup() {
         <div className="flex-1 p-5 flex flex-col gap-3.5 overflow-hidden">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[13px] font-bold text-foreground">Good morning, Jane</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Your AI coach is ready — continue CBC journey.</p>
+              <p className="text-sm font-bold text-foreground">Good morning, Jane</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Your AI coach is ready — continue CBC journey.</p>
             </div>
-            <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center text-[11px] font-black text-primary">JM</div>
+            <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center text-xs font-black text-primary">JM</div>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -57,8 +57,8 @@ export function DashboardMockup() {
               { label: 'Progress', value: '67%', color: 'text-primary' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-card rounded-xl p-2.5 border border-border">
-                <p className={`text-[17px] font-black leading-none ${color}`}>{value}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{label}</p>
+                <p className={`text-lg font-black leading-none ${color}`}>{value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 font-medium">{label}</p>
               </div>
             ))}
           </div>
@@ -68,25 +68,25 @@ export function DashboardMockup() {
               <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
                 <Sparkles className="w-3 h-3 text-white" />
               </div>
-              <span className="text-[11px] font-bold text-foreground">AI Coach</span>
-              <span className="ml-auto text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
+              <span className="text-xs font-bold text-foreground">AI Coach</span>
+              <span className="ml-auto text-xs text-emerald-500 font-semibold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                 Online
               </span>
             </div>
             <div className="space-y-2 flex-1">
               <div className="bg-primary/6 rounded-xl rounded-tl-sm px-3 py-2">
-                <p className="text-[11px] text-foreground leading-relaxed">
+                <p className="text-xs text-foreground leading-relaxed">
                   &ldquo;Great work on CBC Foundations! Ready to practice writing formative assessment rubrics for Grade 4?&rdquo;
                 </p>
               </div>
               <div className="bg-muted rounded-xl rounded-tr-sm px-3 py-2 self-end ml-8">
-                <p className="text-[11px] text-muted-foreground">Yes! Show me an example.</p>
+                <p className="text-xs text-muted-foreground">Yes! Show me an example.</p>
               </div>
             </div>
             <div className="flex gap-1.5 mt-2.5 flex-wrap">
               {['View example →', 'Practice more'].map(s => (
-                <span key={s} className="text-[10px] bg-muted border border-border rounded-full px-2.5 py-1 text-muted-foreground">
+                <span key={s} className="text-xs bg-muted border border-border rounded-full px-2.5 py-1 text-muted-foreground">
                   {s}
                 </span>
               ))}
@@ -95,13 +95,13 @@ export function DashboardMockup() {
 
           <div className="bg-card rounded-xl border border-border p-3">
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-[11px] font-bold text-foreground">CBC Foundations Program</p>
-              <span className="text-[11px] font-black text-primary">67%</span>
+              <p className="text-xs font-bold text-foreground">CBC Foundations Program</p>
+              <span className="text-xs font-black text-primary">67%</span>
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full" style={{ width: '67%' }} />
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Module 4 of 6 · Assessment Strategies</p>
+            <p className="text-xs text-muted-foreground mt-1">Module 4 of 6 · Assessment Strategies</p>
           </div>
         </div>
       </div>
@@ -118,7 +118,7 @@ export function AiCoachMockup() {
           <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
           <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
         </div>
-        <span className="text-[11px] text-muted-foreground font-mono mx-auto">AI Coach · Mwalimu AI</span>
+        <span className="text-xs text-muted-foreground font-mono mx-auto">AI Coach · Mwalimu AI</span>
       </div>
       <div className="bg-background p-5 space-y-3.5" style={{ minHeight: '320px' }}>
         <div className="flex items-center gap-2 pb-3 border-b border-border/40">
@@ -127,7 +127,7 @@ export function AiCoachMockup() {
           </div>
           <div>
             <p className="text-sm font-bold">Your AI Coach</p>
-            <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+            <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> Always available
             </p>
           </div>
@@ -138,7 +138,7 @@ export function AiCoachMockup() {
           { from: 'ai', text: "Great question! Here's a Grade 4 Science rubric framework aligned to KICD strands. Let's build it together." },
         ].map((m, i) => (
           <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : ''}`}>
-            <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-[12px] leading-relaxed ${
+            <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
               m.from === 'ai'
                 ? 'bg-primary/8 border border-primary/10 rounded-tl-sm text-foreground'
                 : 'bg-primary text-primary-foreground rounded-tr-sm'
@@ -148,7 +148,7 @@ export function AiCoachMockup() {
           </div>
         ))}
         <div className="flex gap-2 pt-1">
-          <div className="flex-1 bg-muted rounded-xl px-3.5 py-2 text-[11px] text-muted-foreground border border-border/50">
+          <div className="flex-1 bg-muted rounded-xl px-3.5 py-2 text-xs text-muted-foreground border border-border/50">
             Ask anything about CBC...
           </div>
           <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shrink-0">
@@ -175,21 +175,21 @@ export function ModulesMockup() {
           <span className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
           <span className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
         </div>
-        <span className="text-[11px] text-muted-foreground font-mono mx-auto">Learning Modules</span>
+        <span className="text-xs text-muted-foreground font-mono mx-auto">Learning Modules</span>
       </div>
       <div className="bg-background p-5 space-y-3" style={{ minHeight: '320px' }}>
         <div className="flex items-center justify-between mb-1">
           <p className="text-sm font-bold">Your Learning Path</p>
-          <span className="text-[11px] text-primary font-semibold">2 active</span>
+          <span className="text-xs text-primary font-semibold">2 active</span>
         </div>
         {mods.map(({ title, sub, pct, status }) => (
           <div key={title} className="bg-muted/30 rounded-xl p-3.5 border border-border/40">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-[12px] font-bold text-foreground">{title}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
+                <p className="text-xs font-bold text-foreground">{title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
               </div>
-              <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold shrink-0 ml-2 ${
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 ml-2 ${
                 status === 'In Progress' ? 'bg-primary/10 text-primary' :
                 status === 'Started' ? 'bg-accent/12 text-accent' :
                 'bg-muted text-muted-foreground'

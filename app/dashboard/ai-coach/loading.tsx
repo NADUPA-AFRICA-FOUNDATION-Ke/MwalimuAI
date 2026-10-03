@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function AICoachLoading() {
   return (
-    <div className="flex flex-col -mx-4 -mt-4 md:-mx-8 md:-mt-8" style={{ height: 'calc(100dvh - 57px)' }}>
+    <div className="flex flex-col -mx-4 -mt-4 md:-mx-6 md:-mt-6 app-fill">
       {/* Nav bar */}
       <div className="px-4 md:px-8 pt-4 pb-2 shrink-0 flex items-center justify-between">
         <Skeleton className="h-8 w-28 rounded-xl" />

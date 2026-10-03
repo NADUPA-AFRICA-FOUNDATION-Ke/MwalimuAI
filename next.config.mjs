@@ -8,7 +8,8 @@
 // for React dev tooling and Turbopack HMR.
 const isDev = process.env.NODE_ENV === 'development'
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL ?? 'https://*.convex.cloud'
-const convexWs = convexUrl.replace(/^https:/, 'wss:')
+// https -> wss in production; http -> ws so a local Convex backend (http://127.0.0.1) can connect in development.
+const convexWs = convexUrl.replace(/^http(s?):/, 'ws$1:')
 const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,

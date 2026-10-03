@@ -129,7 +129,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         tabIndex={-1}
         className="layout-main flex-1 min-w-0 overflow-x-hidden"
       >
-        <div className="p-4 md:p-6 pb-safe-nav md:pb-6">
+        <div className="layout-inner mx-auto w-full max-w-[var(--content-max)] px-4 pt-4 pb-safe-nav md:px-6 md:pt-6 md:pb-8">
           {children}
         </div>
       </main>

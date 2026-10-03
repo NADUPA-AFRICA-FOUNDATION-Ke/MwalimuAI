@@ -143,7 +143,7 @@ export default function AboutPage() {
                 <div className="absolute bottom-5 left-5 right-5">
                   <div className="rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(8px)' }}>
                     <p className="text-xs font-bold text-foreground">Learning support for real classroom work</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Modules, tools, coaching, and progress in one place</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Modules, tools, coaching, and progress in one place</p>
                   </div>
                 </div>
               </div>
@@ -169,7 +169,7 @@ export default function AboutPage() {
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
                   <value.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-bold text-[15px] text-foreground mb-2 tracking-tight">{value.title}</h3>
+                <h3 className="font-bold text-base text-foreground mb-2 tracking-tight">{value.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{value.desc}</p>
               </div>
             ))}
@@ -197,7 +197,7 @@ export default function AboutPage() {
                 <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
                   <span className="text-xl font-black text-primary">{member.initials}</span>
                 </div>
-                <h3 className="font-bold text-[15px] text-foreground mb-1 tracking-tight">{member.name}</h3>
+                <h3 className="font-bold text-base text-foreground mb-1 tracking-tight">{member.name}</h3>
                 <p className="text-sm font-semibold text-primary mb-3">{member.role}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">{member.bio}</p>
               </div>
@@ -218,12 +218,12 @@ export default function AboutPage() {
             Create an account to explore the modules, Coach, tools, community, and progress records.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild size="lg" className="text-[14px] px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
+            <Button asChild size="lg" className="text-sm px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
               <Link href="/auth/sign-up">
                 Create an account <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-card/10 text-[14px] px-5 py-3 rounded-xl">
+            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-card/10 text-sm px-5 py-3 rounded-xl">
               <Link href="/contact">
                 Contact us
               </Link>

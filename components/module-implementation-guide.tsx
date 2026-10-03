@@ -18,7 +18,7 @@ export function ModuleImplementationGuide({ guide }: ModuleImplementationGuidePr
           <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
         </div>
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Implementation lab</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Implementation lab</p>
           <h3 className="mt-1 text-base font-bold tracking-tight">{guide.focus}</h3>
         </div>
       </div>
@@ -52,7 +52,7 @@ export function ModuleImplementationGuide({ guide }: ModuleImplementationGuidePr
             <ol className="space-y-2">
               {guide.workflow.map((step, index) => (
                 <li key={step} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-primary/30 text-[11px] font-semibold text-primary" aria-hidden="true">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-primary/30 text-xs font-semibold text-primary" aria-hidden="true">
                     {index + 1}
                   </span>
                   <span>{step}</span>
@@ -113,7 +113,7 @@ export function ModuleImplementationGuide({ guide }: ModuleImplementationGuidePr
                   <ExternalLink className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
                   <span>{source.organisation}: {source.title}</span>
                 </Link>
-                <p className="pl-4 text-[11px] leading-relaxed text-muted-foreground">{source.note}</p>
+                <p className="pl-4 text-xs leading-relaxed text-muted-foreground">{source.note}</p>
               </li>
             ))}
           </ul>

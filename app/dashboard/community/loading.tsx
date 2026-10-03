@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function CommunityLoading() {
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Skeleton className="w-10 h-10 rounded-xl" />

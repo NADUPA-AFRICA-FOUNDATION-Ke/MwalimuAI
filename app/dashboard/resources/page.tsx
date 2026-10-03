@@ -102,7 +102,7 @@ export default function ResourcesPage() {
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold leading-snug">{resource.title}</h3>
                     {!resource.free && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 shrink-0">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 shrink-0">
                         <Lock className="w-2.5 h-2.5" />
                         Pro
                       </span>

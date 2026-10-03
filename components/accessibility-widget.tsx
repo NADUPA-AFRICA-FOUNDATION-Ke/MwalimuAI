@@ -294,7 +294,7 @@ export function AccessibilityWidget() {
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground text-center mt-1.5 tracking-wide" aria-hidden="true">
+              <p className="text-xs text-muted-foreground text-center mt-1.5 tracking-wide" aria-hidden="true">
                 {['Normal', 'Large', 'X-Large', 'XX-Large'].join('  ·  ')}
               </p>
             </section>
@@ -325,8 +325,8 @@ export function AccessibilityWidget() {
                     >
                       <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold leading-none mb-0.5">{label}</p>
-                        <p id={descId} className="text-[11px] text-muted-foreground/80 leading-tight">{desc}</p>
+                        <p className="text-sm font-semibold leading-none mb-0.5">{label}</p>
+                        <p id={descId} className="text-xs text-muted-foreground/80 leading-tight">{desc}</p>
                       </div>
                       <Indicator on={settings[key]} />
                     </button>
@@ -357,8 +357,8 @@ export function AccessibilityWidget() {
                         : <Sun  className="w-4 h-4 shrink-0" aria-hidden="true" />
                       }
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold leading-none mb-0.5">Dark Mode</p>
-                        <p id={descId} className="text-[11px] text-muted-foreground/80 leading-tight">Switch to dark background</p>
+                        <p className="text-sm font-semibold leading-none mb-0.5">Dark Mode</p>
+                        <p id={descId} className="text-xs text-muted-foreground/80 leading-tight">Switch to dark background</p>
                       </div>
                       <Indicator on={theme === 'dark'} />
                     </button>
@@ -379,7 +379,7 @@ export function AccessibilityWidget() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-[10.5px] text-muted-foreground py-2.5 border-t border-border/30 tracking-wide" aria-hidden="true">
+          <p className="text-center text-xs text-muted-foreground py-2.5 border-t border-border/30 tracking-wide" aria-hidden="true">
             Settings saved automatically &nbsp;·&nbsp; Alt+A to toggle
           </p>
         </div>

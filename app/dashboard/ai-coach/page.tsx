@@ -158,7 +158,7 @@ function Sidebar({ conversations, selectedId, loading, onSelect, onNewChat, onDe
         ) : (
           groups.map(group => (
             <div key={group.label}>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-3 mb-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/50 px-3 mb-1">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -601,7 +601,7 @@ export default function AICoachPage() {
   )
 
   return (
-    <div className="flex -mx-4 -mt-4 md:-mx-8 md:-mt-8" style={{ height: 'calc(100dvh - 57px)' }}>
+    <div className="flex -mx-4 -mt-4 md:-mx-6 md:-mt-6 app-fill">
 
       {/* Desktop sidebar */}
       <div className="hidden md:flex flex-col w-64 shrink-0 border-r border-border/50 bg-sidebar">

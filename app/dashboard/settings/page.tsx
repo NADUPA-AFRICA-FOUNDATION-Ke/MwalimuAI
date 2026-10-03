@@ -261,7 +261,7 @@ export default function SettingsPage() {
           >
             <p className="font-semibold text-sm mb-0.5">English</p>
             <p className="text-xs text-muted-foreground">Full AI responses in English</p>
-            {lang === 'en' && <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold uppercase tracking-wide text-primary"><Check className="w-2.5 h-2.5" /> Active</span>}
+            {lang === 'en' && <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold uppercase tracking-wide text-primary"><Check className="w-2.5 h-2.5" /> Active</span>}
           </button>
 
           <button
@@ -273,7 +273,7 @@ export default function SettingsPage() {
           >
             <p className="font-semibold text-sm mb-0.5">Kiswahili</p>
             <p className="text-xs text-muted-foreground">Majibu ya AI kwa Kiswahili</p>
-            {lang === 'sw' && <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold uppercase tracking-wide text-primary"><Check className="w-2.5 h-2.5" /> Imewashwa</span>}
+            {lang === 'sw' && <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold uppercase tracking-wide text-primary"><Check className="w-2.5 h-2.5" /> Imewashwa</span>}
           </button>
         </div>
 

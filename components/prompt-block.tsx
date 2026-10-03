@@ -19,7 +19,7 @@ export function PromptBlock({ code }: { code: string }) {
       <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border/50">
         <div className="flex items-center gap-2 min-w-0">
           <Wand2 className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Prompt template</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Prompt template</span>
         </div>
         <button
           type="button"

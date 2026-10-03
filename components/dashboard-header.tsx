@@ -49,7 +49,7 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
   const avatarBg    = AVATAR_COLORS[(displayName.charCodeAt(0) || 84) % AVATAR_COLORS.length]
 
   return (
-    <header className="sticky top-0 z-40 h-[60px] border-b border-border/40 bg-background/95 backdrop-blur-md">
+    <header className="sticky top-0 z-40 h-[calc(var(--app-header-h)+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] border-b border-border bg-background">
       <div className="flex items-center h-full px-3 md:px-4 gap-1">
 
         {/* Left */}
@@ -71,7 +71,7 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
           )}
           <Link href="/dashboard" className="flex items-center gap-2 ml-1 group">
             <BrandMark className="w-7 h-7 transition-transform duration-150 group-hover:scale-105" />
-            <span className="font-bold text-[13.5px] hidden sm:inline tracking-tight">Mwalimu AI</span>
+            <span className="font-bold text-sm hidden sm:inline tracking-tight">Mwalimu AI</span>
           </Link>
         </div>
 
@@ -79,7 +79,7 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
         <div className="flex items-center gap-1 ml-auto">
           {/* Language toggle */}
           <button type="button" onClick={toggleLang}
-            className="hidden sm:flex min-h-11 items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
+            className="hidden sm:flex min-h-11 items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5 transition-all duration-150"
             title={t('header.langToggle')}>
             {t('header.langToggle')}
           </button>
@@ -93,7 +93,7 @@ export function DashboardHeader({ onLogout, onMenuToggle, sidebarCollapsed, onTo
               style={{ background: avatarBg, fontSize: '10px', fontWeight: 800 }}>
               {initials}
             </div>
-            <span className="font-medium text-[13px] hidden md:block truncate max-w-[150px] text-foreground">
+            <span className="font-medium text-sm hidden md:block truncate max-w-[150px] text-foreground">
               {displayName}
             </span>
           </div>

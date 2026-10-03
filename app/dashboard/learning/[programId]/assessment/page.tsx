@@ -81,7 +81,7 @@ export default function AssessmentPage() {
     const exPct = Math.round((existing.score / existing.total) * 100)
     const failedPost = type === 'post' && exPct < 85
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl">
         <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
         <div className="glass rounded-2xl p-8 text-center">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${exPct >= 50 ? 'bg-primary/10' : 'bg-accent/10'}`}>
@@ -110,7 +110,7 @@ export default function AssessmentPage() {
   /* Results */
   if (submitted) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl">
         <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
         <div className="glass rounded-2xl p-8">
           <div className="text-center mb-8">
@@ -163,7 +163,7 @@ export default function AssessmentPage() {
   const answeredCount = answers.filter(a => a !== null).length
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl">
       <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
 
       <div className="glass rounded-2xl p-7">

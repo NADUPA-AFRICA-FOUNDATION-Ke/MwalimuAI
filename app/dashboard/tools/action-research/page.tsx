@@ -146,7 +146,7 @@ export default function ActionResearchPage() {
   const completedCount = STEPS.filter(s => stepData[s.id].output).length
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl">
       <div className="mb-6">
         <BackButton fallbackHref="/dashboard/tools" label="Back to Teacher Tools" />
         <div className="flex items-center justify-between mt-4 gap-4">

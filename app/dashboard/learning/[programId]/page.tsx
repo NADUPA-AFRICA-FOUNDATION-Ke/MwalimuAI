@@ -138,7 +138,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
   const nextLesson = firstUnfinishedLesson()
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       <div className="mb-6 flex items-center justify-between gap-4">
         <BackButton fallbackHref="/dashboard/learning" label="Back to Programs" />
         <Button variant="outline" size="sm" onClick={downloadOffline} disabled={downloading} className="rounded-xl gap-1.5 text-xs shrink-0">

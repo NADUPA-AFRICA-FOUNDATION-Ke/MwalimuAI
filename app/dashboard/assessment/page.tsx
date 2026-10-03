@@ -507,7 +507,7 @@ export default function AssessmentPage() {
     const label = knowledgeLabel(score)
 
     return (
-      <div className="max-w-2xl mx-auto space-y-8">
+      <div className="max-w-2xl space-y-8">
         <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
 
         <Card className="p-10 space-y-8">
@@ -732,7 +732,7 @@ export default function AssessmentPage() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl space-y-8">
       <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
 
       <div>

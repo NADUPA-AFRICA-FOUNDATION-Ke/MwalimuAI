@@ -89,7 +89,7 @@ function SignUpContent() {
 
         {/* Centre copy */}
         <div className="relative z-10">
-          <p className="text-[11px] font-bold text-white/75 uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
+          <p className="text-xs font-bold text-white/75 uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
           <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
             Learn, plan,<br />and reflect<br />
             <span style={{ color: 'var(--color-accent-bright)' }}>in one place.</span>
@@ -101,7 +101,7 @@ function SignUpContent() {
               'Teacher tools and progress tracking',
               'Community discussions and resources',
             ].map(item => (
-              <li key={item} className="flex items-center gap-3 text-white/65 text-[14px]">
+              <li key={item} className="flex items-center gap-3 text-white/65 text-sm">
                 <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                   style={{ background: 'oklch(0.54 0.14 163 / 0.40)', border: '1px solid oklch(0.54 0.14 163 / 0.35)' }}>
                   <Check className="w-3 h-3 text-white" />
@@ -114,7 +114,7 @@ function SignUpContent() {
 
         {/* Product summary */}
         <div className="relative z-10 flex items-center gap-3">
-          <p className="text-white/80 text-[13px]">Create a profile to start using the platform.</p>
+          <p className="text-white/80 text-sm">Create a profile to start using the platform.</p>
         </div>
       </div>
 
@@ -146,25 +146,25 @@ function SignUpContent() {
 
             <div className="mb-8">
               <h1 className="text-[1.8rem] font-black tracking-tight text-foreground mb-2">Create your account</h1>
-              <p className="text-muted-foreground text-[15px]">Create a profile to explore your learning workspace.</p>
+              <p className="text-muted-foreground text-base">Create a profile to explore your learning workspace.</p>
             </div>
 
             <form onSubmit={handleSignUp} noValidate className="space-y-4">
 
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[13px] font-semibold text-foreground">Email address</Label>
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground">Email address</Label>
                 <Input
                   id="email" type="email" inputMode="email" autoComplete="email" spellCheck={false}
                   placeholder="you@school.ac.ke" required
                   aria-invalid={!!error}
                   aria-describedby={error ? 'signup-error' : undefined}
                   value={email} onChange={e => setEmail(e.target.value)}
-                  className="h-11 rounded-xl border-border bg-muted text-[14px] focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
+                  className="h-11 rounded-xl border-border bg-muted text-sm focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-[13px] font-semibold text-foreground">Password</Label>
+                <Label htmlFor="password" className="text-sm font-semibold text-foreground">Password</Label>
                 <div className="relative">
                   <Input
                     id="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required
@@ -172,7 +172,7 @@ function SignUpContent() {
                     aria-invalid={!!error}
                     aria-describedby={error ? 'signup-error' : undefined}
                     value={password} onChange={e => setPassword(e.target.value)}
-                    className="h-11 rounded-xl border-border bg-muted text-[14px] pr-10 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
+                    className="h-11 rounded-xl border-border bg-muted text-sm pr-10 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -183,24 +183,24 @@ function SignUpContent() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="repeat-password" className="text-[13px] font-semibold text-foreground">Confirm password</Label>
+                <Label htmlFor="repeat-password" className="text-sm font-semibold text-foreground">Confirm password</Label>
                 <Input
                   id="repeat-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required
                   aria-invalid={!!error}
                   aria-describedby={error ? 'signup-error' : undefined}
                   value={repeatPassword} onChange={e => setRepeatPassword(e.target.value)}
-                  className="h-11 rounded-xl border-border bg-muted text-[14px] focus:border-primary focus:ring-primary/20"
+                  className="h-11 rounded-xl border-border bg-muted text-sm focus:border-primary focus:ring-primary/20"
                 />
               </div>
 
               {error && (
-                <div id="signup-error" role="alert" aria-live="assertive" className="text-[13px] text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                <div id="signup-error" role="alert" aria-live="assertive" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
                   {error}
                 </div>
               )}
 
               <Button type="submit" disabled={isLoading}
-                className="w-full h-11 rounded-xl text-[14px] font-semibold btn-primary-glow mt-2">
+                className="w-full h-11 rounded-xl text-sm font-semibold btn-primary-glow mt-2">
                 {isLoading ? <><Spinner className="mr-2 size-4" />Creating account…</> : 'Create free account →'}
               </Button>
 
@@ -210,7 +210,7 @@ function SignUpContent() {
               <OAuthButtons />
             </div>
 
-            <p className="text-center text-[12px] text-muted-foreground mt-8">
+            <p className="text-center text-xs text-muted-foreground mt-8">
               By creating an account you agree to our{' '}
               <Link href="/privacy" className="text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
                 Privacy Policy

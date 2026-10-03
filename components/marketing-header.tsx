@@ -76,7 +76,7 @@ export function MarketingHeader({ activePath, overlay = false }: MarketingHeader
               Sign in
             </Link>
           </Button>
-          <Button asChild size="sm" className={`hidden md:inline-flex rounded-lg px-3.5 text-[13px] font-semibold leading-none transition-colors duration-200 ${lightHeader ? 'bg-accent text-accent-foreground shadow-sm hover:bg-accent/90' : 'bg-accent text-white shadow-sm hover:bg-accent/90'}`}>
+          <Button asChild size="sm" className={`hidden md:inline-flex rounded-lg px-3.5 text-sm font-semibold leading-none transition-colors duration-200 ${lightHeader ? 'bg-accent text-accent-foreground shadow-sm hover:bg-accent/90' : 'bg-accent text-white shadow-sm hover:bg-accent/90'}`}>
             <Link href="/auth/sign-up">
               Create account
             </Link>

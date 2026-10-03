@@ -76,10 +76,10 @@ export default function LandingPage() {
               aria-describedby="homepage-email-help"
               required
               placeholder="Enter your email"
-              className="flex-1 h-12 rounded-xl px-4 text-[14px] font-medium text-foreground placeholder:text-muted-foreground bg-card border-0 outline-none focus:ring-2 focus:ring-accent"
+              className="flex-1 h-12 rounded-xl px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground bg-card border-0 outline-none focus:ring-2 focus:ring-accent"
             />
             <button type="submit"
-              className="h-11 px-5 rounded-xl font-semibold text-[13px] text-white whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+              className="h-11 px-5 rounded-xl font-semibold text-sm text-white whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
               style={{ background: 'var(--primary)' }}>
               Create account →
             </button>
@@ -123,7 +123,7 @@ export default function LandingPage() {
               { title: 'Resources', links: [['/docs','Documentation'],['/faq','FAQ'],['/support','Support']] },
             ].map(({ title, links }) => (
               <div key={title}>
-                <h4 className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-5">{title}</h4>
+                <h4 className="text-xs font-bold uppercase tracking-widest text-white/70 mb-5">{title}</h4>
                 <ul className="space-y-3.5">
                   {links.map(([href, label]) => (
                     <li key={href}>

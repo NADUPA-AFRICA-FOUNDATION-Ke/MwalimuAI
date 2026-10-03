@@ -170,7 +170,7 @@ export function FeaturesSection() {
               Everything you need<br className="hidden md:block" /> to excel at CBC
             </h2>
           </div>
-          <p className="text-muted-foreground text-[15px] leading-relaxed max-w-xs md:text-right">
+          <p className="text-muted-foreground text-base leading-relaxed max-w-xs md:text-right">
             Tools designed specifically for the way Kenyan teachers learn and grow.
           </p>
         </div>
@@ -185,18 +185,18 @@ export function FeaturesSection() {
                     key={title}
                     className="group flex items-start gap-5 py-8 border-b border-border last:border-0 hover:bg-muted/60 -mx-4 px-4 rounded-xl transition-colors duration-150"
                   >
-                    <span className="text-[11px] font-black text-gray-200 tabular-nums mt-1 w-5 shrink-0 select-none">
+                    <span className="text-xs font-black text-gray-200 tabular-nums mt-1 w-5 shrink-0 select-none">
                       {num}
                     </span>
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${accent === 'primary' ? 'bg-primary/10' : 'bg-accent/10'}`}>
                       <Icon className={`w-5 h-5 ${accent === 'primary' ? 'text-primary' : 'text-accent'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-[15px] text-foreground mb-1.5 tracking-tight">{title}</h3>
+                      <h3 className="font-bold text-base text-foreground mb-1.5 tracking-tight">{title}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed mb-3">{desc}</p>
                       <Link
                         href={href}
-                        className={`inline-flex items-center gap-1 text-[12px] font-semibold group-hover:gap-2 transition-all duration-200 ${accent === 'primary' ? 'text-primary' : 'text-accent'}`}
+                        className={`inline-flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all duration-200 ${accent === 'primary' ? 'text-primary' : 'text-accent'}`}
                       >
                         Learn more <ChevronRight className="w-3.5 h-3.5" />
                       </Link>
@@ -233,7 +233,7 @@ export function SplitSection() {
               <div className="absolute bottom-5 left-5 rounded-2xl px-4 py-3"
                 style={{ background: 'rgba(255,255,255,0.90)', backdropFilter: 'blur(8px)' }}>
                 <p className="text-xs font-bold text-foreground">Learning support for Kenyan teachers</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">for planning, practice, and reflection</p>
+                <p className="text-xs text-muted-foreground mt-0.5">for planning, practice, and reflection</p>
               </div>
             </div>
           </div>
@@ -347,11 +347,11 @@ export function HowItWorksSection() {
                   style={{ boxShadow: 'var(--shadow-primary)' }}>
                   <Icon className="w-8 h-8 text-white" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent border-2 border-white flex items-center justify-center text-[11px] font-black text-white">
+                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent border-2 border-white flex items-center justify-center text-xs font-black text-white">
                   {num.slice(-1)}
                 </span>
               </div>
-              <h3 className="font-bold text-[15px] mb-2.5 tracking-tight text-foreground">{title}</h3>
+              <h3 className="font-bold text-base mb-2.5 tracking-tight text-foreground">{title}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed max-w-[220px] mx-auto">{desc}</p>
             </div>
           ))}
@@ -385,7 +385,7 @@ export function TestimonialsSection() {
                 <p className="text-lg font-bold text-foreground mb-3">{title}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
               </div>
-              <Link href={href} className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary hover:gap-2 transition-all duration-200">
+              <Link href={href} className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:gap-2 transition-all duration-200">
                 {link} <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -423,7 +423,7 @@ export function FaqSection() {
                   aria-controls={`marketing-faq-answer-${idx}`}
                   className="w-full min-h-11 flex items-center justify-between gap-4 py-5 text-left group"
                 >
-                  <span className="font-semibold text-[15px] text-foreground group-hover:text-primary transition-colors">{q}</span>
+                  <span className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">{q}</span>
                   <ChevronDown className={`w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
                 </button>
                 <div id={`marketing-faq-answer-${idx}`} aria-hidden={!isOpen} className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-56 opacity-100 pb-5' : 'max-h-0 opacity-0'}`}>
@@ -471,7 +471,7 @@ export function CTASection() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button asChild size="lg"
-              className="text-[14px] px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
+              className="text-sm px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
             <Link href="/auth/sign-up">
               Create an account
               <ArrowRight className="w-5 h-5 ml-2" />

@@ -49,7 +49,7 @@ export function MobileBottomNav() {
               >
                 <Icon className="w-5 h-5" aria-hidden="true" />
               </div>
-              <span className={cn('text-[10px] leading-none', isActive ? 'font-semibold' : 'font-medium')}>
+              <span className={cn('text-xs leading-none', isActive ? 'font-semibold' : 'font-medium')}>
                 {t(labelKey)}
               </span>
             </Link>

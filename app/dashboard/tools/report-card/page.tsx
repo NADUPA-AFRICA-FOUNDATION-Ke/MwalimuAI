@@ -141,7 +141,7 @@ export default function ReportCardPage() {
   const wordCount = output.trim().split(/\s+/).filter(Boolean).length
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-6">
         <BackButton fallbackHref="/dashboard/tools" label="Back to Teacher Tools" />

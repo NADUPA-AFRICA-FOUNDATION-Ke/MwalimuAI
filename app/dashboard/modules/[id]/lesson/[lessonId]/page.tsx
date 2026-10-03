@@ -252,7 +252,7 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-[var(--reading-max)]">
       <BackButton fallbackHref={`/dashboard/modules/${moduleId}`} label={`Back to ${lessonModule.title}`} />
       
       {/* Progress Bar */}

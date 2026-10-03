@@ -130,7 +130,7 @@ export default function LessonPage() {
   const totalLessons = program.modules.reduce((s, m) => s + m.lessons.length, 0)
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-[var(--reading-max)]">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
         <Link href={`/dashboard/learning/${program.id}`} className="hover:text-foreground transition-colors">{program.shortTitle}</Link>

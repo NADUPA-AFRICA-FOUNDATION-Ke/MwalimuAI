@@ -472,7 +472,15 @@
 /* ══════════════════════════════════════════════════════════
    DASHBOARD / APP LAYOUT (unchanged for inner pages)
 ══════════════════════════════════════════════════════════ */
-.pb-safe-nav { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
+/* Space below page content so the fixed bottom tab bar never covers it. */
+.pb-safe-nav { padding-bottom: calc(var(--bottom-nav-h) + max(8px, env(safe-area-inset-bottom, 0px)) + 16px); }
+
+/* Fill exactly the space between the app header and the bottom tab bar (chat-style screens).
+   Uses dvh so the browser's collapsing toolbar cannot push content off screen. */
+.app-fill { height: calc(100dvh - var(--app-header-h) - env(safe-area-inset-top, 0px) - var(--bottom-nav-h) - max(8px, env(safe-area-inset-bottom, 0px))); }
+/* A screen that fills the viewport (chat) supplies its own bottom spacing. */
+.layout-inner:has(> .app-fill) { padding-bottom: 0; }
+@media (min-width: 768px) { .app-fill { height: calc(100dvh - var(--app-header-h)); } }
 .sidebar-nav  { width: 16rem; }
 .layout-main  { transition: margin-left 250ms ease-out; }
 @media (min-width: 768px) {

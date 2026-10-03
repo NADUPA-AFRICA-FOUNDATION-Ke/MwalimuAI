@@ -43,7 +43,7 @@ export function OAuthButtons({ redirectTo = '/dashboard' }: { redirectTo?: strin
     <div className="space-y-3">
       <div className="relative flex items-center py-1">
         <div className="h-px flex-1 bg-gray-200" />
-        <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">or continue with</span>
+        <span className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">or continue with</span>
         <div className="h-px flex-1 bg-gray-200" />
       </div>
 
@@ -55,7 +55,7 @@ export function OAuthButtons({ redirectTo = '/dashboard' }: { redirectTo?: strin
             variant="outline"
             disabled={busyProvider !== null}
             onClick={() => void continueWith(provider.id)}
-            className="h-11 w-full justify-center gap-3 rounded-xl border-border bg-card px-3 text-[12px] font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/30"
+            className="h-11 w-full justify-center gap-3 rounded-xl border-border bg-card px-3 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/30"
             aria-label={`Continue with ${provider.label}`}
           >
             {busyProvider === provider.id ? (
@@ -68,9 +68,9 @@ export function OAuthButtons({ redirectTo = '/dashboard' }: { redirectTo?: strin
         ))}
       </div>
 
-      {error && <p role="alert" aria-live="assertive" className="text-center text-[12px] text-red-600">{error}</p>}
+      {error && <p role="alert" aria-live="assertive" className="text-center text-xs text-red-600">{error}</p>}
 
-      <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+      <p className="text-center text-xs leading-relaxed text-muted-foreground">
         Google accounts with the same verified email are linked to your existing Mwalimu AI account.
       </p>
     </div>

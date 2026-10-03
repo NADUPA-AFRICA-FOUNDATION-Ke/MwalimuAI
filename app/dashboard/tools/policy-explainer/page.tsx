@@ -96,7 +96,7 @@ export default function PolicyExplainerPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl">
       <div className="mb-6">
         <BackButton fallbackHref="/dashboard/tools" label="Back to Teacher Tools" />
         <div className="flex items-center gap-3 mt-4">

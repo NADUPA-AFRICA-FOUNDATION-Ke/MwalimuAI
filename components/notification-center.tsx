@@ -202,7 +202,7 @@ export function NotificationCenter() {
       >
         <Bell className={cn('w-5 h-5 transition-colors', isOpen ? 'text-primary' : 'text-muted-foreground')} aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-accent text-accent-foreground rounded-full px-1 animate-pulse motion-reduce:animate-none" aria-hidden="true">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold bg-accent text-accent-foreground rounded-full px-1 animate-pulse motion-reduce:animate-none" aria-hidden="true">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -280,7 +280,7 @@ export function NotificationCenter() {
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{notification.message}</p>
-                            <p className="text-[10px] text-muted-foreground/70 mt-1">{notification.time}</p>
+                            <p className="text-xs text-muted-foreground/70 mt-1">{notification.time}</p>
                           </div>
                         </div>
                       </button>

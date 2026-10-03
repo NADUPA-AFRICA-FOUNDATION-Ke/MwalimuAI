@@ -95,7 +95,7 @@ export default function LessonRehearsalPage() {
   // ── Setup phase ──────────────────────────────────────────────
   if (phase === 'setup') {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl">
         <div className="mb-6">
           <BackButton fallbackHref="/dashboard/tools" label="Back to Teacher Tools" />
           <div className="flex items-center gap-3 mt-4">
@@ -164,7 +164,7 @@ export default function LessonRehearsalPage() {
   const classIsTyping = isLoading && (!lastMsg || lastMsg.role === 'user')
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
+    <div className="max-w-2xl flex flex-col app-fill">
       {/* Header */}
       <div className="shrink-0 px-1 pt-1 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ export default function LessonRehearsalPage() {
                   : 'bg-muted text-foreground rounded-tl-sm'
               }`}>
                 {!isUser && (
-                  <p className="text-[10px] font-semibold text-accent/70 uppercase tracking-wide mb-1">
+                  <p className="text-xs font-semibold text-accent/70 uppercase tracking-wide mb-1">
                     Class response
                   </p>
                 )}
@@ -224,7 +224,7 @@ export default function LessonRehearsalPage() {
               <Users className="w-3.5 h-3.5 text-accent" />
             </div>
             <div className="px-4 py-3 bg-muted rounded-2xl rounded-tl-sm">
-              <p className="text-[10px] font-semibold text-accent/70 uppercase tracking-wide mb-1">Class response</p>
+              <p className="text-xs font-semibold text-accent/70 uppercase tracking-wide mb-1">Class response</p>
               <span className="flex gap-1 items-center">
                 <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:0ms]" />
                 <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:150ms]" />

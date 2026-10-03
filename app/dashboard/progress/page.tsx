@@ -125,7 +125,7 @@ export default function ProgressPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl">
       {/* Header */}
       <div className="mb-6">
         <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
