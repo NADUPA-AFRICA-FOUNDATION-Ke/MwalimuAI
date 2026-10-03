@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
+import { Component, createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { PROGRAMS, TRACKS, type Program } from '@/lib/learning-paths-data'
@@ -26,13 +26,29 @@ const staticValue: ContentValue = {
 
 const ContentContext = createContext<ContentValue>(staticValue)
 
+/** If the content query fails (e.g. the backend has not been updated yet), keep serving the bundled curriculum. */
+class ContentFallback extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  componentDidCatch(error: unknown) { console.error('[content] CMS content unavailable, using the bundled curriculum:', error) }
+  render() {
+    return this.state.failed
+      ? <ContentContext.Provider value={staticValue}>{this.props.children}</ContentContext.Provider>
+      : <RemoteContent>{this.props.children}</RemoteContent>
+  }
+}
+
 /**
  * Learner curriculum. Content managed in the admin CMS overrides the bundled
  * curriculum program-by-program; anything the CMS doesn't manage (and every
  * program while the query is loading or unavailable) falls back to the static data,
- * so the learning area never renders empty.
+ * so the learning area never renders empty and never breaks if the CMS is unreachable.
  */
 export function ContentProvider({ children }: { children: ReactNode }) {
+  return <ContentFallback>{children}</ContentFallback>
+}
+
+function RemoteContent({ children }: { children: ReactNode }) {
   const remote = useQuery(api.content.publishedPrograms, {})
 
   const value = useMemo<ContentValue>(() => {
