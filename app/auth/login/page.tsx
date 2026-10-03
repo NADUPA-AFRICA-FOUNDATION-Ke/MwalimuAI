@@ -14,7 +14,6 @@ import { useAuthActions } from '@convex-dev/auth/react'
 import { useConvexAuth } from 'convex/react'
 import { ConvexNativeAuthBoundary, FORCED_LOGOUT_FLAG } from '@/context/profile-context'
 
-const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
   if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials') || msg.includes('Invalid credentials'))
@@ -98,40 +97,35 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex min-h-svh w-full">
+    <main className="flex min-h-svh w-full">
 
-      {/* ── Left panel — dark brand ─────────────────────── */}
-      <div className="hidden lg:flex lg:w-[42%] flex-col justify-between p-10 relative overflow-hidden"
-        style={{ background: DARK }}>
-
-        {/* Subtle radial highlight */}
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 20% 10%, oklch(0.54 0.14 163 / 0.30) 0%, transparent 60%)' }} />
+      {/* ── Left panel — tonal brand panel ─────────────────────── */}
+      <div className="hidden lg:flex lg:w-[42%] flex-col justify-between p-10 relative overflow-hidden bg-secondary">
 
         {/* Logo */}
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-2.5 w-fit">
             <BrandMark className="w-9 h-9" />
-            <span className="font-bold text-base text-white tracking-tight">Mwalimu AI</span>
+            <span className="font-bold text-base text-foreground tracking-tight">Mwalimu AI</span>
           </Link>
         </div>
 
         {/* Centre copy */}
         <div className="relative z-10">
-          <p className="text-xs font-bold text-white/75 uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
-          <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-5">For Kenya&apos;s CBC teachers</p>
+          <h2 className="text-[2.4rem] font-black text-foreground leading-[1.1] tracking-tight mb-6">
             Professional learning<br />for Kenyan CBC<br />
-            <span style={{ color: 'var(--color-accent-bright)' }}>teachers.</span>
+            <span className="text-accent">teachers.</span>
           </h2>
-          <p className="text-white/80 text-base leading-relaxed max-w-xs">
+          <p className="text-muted-foreground text-base leading-relaxed max-w-xs">
             Access learning modules, an AI Coach, teacher tools, community discussions, and progress tracking.
           </p>
         </div>
 
         {/* Product summary */}
-        <div className="relative z-10 rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <p className="text-white text-sm font-semibold leading-relaxed">A shared place for learning and planning</p>
-          <p className="text-white/70 text-xs leading-relaxed mt-1">Sign in to return to the work saved on your account.</p>
+        <div className="relative z-10 rounded-2xl border border-border bg-card p-5">
+          <p className="text-foreground text-sm font-semibold leading-relaxed">A shared place for learning and planning</p>
+          <p className="text-muted-foreground text-xs leading-relaxed mt-1">Sign in to return to the work saved on your account.</p>
         </div>
       </div>
 
@@ -140,12 +134,12 @@ function LoginContent() {
 
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-border">
-          <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/" className="flex min-h-11 items-center gap-1.5 pr-3 text-base text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
           {/* Mobile logo */}
-          <Link href="/" className="flex items-center gap-2 lg:hidden">
+          <Link href="/" className="flex min-h-11 items-center gap-2 lg:hidden">
             <BrandMark className="w-7 h-7" />
             <span className="font-bold text-sm tracking-tight">Mwalimu AI</span>
           </Link>
@@ -176,14 +170,14 @@ function LoginContent() {
                   aria-invalid={!!error}
                   aria-describedby={error ? 'login-error' : undefined}
                   value={email} onChange={e => setEmail(e.target.value)}
-                  className="h-11 rounded-xl border-border bg-muted text-sm focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
+                  className="h-11 rounded-xl border-input bg-card text-sm focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-semibold text-foreground">Password</Label>
-                  <Link href="/auth/forgot-password" className="text-xs text-primary hover:underline underline-offset-4">
+                  <Link href="/auth/forgot-password" className="inline-flex min-h-11 items-center text-sm text-primary hover:underline underline-offset-4">
                     Forgot password?
                   </Link>
                 </div>
@@ -193,11 +187,11 @@ function LoginContent() {
                     aria-invalid={!!error}
                     aria-describedby={error ? 'login-error' : undefined}
                     value={password} onChange={e => setPassword(e.target.value)}
-                    className="h-11 rounded-xl border-border bg-muted text-sm pr-10 focus:border-primary focus:ring-primary/20"
+                    className="h-11 rounded-xl border-input bg-card text-sm pr-12 focus:border-primary focus:ring-primary/20"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors">
+                    className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -239,6 +233,6 @@ function LoginContent() {
         </div>
       </div>
 
-    </div>
+    </main>
   )
 }

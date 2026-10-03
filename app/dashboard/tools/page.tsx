@@ -125,7 +125,7 @@ export default function ToolsPage() {
     <div className="max-w-5xl">
       {/* Header */}
       <div className="mb-8">
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-semibold mb-4">
+        <div className="inline-flex items-center gap-2 bg-secondary text-primary px-3 py-1.5 rounded-full text-sm font-semibold mb-4">
           <Wand2 className="w-3.5 h-3.5" />
           AI Teacher Tools
         </div>

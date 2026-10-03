@@ -189,7 +189,7 @@ export default function DashboardPage() {
             <span className="block w-[3px] h-4 bg-primary rounded-full" aria-hidden="true" />
             Continue Learning
           </h2>
-          <Link href="/dashboard/modules" className="text-xs text-primary hover:text-primary/80 font-semibold flex items-center gap-0.5 transition-colors">
+          <Link href="/dashboard/modules" className="min-h-11 text-sm text-primary hover:text-primary-dark font-semibold inline-flex items-center gap-0.5 transition-colors">
             View all <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -203,7 +203,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${learningProgress > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${learningProgress > 0 ? 'bg-secondary text-primary' : 'bg-muted text-muted-foreground'}`}>
                     {learningProgress > 0 ? 'In Progress' : 'Start Here'}
                   </span>
                   {learningProgress > 0 && (
@@ -257,9 +257,9 @@ export default function DashboardPage() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { href: '/dashboard/ai-coach',    icon: Sparkles, label: 'AI Coach',     sub: 'Get instant help',  color: 'bg-primary/10 text-primary group-hover:bg-primary/15', shape: 'rounded-full'  },
+            { href: '/dashboard/ai-coach',    icon: Sparkles, label: 'AI Coach',     sub: 'Get instant help',  color: 'bg-secondary text-primary group-hover:bg-primary/15', shape: 'rounded-full'  },
             { href: '/dashboard/assessment',  icon: FileText, label: 'Assessment',   sub: 'Personalise path',  color: 'bg-accent/10  text-accent  group-hover:bg-accent/15',  shape: 'rounded-xl'   },
-            { href: '/dashboard/community',   icon: Users,    label: 'Community',    sub: 'Join discussions',  color: 'bg-primary/10 text-primary group-hover:bg-primary/15', shape: 'rounded-lg'   },
+            { href: '/dashboard/community',   icon: Users,    label: 'Community',    sub: 'Join discussions',  color: 'bg-secondary text-primary group-hover:bg-primary/15', shape: 'rounded-lg'   },
             { href: '/dashboard/achievements',icon: Trophy,   label: 'Achievements', sub: 'View your badges',  color: 'bg-accent/10  text-accent  group-hover:bg-accent/15',  shape: 'rounded-2xl'  },
           ].map(({ href, icon: Icon, label, sub, color, shape }) => (
             <Link key={href} href={href}>
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                   }
                 </div>
                 <span className={`text-xs font-semibold w-full text-center truncate ${
-                  isTodayCell ? 'text-accent' : isFuture ? 'text-muted-foreground/40' : 'text-muted-foreground'
+                  isTodayCell ? 'text-accent' : isFuture ? 'text-muted-foreground' : 'text-muted-foreground'
                 }`}>
                   {label}
                 </span>

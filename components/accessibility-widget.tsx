@@ -334,7 +334,7 @@ export function AccessibilityWidget() {
                       <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold leading-none mb-0.5">{label}</p>
-                        <p id={descId} className="text-xs text-muted-foreground/80 leading-tight">{desc}</p>
+                        <p id={descId} className="text-xs text-muted-foreground leading-tight">{desc}</p>
                       </div>
                       <Indicator on={settings[key]} />
                     </button>
@@ -366,7 +366,7 @@ export function AccessibilityWidget() {
                       }
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold leading-none mb-0.5">Dark Mode</p>
-                        <p id={descId} className="text-xs text-muted-foreground/80 leading-tight">Switch to dark background</p>
+                        <p id={descId} className="text-xs text-muted-foreground leading-tight">Switch to dark background</p>
                       </div>
                       <Indicator on={theme === 'dark'} />
                     </button>

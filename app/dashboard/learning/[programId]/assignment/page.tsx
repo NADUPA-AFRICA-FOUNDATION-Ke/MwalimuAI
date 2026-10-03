@@ -189,7 +189,7 @@ export default function AssignmentPage() {
                 </div>
                 {feedback && (
                   <Button variant="ghost" size="sm" onClick={copyFeedback} className="rounded-xl gap-1.5 text-xs">
-                    {copied ? <><Check className="w-3.5 h-3.5 text-green-500" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                    {copied ? <><Check className="w-3.5 h-3.5 text-green-700" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
                   </Button>
                 )}
               </div>
@@ -222,7 +222,7 @@ export default function AssignmentPage() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Rubric</p>
                   {assignment.rubric.map((r, i) => (
                     <div key={i} className="flex gap-2 mb-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary/60 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                       <p className="text-xs text-muted-foreground">{r}</p>
                     </div>
                   ))}

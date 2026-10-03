@@ -14,10 +14,10 @@ import { api } from '@/convex/_generated/api'
 const JOURNAL_KEY = 'mwalimu_journal'
 
 const MOODS: { icon: LucideIcon; label: string; value: number; color: string }[] = [
-  { icon: Laugh,   label: 'Energised', value: 5, color: 'text-green-600 dark:text-green-400'  },
+  { icon: Laugh,   label: 'Energised', value: 5, color: 'text-green-700 dark:text-green-400'  },
   { icon: Smile,   label: 'Good',      value: 4, color: 'text-blue-600 dark:text-blue-400'    },
-  { icon: Meh,     label: 'Okay',      value: 3, color: 'text-yellow-600 dark:text-yellow-400'},
-  { icon: Frown,   label: 'Tired',     value: 2, color: 'text-orange-600 dark:text-orange-400'},
+  { icon: Meh,     label: 'Okay',      value: 3, color: 'text-yellow-800 dark:text-yellow-400'},
+  { icon: Frown,   label: 'Tired',     value: 2, color: 'text-orange-700 dark:text-orange-400'},
   { icon: Annoyed, label: 'Stressed',  value: 1, color: 'text-red-600 dark:text-red-400'      },
 ]
 
@@ -381,7 +381,7 @@ export default function JournalPage() {
 
       {mounted && !loading && entries.length === 0 && (
         <div className="glass rounded-2xl p-10 text-center">
-          <Sparkles className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" aria-hidden="true" />
+          <Sparkles className="w-10 h-10 mx-auto mb-3 text-muted-foreground" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">Your journal is empty — write your first reflection above.</p>
         </div>
       )}

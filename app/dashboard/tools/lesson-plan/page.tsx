@@ -290,7 +290,7 @@ export default function LessonPlanPage() {
                     : <><Printer className="w-3.5 h-3.5" aria-hidden="true" /> Download PDF</>}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={copyOutput} className="rounded-xl gap-1.5 text-xs">
-                  {copied ? <><Check className="w-3.5 h-3.5 text-green-500" aria-hidden="true" /> Copied!</> : <><Copy className="w-3.5 h-3.5" aria-hidden="true" /> Copy</>}
+                  {copied ? <><Check className="w-3.5 h-3.5 text-green-700" aria-hidden="true" /> Copied!</> : <><Copy className="w-3.5 h-3.5" aria-hidden="true" /> Copy</>}
                 </Button>
               </div>
             )}

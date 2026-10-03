@@ -56,7 +56,7 @@ export function DashboardHeader({ onLogout, sidebarCollapsed, onToggleCollapse }
             <PanelLeft className={cn('h-5 w-5 transition-transform duration-200', sidebarCollapsed && 'rotate-180')} aria-hidden="true" />
           </button>
         )}
-        <Link href="/dashboard" aria-label="Mwalimu AI home" className={cn('flex items-center gap-2 px-1', showBack && 'max-md:hidden')}>
+        <Link href="/dashboard" aria-label="Mwalimu AI home" className={cn('flex min-h-11 min-w-11 items-center gap-2 px-1', showBack && 'max-md:hidden')}>
           <BrandMark className="h-8 w-8" />
           <span className="hidden text-base font-bold tracking-tight md:inline">Mwalimu AI</span>
         </Link>

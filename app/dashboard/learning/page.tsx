@@ -105,7 +105,7 @@ export default function LearningPage() {
                 {/* Labels */}
                 <div className="flex items-center gap-2 mb-4">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
-                    program.accent === 'primary' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'
+                    program.accent === 'primary' ? 'bg-secondary text-primary' : 'bg-accent/10 text-accent'
                   }`}>
                     <Icon className="w-3 h-3 inline mr-1" />
                     {TRACKS.find(t => t.id === program.track)?.label}
@@ -116,14 +116,14 @@ export default function LearningPage() {
                     </span>
                   )}
                   {mounted && pct === 100 && (
-                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-green-500/10 text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-green-500/10 text-green-700 dark:text-green-400 flex items-center gap-1">
                       <Award className="w-3 h-3" /> Completed
                     </span>
                   )}
                 </div>
 
                 <h2 className="font-bold text-lg tracking-tight mb-1">{program.title}</h2>
-                <p className="text-xs text-primary/80 font-medium mb-3">{program.kicdAlignment}</p>
+                <p className="text-xs text-primary font-medium mb-3">{program.kicdAlignment}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">{program.description}</p>
 
                 {/* Meta */}
@@ -156,7 +156,7 @@ export default function LearningPage() {
                 {isAvailable ? (
                   <Link href={`/dashboard/learning/${program.id}`} className={`flex items-center justify-between min-h-11 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                       program.accent === 'primary'
-                        ? 'bg-primary/8 text-primary hover:bg-primary/15'
+                        ? 'bg-secondary text-primary hover:bg-primary/15'
                         : 'bg-accent/8 text-accent hover:bg-accent/15'
                     }`}>
                       <span>{pct === 0 ? 'Start Program' : pct === 100 ? 'Review Program' : 'Continue Learning'}</span>

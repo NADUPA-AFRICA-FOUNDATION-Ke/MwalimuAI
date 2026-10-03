@@ -13,7 +13,6 @@ import { OAuthButtons } from '@/components/oauth-buttons'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 
-const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
   if (msg.includes('already registered') || msg.includes('already exists'))
@@ -65,34 +64,25 @@ function SignUpContent() {
   }
 
   return (
-    <div className="flex min-h-svh w-full">
+    <main className="flex min-h-svh w-full">
 
-      {/* ── Left panel — dark brand ─────────────────────── */}
-      <div className="hidden lg:flex lg:w-[42%] flex-col justify-between p-10 relative overflow-hidden"
-        style={{ background: DARK }}>
-
-        {/* Radial highlight */}
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 20% 10%, oklch(0.54 0.14 163 / 0.30) 0%, transparent 60%)' }} />
-
-        {/* Lightweight brand detail: avoids making authentication wait for a
-            third-party photograph to download before the form is usable. */}
-        <div className="absolute -right-24 top-1/4 h-80 w-80 rounded-full border-[28px] border-accent/15" aria-hidden="true" />
+      {/* ── Left panel — tonal brand panel ─────────────────────── */}
+      <div className="hidden lg:flex lg:w-[42%] flex-col justify-between p-10 relative overflow-hidden bg-secondary">
 
         {/* Logo */}
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-2.5 w-fit">
             <BrandMark className="w-9 h-9" />
-            <span className="font-bold text-base text-white tracking-tight">Mwalimu AI</span>
+            <span className="font-bold text-base text-foreground tracking-tight">Mwalimu AI</span>
           </Link>
         </div>
 
         {/* Centre copy */}
         <div className="relative z-10">
-          <p className="text-xs font-bold text-white/75 uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
-          <h2 className="text-[2.4rem] font-black text-white leading-[1.1] tracking-tight mb-6">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-5">For Kenyan CBC teachers</p>
+          <h2 className="text-[2.4rem] font-black text-foreground leading-[1.1] tracking-tight mb-6">
             Learn, plan,<br />and reflect<br />
-            <span style={{ color: 'var(--color-accent-bright)' }}>in one place.</span>
+            <span className="text-accent">in one place.</span>
           </h2>
           <ul className="space-y-3.5">
             {[
@@ -101,10 +91,10 @@ function SignUpContent() {
               'Teacher tools and progress tracking',
               'Community discussions and resources',
             ].map(item => (
-              <li key={item} className="flex items-center gap-3 text-white/65 text-sm">
+              <li key={item} className="flex items-center gap-3 text-muted-foreground text-sm">
                 <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                   style={{ background: 'oklch(0.54 0.14 163 / 0.40)', border: '1px solid oklch(0.54 0.14 163 / 0.35)' }}>
-                  <Check className="w-3 h-3 text-white" />
+                  <Check className="w-3 h-3 text-foreground" />
                 </span>
                 {item}
               </li>
@@ -114,7 +104,7 @@ function SignUpContent() {
 
         {/* Product summary */}
         <div className="relative z-10 flex items-center gap-3">
-          <p className="text-white/80 text-sm">Create a profile to start using the platform.</p>
+          <p className="text-muted-foreground text-sm">Create a profile to start using the platform.</p>
         </div>
       </div>
 
@@ -123,12 +113,12 @@ function SignUpContent() {
 
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-border">
-          <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/" className="flex min-h-11 items-center gap-1.5 pr-3 text-base text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
           {/* Mobile logo */}
-          <Link href="/" className="flex items-center gap-2 lg:hidden">
+          <Link href="/" className="flex min-h-11 items-center gap-2 lg:hidden">
             <BrandMark className="w-7 h-7" />
             <span className="font-bold text-sm tracking-tight">Mwalimu AI</span>
           </Link>
@@ -159,7 +149,7 @@ function SignUpContent() {
                   aria-invalid={!!error}
                   aria-describedby={error ? 'signup-error' : undefined}
                   value={email} onChange={e => setEmail(e.target.value)}
-                  className="h-11 rounded-xl border-border bg-muted text-sm focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
+                  className="h-11 rounded-xl border-input bg-card text-sm focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
                 />
               </div>
 
@@ -172,11 +162,11 @@ function SignUpContent() {
                     aria-invalid={!!error}
                     aria-describedby={error ? 'signup-error' : undefined}
                     value={password} onChange={e => setPassword(e.target.value)}
-                    className="h-11 rounded-xl border-border bg-muted text-sm pr-10 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
+                    className="h-11 rounded-xl border-input bg-card text-sm pr-12 focus:border-primary focus:ring-primary/20 placeholder:text-muted-foreground"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors">
+                    className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -189,7 +179,7 @@ function SignUpContent() {
                   aria-invalid={!!error}
                   aria-describedby={error ? 'signup-error' : undefined}
                   value={repeatPassword} onChange={e => setRepeatPassword(e.target.value)}
-                  className="h-11 rounded-xl border-border bg-muted text-sm focus:border-primary focus:ring-primary/20"
+                  className="h-11 rounded-xl border-input bg-card text-sm focus:border-primary focus:ring-primary/20"
                 />
               </div>
 
@@ -223,6 +213,6 @@ function SignUpContent() {
         </div>
       </div>
 
-    </div>
+    </main>
   )
 }

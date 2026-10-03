@@ -64,7 +64,7 @@ export default function ContactPage() {
           <Card className="p-8">
             {submitted ? (
               <div className="text-center py-12">
-                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                <CheckCircle className="w-16 h-16 text-green-700 mx-auto mb-4" />
                 <h3 className="text-2xl font-semibold mb-2">Message Sent!</h3>
                 <p className="text-muted-foreground mb-6">
                   Your message was sent. We&apos;ll follow up using the email address you provided.

@@ -1,136 +1,79 @@
-'use client'
-
+import type { Metadata } from 'next'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { MarketingHeader } from '@/components/marketing-header'
 import { MarketingFooter } from '@/components/marketing-footer'
-import Link from 'next/link'
-import {
-  BookOpen, Zap, Users, Award, MessageSquare, TrendingUp,
-  Brain, FileText, Target, Clock, Shield, Smartphone,
-  Check, ArrowRight,
-} from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useFadeIn } from '@/hooks/use-scroll-animations'
 
-const features = [
-  { icon: BookOpen,      title: 'Structured Learning Modules', desc: 'Work through lessons, activities, and quizzes in a clear sequence.' },
-  { icon: Zap,           title: 'AI Coach Support',            desc: 'Ask questions about planning, assessment, classroom management, or teaching strategies.' },
-  { icon: Users,         title: 'Community Forum',             desc: 'Post questions, reply to other teachers, and share classroom resources.' },
-  { icon: Award,         title: 'Achievement Badges',          desc: 'See milestone badges and certificates connected to completed learning work.' },
-  { icon: MessageSquare, title: 'Needs Assessment',            desc: 'Answer a short assessment to identify a starting point for your learning.' },
-  { icon: TrendingUp,    title: 'Progress Tracking',           desc: 'Review completed lessons, assessment results, and learning activity from your dashboard.' },
-  { icon: Brain,         title: 'CBC-Specific Content',         desc: 'Read modules and resources focused on CBC teaching topics.' },
-  { icon: FileText,      title: 'Downloadable Resources',      desc: 'Open practical resources, guides, and templates from the resources area.' },
-  { icon: Target,        title: 'Competency Mapping',          desc: 'Use competency and level information included in selected learning content.' },
-  { icon: Clock,         title: 'Flexible Learning',           desc: 'Return to lessons and tools when your schedule allows.' },
-  { icon: Shield,        title: 'Offline Access',              desc: 'Use supported saved content when a connection is unavailable; AI Coach responses still need internet.' },
-  { icon: Smartphone,    title: 'Mobile Friendly',             desc: 'Use the responsive web app on a phone, tablet, or computer.' },
-]
+export const metadata: Metadata = {
+  title: 'Features',
+  description: 'Lessons, an AI coach, teacher tools, community and verifiable certificates for Kenyan CBC teachers.',
+}
 
-const highlights = [
-  { label: 'Interactive modules',   icon: BookOpen      },
-  { label: 'AI coaching',           icon: Zap            },
-  { label: 'Community discussions', icon: Users          },
-  { label: 'Progress tracking',     icon: TrendingUp    },
+const GROUPS = [
+  {
+    title: 'Learn',
+    items: [
+      ['Structured learning modules', 'Work through lessons, activities and quizzes in a clear order. Each lesson ends with a reflection prompt.'],
+      ['Needs assessment', 'Answer five short questions to find a sensible starting point.'],
+      ['CBC-specific content', 'Modules and resources written around CBC teaching topics, with competency and level information on selected content.'],
+      ['Flexible pace', 'Leave a lesson and come back to the same place on any phone.'],
+    ],
+  },
+  {
+    title: 'Plan and teach',
+    items: [
+      ['AI coach', 'Ask about planning, assessment, classroom management or a specific learner. Review every suggestion with your own judgement.'],
+      ['Teacher tools', 'Lesson plans, differentiation, parent messages, report-card comments and more, each as a short guided form.'],
+      ['Downloadable resources', 'Guides and templates you can open from the resources area.'],
+    ],
+  },
+  {
+    title: 'Connect and prove it',
+    items: [
+      ['Teacher community', 'Post questions, reply to colleagues and share classroom resources.'],
+      ['Progress and badges', 'See completed lessons, assessment results and milestone badges on your dashboard.'],
+      ['Verifiable certificates', 'Finish a programme and its final assessment. Anyone can confirm the certificate by its serial number.'],
+      ['Works on your phone', 'Installs like an app. Pages you have opened stay available offline; the AI coach needs a connection.'],
+    ],
+  },
 ]
 
 export default function FeaturesPage() {
-  const { ref: heroRef, visible: heroVisible } = useFadeIn<HTMLDivElement>(0.1)
-  const { ref: gridRef, visible: gridVisible } = useFadeIn<HTMLElement>(0.04)
-
   return (
-    <div className="min-h-screen bg-card">
-
+    <div className="flex min-h-svh flex-col">
       <MarketingHeader activePath="/features" />
-
-      <main>
-
-      {/* Hero */}
-      <section className="relative overflow-hidden pt-24 pb-16 hero-bg">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none hero-bg-radial" />
-        <div ref={heroRef} className={`relative max-w-4xl mx-auto px-5 md:px-10 pt-12 text-center transition-all duration-700 ${heroVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
-          <h1 className="text-[2.8rem] md:text-[3.6rem] font-black text-white tracking-tight leading-[1.06] mb-5">
-            Learning and planning tools for<br />
-            <span className="text-accent">CBC teachers</span>
-          </h1>
-          <p className="text-base md:text-lg text-white/80 leading-relaxed max-w-xl mx-auto mb-8">
-            Mwalimu AI brings together learning modules, AI coaching, teacher tools, community discussions, and progress tracking.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button asChild size="lg" className="text-sm px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
-              <Link href="/auth/sign-up">
-                Create an account <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-card/10 text-sm px-5 py-3 rounded-xl">
-              <Link href="/pricing">
-                View pricing
-              </Link>
-            </Button>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-5 mt-10">
-            {highlights.map(({ label, icon: Icon }) => (
-              <div key={label} className="flex items-center gap-1.5 text-white/80 text-sm">
-                <Check className="w-4 h-4 text-accent" />
-                {label}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section ref={gridRef} className="py-20 bg-card">
-        <div className="max-w-7xl mx-auto px-5 md:px-10">
-          <div className={`text-center mb-14 transition-all duration-700 ${gridVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
-            <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Platform Features</p>
-            <h2 className="text-3xl md:text-[2.6rem] font-black tracking-tight text-foreground mb-3">
-              Tools built for the way you teach
-            </h2>
-            <p className="text-muted-foreground text-base max-w-lg mx-auto">
-              Explore the platform areas available to you.
+      <main className="flex-1">
+        <section className="border-b border-border bg-[var(--hero-bg)]">
+          <div className="mx-auto max-w-3xl px-4 py-12 text-center md:px-6 md:py-20">
+            <h1 className="text-[2rem] font-bold leading-tight tracking-tight sm:text-5xl">
+              Learning and planning tools for <span className="text-accent">CBC teachers</span>
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
+              Everything below is in the app today. Start with whichever part of your week needs it most.
             </p>
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Button asChild size="lg" className="rounded-xl px-8"><Link href="/auth/sign-up">Create free account</Link></Button>
+              <Button asChild size="lg" variant="outline" className="rounded-xl px-8"><Link href="/pricing">See pricing</Link></Button>
+            </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((feature, i) => (
-              <div
-                key={feature.title}
-                className={`card-premium rounded-2xl p-7 transition-all duration-700 ${gridVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}
-                style={{ transitionDelay: `${(i % 9) * 50}ms` }}
-              >
-                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <feature.icon className="w-5.5 h-5.5 text-primary" />
-                </div>
-                <h3 className="font-bold text-base text-foreground mb-2 tracking-tight">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 hero-bg relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[350px] pointer-events-none hero-bg-radial" />
-        <div className="relative max-w-2xl mx-auto px-5 md:px-10 text-center">
-          <h2 className="text-[2.2rem] md:text-[2.8rem] font-black text-white tracking-tight leading-[1.06] mb-4">
-            A practical place to keep<br />
-            <span className="text-accent">learning</span>
-          </h2>
-          <p className="text-white/80 text-base leading-relaxed mb-8 max-w-lg mx-auto">
-            Create an account to explore the platform.
-          </p>
-          <Button asChild size="lg" className="text-sm px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
-            <Link href="/auth/sign-up">
-              Create an account <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-
+        {GROUPS.map(({ title, items }, i) => (
+          <section key={title} aria-labelledby={`group-${i}`} className={i % 2 ? 'border-y border-border bg-secondary' : ''}>
+            <div className="mx-auto grid max-w-5xl gap-6 px-4 py-12 md:grid-cols-[1fr_2fr] md:gap-16 md:px-6 md:py-20">
+              <h2 id={`group-${i}`} className="text-3xl font-bold tracking-tight md:sticky md:top-24 md:self-start">{title}</h2>
+              <dl className="space-y-7">
+                {items.map(([name, body]) => (
+                  <div key={name}>
+                    <dt className="text-xl font-semibold">{name}</dt>
+                    <dd className="mt-1.5 leading-relaxed text-muted-foreground">{body}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </section>
+        ))}
       </main>
-
       <MarketingFooter />
     </div>
   )

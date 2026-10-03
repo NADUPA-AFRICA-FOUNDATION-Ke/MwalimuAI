@@ -17,7 +17,8 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { BrandMark } from '@/components/brand-mark'
+import { MarketingHeader } from '@/components/marketing-header'
+import { MarketingFooter } from '@/components/marketing-footer'
 import { useProfile } from '@/context/profile-context'
 import { cn } from '@/lib/utils'
 
@@ -218,7 +219,6 @@ function PricingContent() {
   const { user } = useProfile()
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [menuOpen, setMenuOpen] = useState(false)
 
   const canceled = searchParams.get('canceled') === 'true'
 
@@ -252,89 +252,11 @@ function PricingContent() {
   return (
     <div className="min-h-screen overflow-x-hidden">
 
-      {/* ── Header ── */}
-      <header className="glass sticky top-0 z-50 border-b border-white/40">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between">
-
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <BrandMark className="w-9 h-9 group-hover:scale-110 transition-transform duration-200" />
-            <span className="font-bold text-lg tracking-tight">Mwalimu AI</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {[
-              { href: '/features', label: 'Features' },
-              { href: '/pricing',  label: 'Pricing'  },
-              { href: '/about',    label: 'About'    },
-              { href: '/blog',     label: 'Blog'     },
-            ].map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'relative px-4 py-2 text-sm font-medium rounded-lg transition-colors group',
-                  href === '/pricing'
-                    ? 'text-foreground bg-primary/8'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-primary/5'
-                )}
-              >
-                {label}
-                {href === '/pricing' && (
-                  <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary rounded-full" />
-                )}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm" className="hidden md:block font-medium hover:text-primary hover:bg-primary/8 rounded-xl transition-all">
-              <Link href="/auth/login">Log in</Link>
-            </Button>
-            <Button asChild size="sm" className="hidden md:block font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200 px-5">
-              <Link href="/auth/sign-up">Get started</Link>
-            </Button>
-            <button
-              onClick={() => setMenuOpen(v => !v)}
-              className="md:hidden p-2 hover:bg-muted rounded-xl transition-colors"
-              aria-label="Toggle menu"
-            >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-t border-white/30 ${menuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="px-4 py-3 flex flex-col gap-1">
-            {[
-              { href: '/features', label: 'Features' },
-              { href: '/pricing',  label: 'Pricing'  },
-              { href: '/about',    label: 'About'    },
-              { href: '/blog',     label: 'Blog'     },
-            ].map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setMenuOpen(false)}
-                className="px-4 py-3 text-sm font-medium rounded-xl hover:bg-primary/8 hover:text-foreground text-muted-foreground transition-colors"
-              >
-                {label}
-              </Link>
-            ))}
-            <div className="flex gap-2 pt-3 mt-1 border-t border-border/50">
-              <Button asChild variant="outline" className="flex-1 w-full rounded-xl">
-                <Link href="/auth/login" onClick={() => setMenuOpen(false)}>Log in</Link>
-              </Button>
-              <Button asChild className="flex-1 w-full rounded-xl">
-                <Link href="/auth/sign-up" onClick={() => setMenuOpen(false)}>Get started</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader activePath="/pricing" />
+      <main>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-[var(--surface-subtle)] border-b border-border/70" aria-labelledby="pricing-heading">
+      <section className="relative overflow-hidden bg-secondary border-b border-border/70" aria-labelledby="pricing-heading">
         <div className="max-w-4xl mx-auto px-4 md:px-8 pt-20 pb-20 text-center">
           <div className="inline-flex items-center gap-2.5 glass-subtle border-primary/25 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-8 animate-fade-in-up">
             <Zap className="w-3.5 h-3.5" />
@@ -416,25 +338,8 @@ function PricingContent() {
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-border/40 bg-muted/20 py-10">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <BrandMark className="w-8 h-8 group-hover:scale-110 transition-transform duration-200" />
-              <span className="font-bold tracking-tight">Mwalimu AI</span>
-            </Link>
-            <p className="text-xs text-muted-foreground order-last md:order-none">
-              © 2026 Mwalimu AI. All rights reserved.
-            </p>
-            <div className="flex items-center gap-6 text-xs text-muted-foreground">
-              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy policy</Link>
-              <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      </main>
+      <MarketingFooter />
     </div>
   )
 }

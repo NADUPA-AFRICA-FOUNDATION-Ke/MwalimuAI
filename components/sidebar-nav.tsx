@@ -107,7 +107,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
                         className={cn(
                           'flex items-center justify-center min-w-11 min-h-11 mx-auto mb-0.5 rounded-xl transition-all duration-150',
                           isActive
-                            ? 'bg-primary/12 text-primary'
+                            ? 'bg-secondary text-primary'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
                         )}>
                         <Icon className="w-4 h-4 shrink-0" />
@@ -133,7 +133,7 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
                           'transition-all duration-150',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                           isActive
-                            ? 'bg-primary/10 text-primary font-semibold'
+                            ? 'bg-secondary text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
                         )}>
                         {isActive && <span className="absolute left-0 w-0.5 h-5 bg-primary rounded-r-full" aria-hidden />}

@@ -88,9 +88,9 @@ const notificationIcons: Record<NotificationType, typeof BookOpen> = {
 
 const notificationColors: Record<NotificationType, string> = {
   course: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-  achievement: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-  community: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  announcement: 'bg-primary/10 text-primary',
+  achievement: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+  community: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  announcement: 'bg-secondary text-primary',
 }
 
 export function NotificationCenter() {
@@ -244,9 +244,9 @@ export function NotificationCenter() {
           <div className="max-h-[400px] overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="py-12 text-center">
-                <Bell className="w-10 h-10 mx-auto text-muted-foreground/30 mb-3" aria-hidden="true" />
+                <Bell className="w-10 h-10 mx-auto text-muted-foreground mb-3" aria-hidden="true" />
                 <p className="text-sm text-muted-foreground">No notifications</p>
-                <p className="text-xs text-muted-foreground/70 mt-1">You&apos;re all caught up</p>
+                <p className="text-xs text-muted-foreground mt-1">You&apos;re all caught up</p>
               </div>
             ) : (
               <ul role="list" className="divide-y divide-border">
@@ -280,7 +280,7 @@ export function NotificationCenter() {
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{notification.message}</p>
-                            <p className="text-xs text-muted-foreground/70 mt-1">{notification.time}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
                           </div>
                         </div>
                       </button>

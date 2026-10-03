@@ -226,7 +226,7 @@ export default function DifferentiationPage() {
                       : 'border-border/50 bg-transparent text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/40'
                   }`}
                 >
-                  <span className={`mr-2 inline-flex items-center ${form.barriers.includes(b.id) ? 'text-primary' : 'text-muted-foreground/30'}`}>
+                  <span className={`mr-2 inline-flex items-center ${form.barriers.includes(b.id) ? 'text-primary' : 'text-muted-foreground'}`}>
                     {form.barriers.includes(b.id)
                       ? <Check className="w-3.5 h-3.5" />
                       : <Circle className="w-3.5 h-3.5" />}
@@ -257,7 +257,7 @@ export default function DifferentiationPage() {
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Strategies</h2>
             {output && (
               <Button variant="ghost" size="sm" onClick={copyOutput} className="rounded-xl gap-1.5 text-xs">
-                {copied ? <><Check className="w-3.5 h-3.5 text-green-500" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                {copied ? <><Check className="w-3.5 h-3.5 text-green-700" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
               </Button>
             )}
           </div>

@@ -110,7 +110,7 @@ export default function VerifyPage() {
         {status === 'valid' && cert && (
           <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-950/20 p-6" role="status">
             <div className="flex items-center gap-2.5 mb-4">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              <ShieldCheck className="w-5 h-5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
               <p className="font-bold text-emerald-700 dark:text-emerald-300">Valid certificate</p>
             </div>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">

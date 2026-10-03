@@ -34,7 +34,7 @@ export function DashboardMockup() {
             { Icon: Settings,      active: false },
           ].map(({ Icon, active }, i) => (
             <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-              active ? 'bg-primary/10 text-primary' : 'text-muted-foreground'
+              active ? 'bg-secondary text-primary' : 'text-muted-foreground'
             }`}>
               <Icon className="w-4 h-4" />
             </div>
@@ -47,13 +47,13 @@ export function DashboardMockup() {
               <p className="text-sm font-bold text-foreground">Good morning, Jane</p>
               <p className="text-xs text-muted-foreground mt-0.5">Your AI coach is ready — continue CBC journey.</p>
             </div>
-            <div className="w-8 h-8 rounded-full bg-primary/12 flex items-center justify-center text-xs font-black text-primary">JM</div>
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-black text-primary">JM</div>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Lessons', value: '24', color: 'text-primary' },
-              { label: 'AI Sessions', value: '12', color: 'text-amber-500' },
+              { label: 'AI Sessions', value: '12', color: 'text-amber-800' },
               { label: 'Progress', value: '67%', color: 'text-primary' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-card rounded-xl p-2.5 border border-border">
@@ -69,7 +69,7 @@ export function DashboardMockup() {
                 <Sparkles className="w-3 h-3 text-white" />
               </div>
               <span className="text-xs font-bold text-foreground">AI Coach</span>
-              <span className="ml-auto text-xs text-emerald-500 font-semibold flex items-center gap-1">
+              <span className="ml-auto text-xs text-emerald-700 font-semibold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                 Online
               </span>
@@ -127,7 +127,7 @@ export function AiCoachMockup() {
           </div>
           <div>
             <p className="text-sm font-bold">Your AI Coach</p>
-            <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+            <p className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" /> Always available
             </p>
           </div>
@@ -190,7 +190,7 @@ export function ModulesMockup() {
                 <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
               </div>
               <span className={`text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 ml-2 ${
-                status === 'In Progress' ? 'bg-primary/10 text-primary' :
+                status === 'In Progress' ? 'bg-secondary text-primary' :
                 status === 'Started' ? 'bg-accent/12 text-accent' :
                 'bg-muted text-muted-foreground'
               }`}>{status}</span>

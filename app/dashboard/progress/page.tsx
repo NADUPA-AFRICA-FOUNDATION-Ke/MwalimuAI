@@ -29,10 +29,10 @@ interface Goal {
 }
 
 const CATEGORY_COLORS: Record<Category, string> = {
-  assessment: 'bg-primary/10 text-primary border-primary/20',
+  assessment: 'bg-secondary text-primary border-primary/20',
   pedagogy:   'bg-accent/10 text-accent border-accent/20',
   digital:    'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400',
-  community:  'bg-green-500/10 text-green-600 border-green-500/20 dark:text-green-400',
+  community:  'bg-green-500/10 text-green-700 border-green-500/20 dark:text-green-400',
   wellbeing:  'bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400',
   other:      'bg-muted text-muted-foreground border-border',
 }
@@ -222,7 +222,7 @@ export default function ProgressPage() {
       {/* Goals list */}
       {goals.length === 0 && !showForm ? (
         <div className="glass rounded-2xl p-12 text-center">
-          <TrendingUp className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+          <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="font-semibold mb-1">{t('progress.noGoals')}</h3>
           <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">{t('progress.noGoalsSub')}</p>
           <Button onClick={() => setShowForm(true)} className="rounded-xl gap-2">
@@ -271,7 +271,7 @@ export default function ProgressPage() {
                         onClick={() => toggleMilestone(goal.id, ms.id)}>
                         {ms.completed
                           ? <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                          : <Circle className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary/60 shrink-0 transition-colors" />}
+                          : <Circle className="w-4 h-4 text-muted-foreground group-hover:text-primary/60 shrink-0 transition-colors" />}
                         <span className={`text-sm flex-1 transition-colors ${ms.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                           {ms.text}
                         </span>

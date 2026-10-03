@@ -151,14 +151,14 @@ function Sidebar({ conversations, selectedId, loading, onSelect, onNewChat, onDe
         {loading ? (
           <div className="text-xs text-muted-foreground px-3 py-4" role="status" aria-live="polite">Loading conversations…</div>
         ) : groups.length === 0 ? (
-          <div className="flex flex-col items-center py-10 text-muted-foreground/40">
+          <div className="flex flex-col items-center py-10 text-muted-foreground">
             <MessageSquare className="w-7 h-7 mb-2" />
             <p className="text-xs">No conversations yet</p>
           </div>
         ) : (
           groups.map(group => (
             <div key={group.label}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/50 px-3 mb-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-1">
                 {group.label}
               </p>
               <div className="space-y-0.5">
@@ -514,7 +514,7 @@ function ChatPanel({
             disabled={isLoading}
             className="flex-1 rounded-xl border-border/60 focus:border-primary/50 bg-background"
           />
-          <Button type="submit" disabled={isLoading || !input.trim()} className="rounded-xl gap-2 px-5">
+          <Button type="submit" disabled={isLoading || !input.trim()} aria-label="Send message" className="min-w-11 rounded-xl gap-2 px-4 sm:px-5">
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Send</span>
           </Button>

@@ -95,7 +95,7 @@ export default function CertificatePage() {
       <div className="max-w-2xl">
         <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
         <div className="glass rounded-2xl p-12 text-center">
-          <Lock className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+          <Lock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-xl font-bold mb-2">Certificate Locked</h1>
           <p className="text-muted-foreground text-sm mb-6 max-w-xs mx-auto">
             Read every lesson, write at least 6 reflections, and score 85% or higher on the post-assessment to earn your certificate.
@@ -161,7 +161,7 @@ export default function CertificatePage() {
 
             {/* Certificate title */}
             <div className="mb-6">
-              <div className="inline-flex items-center gap-2 bg-primary/8 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+              <div className="inline-flex items-center gap-2 bg-secondary text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
                 <Award className="w-4 h-4" />
                 Certificate of Completion
               </div>
@@ -241,7 +241,7 @@ export default function CertificatePage() {
               </div>
             </div>
 
-            <div className="inline-flex self-center items-center gap-2 bg-primary/8 text-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-4">
+            <div className="inline-flex self-center items-center gap-2 bg-secondary text-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-4">
               <ShieldCheck className="w-3.5 h-3.5" /> Authenticity &amp; Verification
             </div>
 

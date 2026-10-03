@@ -39,7 +39,7 @@ export function MobileBottomNav() {
                 <span
                   className={cn(
                     'flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-150',
-                    isActive ? 'bg-primary/12 text-primary' : 'text-muted-foreground',
+                    isActive ? 'bg-secondary text-primary' : 'text-muted-foreground',
                   )}
                 >
                   <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 1.75} aria-hidden="true" />

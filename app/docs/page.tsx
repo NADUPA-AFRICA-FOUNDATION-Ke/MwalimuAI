@@ -127,12 +127,12 @@ export default function DocsPage() {
               </div>
               <h2 className="text-xl font-semibold mb-2">{section.title}</h2>
               <p className="text-muted-foreground text-sm mb-4">{section.description}</p>
-              <ul className="space-y-2">
+              <ul>
                 {section.articles.map((article) => (
                   <li key={article}>
                     <Link
                       href={sectionLinks[section.title]}
-                      className="text-sm text-primary hover:underline"
+                      className="flex min-h-11 items-center text-base text-primary hover:underline"
                     >
                       {article}
                     </Link>

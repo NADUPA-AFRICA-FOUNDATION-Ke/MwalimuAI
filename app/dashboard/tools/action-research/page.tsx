@@ -180,7 +180,7 @@ export default function ActionResearchPage() {
                   active
                     ? 'bg-primary text-primary-foreground'
                     : done
-                    ? 'bg-primary/10 text-primary'
+                    ? 'bg-secondary text-primary'
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
@@ -254,7 +254,7 @@ export default function ActionResearchPage() {
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">AI Guidance — Step {step.id}</h2>
             {data.output && (
               <Button variant="ghost" size="sm" onClick={() => copyStep(currentStep)} className="rounded-xl gap-1.5 text-xs">
-                {copied === currentStep ? <><Check className="w-3.5 h-3.5 text-green-500" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                {copied === currentStep ? <><Check className="w-3.5 h-3.5 text-green-700" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
               </Button>
             )}
           </div>
@@ -290,7 +290,7 @@ export default function ActionResearchPage() {
                   <button
                     key={s.id}
                     onClick={() => setCurrentStep(s.id)}
-                    className="text-xs bg-primary/8 text-primary px-2.5 py-1 rounded-lg font-medium hover:bg-primary/15 transition-colors"
+                    className="text-xs bg-secondary text-primary px-2.5 py-1 rounded-lg font-medium hover:bg-primary/15 transition-colors"
                   >
                     {s.id}. {s.label}
                   </button>

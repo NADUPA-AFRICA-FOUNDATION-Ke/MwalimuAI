@@ -358,7 +358,7 @@ export default function OnboardingPage() {
           {step === 4 && !quizSubmitted && (
             <div className="space-y-5">
               <div className="text-center">
-                <div className="inline-flex items-center gap-2 bg-primary/8 text-primary px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                <div className="inline-flex items-center gap-2 bg-secondary text-primary px-3 py-1 rounded-full text-xs font-semibold mb-3">
                   <Sparkles className="w-3.5 h-3.5" /> Quick Knowledge Check
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight mb-2">5 Quick Questions</h1>

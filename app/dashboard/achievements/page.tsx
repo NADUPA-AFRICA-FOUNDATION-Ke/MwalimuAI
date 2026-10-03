@@ -17,16 +17,16 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
 const COLOR_MAP: Record<string, { ring: string; bg: string; icon: string; text: string; bar: string }> = {
   blue:    { ring: 'ring-blue-200 dark:ring-blue-800',    bg: 'bg-blue-50 dark:bg-blue-950/30',    icon: 'text-blue-600 dark:text-blue-400',    text: 'text-blue-700 dark:text-blue-300',    bar: 'bg-blue-500'    },
   purple:  { ring: 'ring-purple-200 dark:ring-purple-800', bg: 'bg-purple-50 dark:bg-purple-950/30', icon: 'text-purple-600 dark:text-purple-400', text: 'text-purple-700 dark:text-purple-300', bar: 'bg-purple-500'  },
-  amber:   { ring: 'ring-amber-200 dark:ring-amber-800',  bg: 'bg-amber-50 dark:bg-amber-950/30',  icon: 'text-amber-600 dark:text-amber-400',  text: 'text-amber-700 dark:text-amber-300',  bar: 'bg-amber-500'   },
-  orange:  { ring: 'ring-orange-200 dark:ring-orange-800', bg: 'bg-orange-50 dark:bg-orange-950/30', icon: 'text-orange-600 dark:text-orange-400', text: 'text-orange-700 dark:text-orange-300', bar: 'bg-orange-500' },
-  green:   { ring: 'ring-green-200 dark:ring-green-800',  bg: 'bg-green-50 dark:bg-green-950/30',  icon: 'text-green-600 dark:text-green-400',  text: 'text-green-700 dark:text-green-300',  bar: 'bg-green-500'   },
+  amber:   { ring: 'ring-amber-200 dark:ring-amber-800',  bg: 'bg-amber-50 dark:bg-amber-950/30',  icon: 'text-amber-800 dark:text-amber-400',  text: 'text-amber-700 dark:text-amber-300',  bar: 'bg-amber-500'   },
+  orange:  { ring: 'ring-orange-200 dark:ring-orange-800', bg: 'bg-orange-50 dark:bg-orange-950/30', icon: 'text-orange-700 dark:text-orange-400', text: 'text-orange-700 dark:text-orange-300', bar: 'bg-orange-500' },
+  green:   { ring: 'ring-green-200 dark:ring-green-800',  bg: 'bg-green-50 dark:bg-green-950/30',  icon: 'text-green-700 dark:text-green-400',  text: 'text-green-700 dark:text-green-300',  bar: 'bg-green-500'   },
   pink:    { ring: 'ring-pink-200 dark:ring-pink-800',    bg: 'bg-pink-50 dark:bg-pink-950/30',    icon: 'text-pink-600 dark:text-pink-400',    text: 'text-pink-700 dark:text-pink-300',    bar: 'bg-pink-500'    },
   teal:    { ring: 'ring-teal-200 dark:ring-teal-800',    bg: 'bg-teal-50 dark:bg-teal-950/30',    icon: 'text-teal-600 dark:text-teal-400',    text: 'text-teal-700 dark:text-teal-300',    bar: 'bg-teal-500'    },
   violet:  { ring: 'ring-violet-200 dark:ring-violet-800', bg: 'bg-violet-50 dark:bg-violet-950/30', icon: 'text-violet-600 dark:text-violet-400', text: 'text-violet-700 dark:text-violet-300', bar: 'bg-violet-500' },
   cyan:    { ring: 'ring-cyan-200 dark:ring-cyan-800',    bg: 'bg-cyan-50 dark:bg-cyan-950/30',    icon: 'text-cyan-600 dark:text-cyan-400',    text: 'text-cyan-700 dark:text-cyan-300',    bar: 'bg-cyan-500'    },
   rose:    { ring: 'ring-rose-200 dark:ring-rose-800',    bg: 'bg-rose-50 dark:bg-rose-950/30',    icon: 'text-rose-600 dark:text-rose-400',    text: 'text-rose-700 dark:text-rose-300',    bar: 'bg-rose-500'    },
-  emerald: { ring: 'ring-emerald-200 dark:ring-emerald-800', bg: 'bg-emerald-50 dark:bg-emerald-950/30', icon: 'text-emerald-600 dark:text-emerald-400', text: 'text-emerald-700 dark:text-emerald-300', bar: 'bg-emerald-500' },
-  yellow:  { ring: 'ring-yellow-200 dark:ring-yellow-800', bg: 'bg-yellow-50 dark:bg-yellow-950/30', icon: 'text-yellow-600 dark:text-yellow-400', text: 'text-yellow-700 dark:text-yellow-300', bar: 'bg-yellow-500' },
+  emerald: { ring: 'ring-emerald-200 dark:ring-emerald-800', bg: 'bg-emerald-50 dark:bg-emerald-950/30', icon: 'text-emerald-700 dark:text-emerald-400', text: 'text-emerald-700 dark:text-emerald-300', bar: 'bg-emerald-500' },
+  yellow:  { ring: 'ring-yellow-200 dark:ring-yellow-800', bg: 'bg-yellow-50 dark:bg-yellow-950/30', icon: 'text-yellow-800 dark:text-yellow-400', text: 'text-yellow-700 dark:text-yellow-300', bar: 'bg-yellow-500' },
 }
 
 interface BadgeProgress {
@@ -91,8 +91,8 @@ function BadgeCard({ badge, progress }: { badge: BadgeStatus; progress: BadgePro
   return (
     <div className="glass rounded-2xl p-5 text-center hover:opacity-90 transition-opacity">
       <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-3 relative">
-        <Icon className="w-7 h-7 text-muted-foreground/50" />
-        <Lock className="w-3.5 h-3.5 text-muted-foreground/50 absolute -bottom-0.5 -right-0.5" />
+        <Icon className="w-7 h-7 text-muted-foreground" />
+        <Lock className="w-3.5 h-3.5 text-muted-foreground absolute -bottom-0.5 -right-0.5" />
       </div>
       <h3 className="font-bold text-sm mb-1 text-muted-foreground">{badge.name}</h3>
       <p className="text-xs text-muted-foreground leading-relaxed mb-3">{badge.desc}</p>
@@ -106,7 +106,7 @@ function BadgeCard({ badge, progress }: { badge: BadgeStatus; progress: BadgePro
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="text-xs text-muted-foreground/70">{progress.label}</p>
+          <p className="text-xs text-muted-foreground">{progress.label}</p>
         </div>
       )}
     </div>
@@ -200,7 +200,7 @@ export default function AchievementsPage() {
             { label: 'Tools Used', value: badgeInput.toolsUsed, icon: Wand2 },
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="glass rounded-xl p-4 text-center">
-              <Icon className="w-5 h-5 mx-auto mb-1 text-primary/60" />
+              <Icon className="w-5 h-5 mx-auto mb-1 text-primary" />
               <p className="text-2xl font-bold">{value}</p>
               <p className="text-xs text-muted-foreground">{label}</p>
             </div>

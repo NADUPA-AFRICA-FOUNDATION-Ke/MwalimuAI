@@ -80,7 +80,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <Card className="p-8 md:p-12 border-border/50 shadow-xl">
           {/* Meta */}
           <div className="mb-6">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+            <Badge className="mb-4 bg-secondary text-primary border-primary/20">
               {post.category}
             </Badge>
             <h1 className="text-3xl md:text-4xl font-bold mb-6 text-balance">{post.title}</h1>
@@ -150,7 +150,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   />
                 </div>
                 <div className="p-5">
-                  <Badge className="mb-2 bg-primary/10 text-primary border-primary/20 text-xs">
+                  <Badge className="mb-2 bg-secondary text-primary border-primary/20 text-xs">
                     {relatedPost.category}
                   </Badge>
                   <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">

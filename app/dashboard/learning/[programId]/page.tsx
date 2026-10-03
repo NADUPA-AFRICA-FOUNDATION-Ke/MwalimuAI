@@ -101,7 +101,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
   if (!program.available) {
     return (
       <div className="max-w-2xl mx-auto text-center py-20">
-        <GraduationCap className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+        <GraduationCap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2">{program.title}</h1>
         <p className="text-muted-foreground mb-6">This program is coming soon. Check back shortly!</p>
         <Button asChild variant="outline" className="rounded-xl"><Link href="/dashboard/learning">Back to Programs</Link></Button>
@@ -148,30 +148,30 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
       </div>
 
       {/* Program header */}
-      <div className={`relative overflow-hidden rounded-2xl p-7 mb-6 ${program.accent === 'primary' ? 'bg-primary' : 'bg-accent'}`}>
+      <div className={`relative overflow-hidden rounded-2xl p-7 mb-6 ${'bg-primary-dark'}`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(255,255,255,0.18),transparent_55%)]" />
         <div className="relative z-10">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 bg-card/20 text-white px-3 py-1 rounded-full text-xs font-semibold mb-3">
+              <div className="inline-flex items-center gap-1.5 bg-white/20 text-white px-3 py-1 rounded-full text-xs font-semibold mb-3">
                 <Zap className="w-3 h-3" />
                 {track?.label} · {program.kicdAlignment}
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">{program.title}</h1>
-              <p className="text-white/80 text-sm max-w-xl leading-relaxed">{program.description}</p>
+              <p className="text-white text-sm max-w-xl leading-relaxed">{program.description}</p>
             </div>
             <div className="flex gap-2 shrink-0">
               <div className="text-center bg-card/15 rounded-xl px-4 py-3">
                 <p className="text-xl font-bold text-white">{program.hours}h</p>
-                <p className="text-xs text-white/70">Content</p>
+                <p className="text-xs text-white">Content</p>
               </div>
               <div className="text-center bg-card/15 rounded-xl px-4 py-3">
                 <p className="text-xl font-bold text-white">{total}</p>
-                <p className="text-xs text-white/70">Lessons</p>
+                <p className="text-xs text-white">Lessons</p>
               </div>
               <div className="text-center bg-card/15 rounded-xl px-4 py-3">
                 <p className="text-xl font-bold text-white">{program.modules.length}</p>
-                <p className="text-xs text-white/70">Modules</p>
+                <p className="text-xs text-white">Modules</p>
               </div>
             </div>
           </div>
@@ -179,11 +179,11 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
           {/* Progress bar */}
           {mounted && (
             <div className="mt-5">
-              <div className="flex justify-between text-xs text-white/80 mb-1.5">
+              <div className="flex justify-between text-xs text-white mb-1.5">
                 <span>{done}/{total} lessons complete</span>
                 <span className="font-bold">{pct}%</span>
               </div>
-              <div className="h-2 bg-card/20 rounded-full overflow-hidden">
+              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
                 <div className="h-full bg-card rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
               </div>
             </div>
@@ -239,7 +239,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-                      modDone === mod.lessons.length ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                      modDone === mod.lessons.length ? 'bg-secondary text-primary' : 'bg-muted text-muted-foreground'
                     }`}>
                       {modDone === mod.lessons.length ? <CheckCircle2 className="w-4 h-4 text-primary" /> : `M${mi + 1}`}
                     </div>
@@ -267,7 +267,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
                         >
                           {lessonDone
                             ? <CheckCircle2 className="w-4.5 h-4.5 text-primary shrink-0" />
-                            : <Circle className="w-4.5 h-4.5 text-muted-foreground/40 shrink-0" />
+                            : <Circle className="w-4.5 h-4.5 text-muted-foreground shrink-0" />
                           }
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm font-medium ${lessonDone ? 'text-muted-foreground line-through' : ''}`}>
@@ -296,7 +296,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
               <p className="text-xs text-muted-foreground">Practical assignment with AI feedback</p>
             </div>
             {progress.assignment ? (
-              <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+              <span className="text-xs text-green-700 dark:text-green-400 font-medium flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Submitted
               </span>
             ) : (
@@ -320,7 +320,7 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
                   {data ? (
                     <span className="text-xs font-bold text-primary">{data.score}/{data.total}</span>
                   ) : locked ? (
-                    <span className="text-xs text-muted-foreground/50">Complete lessons first</span>
+                    <span className="text-xs text-muted-foreground">Complete lessons first</span>
                   ) : (
                     <Link href={`/dashboard/learning/${program.id}/assessment${href}`} className="text-xs text-primary font-medium hover:underline">Take now</Link>
                   )}

@@ -164,7 +164,7 @@ export default function PolicyExplainerPage() {
                   {isPrinting ? 'Generating…' : <><Printer className="w-3.5 h-3.5" /> Download PDF</>}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={copyOutput} className="rounded-xl gap-1.5 text-xs">
-                  {copied ? <><Check className="w-3.5 h-3.5 text-green-500" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
+                  {copied ? <><Check className="w-3.5 h-3.5 text-green-700" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
                 </Button>
               </div>
             )}

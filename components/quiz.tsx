@@ -134,7 +134,7 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
             {passed ? (
               <Trophy className="w-10 h-10 text-primary" />
             ) : (
-              <RotateCcw className="w-10 h-10 text-orange-600" />
+              <RotateCcw className="w-10 h-10 text-orange-700" />
             )}
           </div>
           
@@ -306,7 +306,7 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
           )}>
             <Lightbulb className={cn(
               "w-5 h-5 shrink-0 mt-0.5",
-              currentState.isCorrect ? "text-green-600" : "text-orange-600"
+              currentState.isCorrect ? "text-green-700" : "text-orange-700"
             )} />
             <div>
               <p className="font-medium mb-1">
@@ -328,7 +328,7 @@ export function QuizComponent({ quiz, onComplete }: QuizProps) {
               : "bg-red-50 dark:bg-red-900/20"
           )}>
             {currentState.isCorrect ? (
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <CheckCircle2 className="w-5 h-5 text-green-700" />
             ) : (
               <XCircle className="w-5 h-5 text-red-600" />
             )}

@@ -202,7 +202,7 @@ export default function LessonPage() {
                     setShared(true)
                     setTimeout(() => setShared(false), 2000)
                   }}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-green-600 transition-colors"
+                  className="flex min-h-11 items-center gap-1.5 px-2 text-sm text-muted-foreground hover:text-green-700 transition-colors"
                   title="Share via WhatsApp"
                 >
                   <Share2 className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export default function LessonPage() {
                         setIsSpeaking(true)
                       }
                     }}
-                    className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${isSpeaking ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                    className={`flex min-h-11 items-center gap-1.5 px-2 text-sm font-medium transition-colors ${isSpeaking ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
                   >
                     {isSpeaking ? <><VolumeX className="w-3.5 h-3.5" /> Stop</> : <><Volume2 className="w-3.5 h-3.5" /> Listen</>}
                   </button>
@@ -251,7 +251,7 @@ export default function LessonPage() {
               </div>
               {lesson.videoPoints.map((point, i) => (
                 <div key={i} className="flex items-start gap-2.5">
-                  <div className="w-5 h-5 bg-primary/10 text-primary rounded-lg flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{i + 1}</div>
+                  <div className="w-5 h-5 bg-secondary text-primary rounded-lg flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{i + 1}</div>
                   <p className="text-sm leading-relaxed">{point}</p>
                 </div>
               ))}
@@ -292,7 +292,7 @@ export default function LessonPage() {
                         setIsSpeaking(true)
                       }
                     }}
-                    className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${isSpeaking ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                    className={`flex min-h-11 items-center gap-1.5 px-2 text-sm font-medium transition-colors ${isSpeaking ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
                   >
                     {isSpeaking ? <><VolumeX className="w-3.5 h-3.5" /> Stop audio</> : <><Volume2 className="w-3.5 h-3.5" /> Listen</>}
                   </button>

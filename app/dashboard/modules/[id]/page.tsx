@@ -53,9 +53,9 @@ const lessonTypeIcons = {
 }
 
 const lessonTypeColors = {
-  video: 'text-blue-500',
-  reading: 'text-green-500',
-  quiz: 'text-orange-500',
+  video: 'text-blue-700',
+  reading: 'text-green-700',
+  quiz: 'text-orange-700',
   activity: 'text-purple-500',
 }
 
@@ -219,7 +219,7 @@ export default function ModuleDetailPage() {
       {moduleData.prerequisites.length > 0 && (
         <Card className="p-6 border-orange-200 dark:border-orange-800/50 bg-orange-50/50 dark:bg-orange-950/20">
           <div className="flex items-center gap-2 mb-3">
-            <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            <AlertCircle className="w-5 h-5 text-orange-700 dark:text-orange-400" />
             <h2 className="font-semibold text-orange-900 dark:text-orange-100">Prerequisites</h2>
           </div>
           <p className="text-sm text-orange-700 dark:text-orange-300">

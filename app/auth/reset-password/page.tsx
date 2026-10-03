@@ -75,16 +75,7 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="relative flex min-h-svh w-full items-center justify-center overflow-hidden p-6 md:p-10">
-      {/* Background accents */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full"
-          style={{ background: 'radial-gradient(circle, oklch(0.52 0.20 160 / 0.15) 0%, transparent 70%)' }} />
-        <div className="absolute top-1/3 -right-24 h-96 w-96 rounded-full"
-          style={{ background: 'radial-gradient(circle, oklch(0.70 0.20 55 / 0.12) 0%, transparent 70%)' }} />
-        <div className="absolute -bottom-32 left-1/4 h-72 w-72 rounded-full"
-          style={{ background: 'radial-gradient(circle, oklch(0.52 0.20 160 / 0.10) 0%, transparent 70%)' }} />
-      </div>
+    <main className="relative flex min-h-svh w-full items-center justify-center overflow-hidden p-6 md:p-10">
 
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-6">
@@ -101,7 +92,7 @@ function ResetPasswordContent() {
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
                     <AlertCircle className="h-7 w-7 text-destructive" aria-hidden="true" />
                   </div>
-                  <CardTitle className="text-2xl">Link expired</CardTitle>
+                  <CardTitle className="text-2xl"><h1>Link expired</h1></CardTitle>
                   <CardDescription>
                     This password reset link has expired or already been used.
                   </CardDescription>
@@ -116,9 +107,9 @@ function ResetPasswordContent() {
               <>
                 <CardHeader className="text-center space-y-3">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                    <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" aria-hidden="true" />
+                    <CheckCircle className="h-7 w-7 text-green-700 dark:text-green-400" aria-hidden="true" />
                   </div>
-                  <CardTitle className="text-2xl">Password updated</CardTitle>
+                  <CardTitle className="text-2xl"><h1>Password updated</h1></CardTitle>
                   <CardDescription>
                     Your password has been changed. Redirecting you to the dashboard…
                   </CardDescription>
@@ -128,7 +119,7 @@ function ResetPasswordContent() {
               /* ── Form ─────────────────────────────────────── */
               <>
                 <CardHeader>
-                  <CardTitle className="text-2xl">Set a new password</CardTitle>
+                  <CardTitle className="text-2xl"><h1>Set a new password</h1></CardTitle>
                   <CardDescription>Enter and confirm your new password below.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -153,7 +144,7 @@ function ResetPasswordContent() {
                           type="button"
                           onClick={() => setShowPassword(v => !v)}
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
@@ -196,6 +187,6 @@ function ResetPasswordContent() {
           </Card>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

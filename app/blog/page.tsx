@@ -27,7 +27,7 @@ export default function BlogPage() {
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 text-center">
-        <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 px-4 py-1">
+        <Badge className="mb-4 bg-secondary text-primary border-primary/20 px-4 py-1">
           Teacher Resources
         </Badge>
         <h1 className="text-4xl md:text-5xl font-bold mb-6 text-balance">Mwalimu AI Blog</h1>
@@ -54,7 +54,7 @@ export default function BlogPage() {
                 <Badge variant="secondary" className="w-fit mb-4 bg-accent/10 text-accent border-accent/20">
                   Featured
                 </Badge>
-                <Badge className="w-fit mb-3 bg-primary/10 text-primary border-primary/20">
+                <Badge className="w-fit mb-3 bg-secondary text-primary border-primary/20">
                   {featuredPost.category}
                 </Badge>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 group-hover:text-primary transition-colors">
@@ -97,7 +97,7 @@ export default function BlogPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                 </div>
                 <div className="p-6 flex flex-col flex-1">
-                  <Badge className="w-fit mb-3 bg-primary/10 text-primary border-primary/20">
+                  <Badge className="w-fit mb-3 bg-secondary text-primary border-primary/20">
                     {post.category}
                   </Badge>
                   <h3 className="text-xl font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">

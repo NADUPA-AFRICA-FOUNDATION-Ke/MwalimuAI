@@ -111,7 +111,7 @@ export default function SupportPage() {
 
             {submitted ? (
               <div className="text-center py-12">
-                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                <CheckCircle className="w-16 h-16 text-green-700 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Ticket Submitted!</h3>
                 <p className="text-muted-foreground mb-6">
                   We&apos;ve received your request. We&apos;ll follow up using the email address you provided.
@@ -159,7 +159,7 @@ export default function SupportPage() {
                     id="category"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="mt-2 w-full px-3 py-2 rounded-md border bg-background"
+                    className="mt-2 min-h-11 w-full px-3 py-2 rounded-md border bg-background"
                   >
                     <option value="technical">Technical Issue</option>
                     <option value="billing">Billing & Subscription</option>
