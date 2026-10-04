@@ -137,7 +137,8 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
   const [provisioning, setProvisioning] = useState(false)
   const [progressReady, setProgressReady] = useState(false)
   const provisionedFor = useRef<string | null>(null)
-  const claimedFor = useRef<string | null>(null)
+  // This device's claim on the account. `confirmed` flips once we have seen the server hold our id.
+  const claim = useRef<{ deviceId: string; confirmed: boolean } | null>(null)
 
   // Link an existing/migrated profile once it has been resolved. New users
   // create their profile explicitly from the onboarding form; never create a
@@ -221,19 +222,25 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
     } catch {}
   }, [isAuthenticated, profileDoc])
 
-  // Preserve the existing one-active-device experience through Convex.
+  // One active device per account. A device only counts as taken over after it has seen its own claim land:
+  // until then, an old activeSessionId in the profile is stale data from an earlier session (or this device's
+  // own previous sign-in), and treating it as "someone else signed in" would sign the user out right after login.
   useEffect(() => {
     if (!user || !profileDoc) {
-      claimedFor.current = null
+      claim.current = null
       return
     }
     const deviceId = getDeviceId()
-    if (!claimedFor.current) {
-      claimedFor.current = deviceId
-      void upsertProfile({ activeSessionId: deviceId })
+    if (!claim.current || claim.current.deviceId !== deviceId) {
+      claim.current = { deviceId, confirmed: false }
+      void upsertProfile({ activeSessionId: deviceId }).catch(() => { claim.current = null })
       return
     }
-    if (profileDoc.activeSessionId && profileDoc.activeSessionId !== claimedFor.current) {
+    if (profileDoc.activeSessionId === deviceId) {
+      claim.current.confirmed = true
+      return
+    }
+    if (claim.current.confirmed && profileDoc.activeSessionId) {
       try { sessionStorage.setItem(FORCED_LOGOUT_FLAG, '1') } catch {}
       void convexSignOut()
     }
