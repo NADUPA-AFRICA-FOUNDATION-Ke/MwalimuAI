@@ -578,6 +578,40 @@ export default defineSchema({
     .index("by_item", ["itemId", "version"])
     .index("by_status", ["status", "createdAt"]),
 
+  // Support tickets raised by learners and worked by staff.
+  tickets: defineTable({
+    number: v.string(), // human reference, e.g. MW-4F7K2Q; staff quote it as ticketRef on streak restores
+    profileId: v.id("profiles"),
+    subject: v.string(),
+    category: v.union(
+      v.literal("streak"),
+      v.literal("account"),
+      v.literal("content"),
+      v.literal("payment"),
+      v.literal("certificate"),
+      v.literal("other"),
+    ),
+    status: v.union(v.literal("open"), v.literal("pending_user"), v.literal("resolved")),
+    assignedTo: v.optional(v.id("staff")),
+    lastMessageAt: v.number(),
+    lastMessageBy: v.union(v.literal("user"), v.literal("staff")),
+    resolvedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_number", ["number"])
+    .index("by_profile", ["profileId", "lastMessageAt"])
+    .index("by_status", ["status", "lastMessageAt"]),
+
+  ticketMessages: defineTable({
+    ticketId: v.id("tickets"),
+    author: v.union(v.literal("user"), v.literal("staff")),
+    staffId: v.optional(v.id("staff")),
+    authorLabel: v.string(),
+    body: v.string(),
+    internal: v.boolean(), // staff-only note, never returned to the learner
+    createdAt: v.number(),
+  }).index("by_ticket", ["ticketId", "createdAt"]),
+
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;
   // feature-specific backfills can promote records into typed tables later.

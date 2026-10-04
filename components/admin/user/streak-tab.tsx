@@ -11,6 +11,7 @@ import { Empty, Field, fmtTime, Loading, Pill, ReasonDialog, useRun, useStaff } 
 export function StreakTab({ profileId }: { profileId: Id<'profiles'> }) {
   const { can, role } = useStaff()
   const s = useQuery(api.admin.streaks.get, { profileId })
+  const learnerTickets = useQuery(api.admin.tickets.forUser, can('tickets.read') ? { profileId } : 'skip')
   const restore = useMutation(api.admin.streaks.restore)
   const revoke = useMutation(api.admin.streaks.revoke)
   const { run, ok } = useRun()
@@ -109,7 +110,12 @@ export function StreakTab({ profileId }: { profileId: Id<'profiles'> }) {
               <Input type="date" min={earliest} max={yesterday} value={to} onChange={(e) => setTo(e.target.value)} />
             </Field>
             <Field label="Ticket / reference (optional)">
-              <Input value={ticket} onChange={(e) => setTicket(e.target.value)} placeholder="SUP-1042" />
+              <Input value={ticket} onChange={(e) => setTicket(e.target.value)} placeholder="MW-4F7K2Q" list="learner-tickets" />
+              <datalist id="learner-tickets">
+                {learnerTickets?.filter((t) => t.status !== 'resolved').map((t) => (
+                  <option key={t._id} value={t.number}>{t.subject}</option>
+                ))}
+              </datalist>
             </Field>
           </div>
           {role === 'super_admin' && (

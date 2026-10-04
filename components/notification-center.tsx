@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from 'convex/react'
-import { makeFunctionReference } from 'convex/server'
 import { Bell, X, BookOpen, Award, MessageSquare, Megaphone, Check, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { api } from '@/convex/_generated/api'
+import type { Id } from '@/convex/_generated/dataModel'
 import { useProfile } from '@/context/profile-context'
 
 type NotificationType = 'course' | 'achievement' | 'community' | 'announcement'
@@ -22,61 +22,15 @@ interface Notification {
   link?: string
 }
 
-const SEED_NOTIFICATIONS: Omit<Notification, 'read'>[] = [
-  {
-    id: 'welcome',
-    type: 'announcement',
-    title: 'Welcome to Mwalimu AI!',
-    message: 'Start your professional development journey with our AI-powered platform.',
-    time: 'Just now',
-    link: '/dashboard',
-  },
-  {
-    id: 'module-1',
-    type: 'course',
-    title: 'New Module Available',
-    message: 'CBC Fundamentals module is now available. Start learning today!',
-    time: '5 min ago',
-    link: '/dashboard/modules/1',
-  },
-  {
-    id: 'assessment-cta',
-    type: 'course',
-    title: 'Complete Your Assessment',
-    message: 'Take your needs assessment to get personalised learning recommendations.',
-    time: '1 day ago',
-    link: '/dashboard/assessment',
-  },
-]
-
-const NOTIF_KEY = 'mwalimu_notifications_state'
-
-interface NotifState {
-  read: string[]       // IDs the user has marked as read
-  dismissed: string[]  // IDs the user has deleted
-}
-
-const updateNotificationPreferences = makeFunctionReference<'mutation', { notificationsState: NotifState }, unknown>('profiles:updatePreferences')
-
-function loadState(): NotifState {
-  if (typeof window === 'undefined') return { read: [], dismissed: [] }
-  try {
-    const raw = localStorage.getItem(NOTIF_KEY)
-    return raw ? (JSON.parse(raw) as NotifState) : { read: [], dismissed: [] }
-  } catch {
-    return { read: [], dismissed: [] }
-  }
-}
-
-function saveState(state: NotifState) {
-  if (typeof window === 'undefined') return
-  try { localStorage.setItem(NOTIF_KEY, JSON.stringify(state)) } catch {}
-}
-
-function buildNotifications(state: NotifState): Notification[] {
-  return SEED_NOTIFICATIONS
-    .filter(n => !state.dismissed.includes(n.id))
-    .map(n => ({ ...n, read: state.read.includes(n.id) }))
+function timeAgo(ms: number): string {
+  const diff = Math.max(0, Date.now() - ms)
+  const min = Math.floor(diff / 60_000)
+  if (min < 1) return 'Just now'
+  if (min < 60) return `${min} min ago`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `${h} h ago`
+  const d = Math.floor(h / 24)
+  return d === 1 ? 'Yesterday' : `${d} days ago`
 }
 
 const notificationIcons: Record<NotificationType, typeof BookOpen> = {
@@ -95,36 +49,25 @@ const notificationColors: Record<NotificationType, string> = {
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { user } = useProfile()
-  const cloudProfile = useQuery(api.profiles.me, user ? {} : 'skip')
-  const updatePreferences = useMutation(updateNotificationPreferences)
+  // Server-backed and live: staff actions (streak restored, ticket replies, account changes) appear here as they happen.
+  const rows = useQuery(api.notifications.listMine, user ? { limit: 30 } : 'skip')
+  const markRead = useMutation(api.notifications.markRead)
+  const markAllRead = useMutation(api.notifications.markAllRead)
+  const dismiss = useMutation(api.notifications.dismiss)
+  const dismissAll = useMutation(api.notifications.dismissAll)
 
-  // Load persisted state once on mount
-  useEffect(() => {
-    setNotifications(buildNotifications(loadState()))
-  }, [])
-
-  // Merge remote state with any actions taken while offline. This keeps
-  // dismissals/read markers monotonic and retains localStorage as fallback.
-  useEffect(() => {
-    if (!cloudProfile?.notificationsState) return
-    const local = loadState()
-    const merged: NotifState = {
-      read: [...new Set([...cloudProfile.notificationsState.read, ...local.read])],
-      dismissed: [...new Set([...cloudProfile.notificationsState.dismissed, ...local.dismissed])],
-    }
-    saveState(merged)
-    setNotifications(buildNotifications(merged))
-  }, [cloudProfile?.notificationsState])
-
-  const persistToCloud = useCallback((state: NotifState) => {
-    if (!user) return
-    void updatePreferences({ notificationsState: state })
-      .catch(err => console.error('[mwalimu] notification state sync failed:', err))
-  }, [updatePreferences, user])
+  const notifications: Notification[] = (rows ?? []).map(r => ({
+    id: r._id,
+    type: r.type,
+    title: r.title,
+    message: r.message,
+    time: timeAgo(r.createdAt),
+    read: r.readAt !== undefined,
+    link: r.link,
+  }))
 
   const unreadCount = notifications.filter(n => !n.read).length
 
@@ -146,42 +89,11 @@ export function NotificationCenter() {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [])
 
-  const markAsRead = (id: string) => {
-    const state = loadState()
-    if (!state.read.includes(id)) {
-      state.read = [...state.read, id]
-      saveState(state)
-      persistToCloud(state)
-    }
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-  }
-
-  const markAllAsRead = () => {
-    const state = loadState()
-    const unreadIds = notifications.filter(n => !n.read).map(n => n.id)
-    state.read = [...new Set([...state.read, ...unreadIds])]
-    saveState(state)
-    persistToCloud(state)
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-  }
-
-  const deleteNotification = (id: string) => {
-    const state = loadState()
-    if (!state.dismissed.includes(id)) {
-      state.dismissed = [...state.dismissed, id]
-      saveState(state)
-      persistToCloud(state)
-    }
-    setNotifications(prev => prev.filter(n => n.id !== id))
-  }
-
-  const clearAll = () => {
-    const state = loadState()
-    state.dismissed = [...new Set([...state.dismissed, ...notifications.map(n => n.id)])]
-    saveState(state)
-    persistToCloud(state)
-    setNotifications([])
-  }
+  const quiet = (p: Promise<unknown>) => void p.catch(err => console.error('[mwalimu] notification update failed:', err))
+  const markAsRead = (id: string) => quiet(markRead({ notificationId: id as Id<'notifications'> }))
+  const markAllAsRead = () => quiet(markAllRead({}))
+  const deleteNotification = (id: string) => quiet(dismiss({ notificationId: id as Id<'notifications'> }))
+  const clearAll = () => quiet(dismissAll({}))
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id)

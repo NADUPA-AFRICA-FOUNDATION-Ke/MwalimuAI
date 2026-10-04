@@ -12,6 +12,7 @@ import { ContentProvider } from '@/context/content-context'
 import { useMutation, useQuery } from 'convex/react'
 import { useConvexAuth } from 'convex/react'
 import { api } from '@/convex/_generated/api'
+import { ActivitySync } from '@/components/activity-sync'
 
 const COLLAPSE_KEY = 'mwalimu_sidebar_collapsed'
 
@@ -137,6 +138,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <MobileBottomNav />
       <OfflineIndicator />
+      <ActivitySync />
     </div>
   )
 }

@@ -79,6 +79,29 @@ export async function syncActivityFromConvex(userId: string): Promise<void> {
   } catch {}
 }
 
+/** Fired after server activity is merged into the device cache, so screens can re-read the streak. */
+export const ACTIVITY_SYNCED_EVENT = 'mwalimu:activity-synced'
+
+/**
+ * Make this device agree with the server: add every day the server holds (including days staff restored),
+ * and drop restored days staff later reversed. Returns true when anything changed.
+ */
+export function applyServerActivity(state: { rows: { date: string; type: ActivityType }[]; revokedDates: string[] }): boolean {
+  if (typeof window === 'undefined') return false
+  const before = loadActivity()
+  const revoked = new Set(state.revokedDates)
+  const merged = before.filter(e => !revoked.has(e.date))
+  for (const row of state.rows) {
+    if (!merged.some(e => e.date === row.date && e.type === row.type)) merged.push({ date: row.date, type: row.type })
+  }
+  const changed = merged.length !== before.length || merged.some((e, i) => before[i]?.date !== e.date || before[i]?.type !== e.type)
+  if (changed) {
+    saveActivity(merged)
+    window.dispatchEvent(new Event(ACTIVITY_SYNCED_EVENT))
+  }
+  return changed
+}
+
 /**
  * Pull the user's community post count from Convex for badge calculations.
  * Called once after sign-in.

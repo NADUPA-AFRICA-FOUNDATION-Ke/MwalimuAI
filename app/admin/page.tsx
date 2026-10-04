@@ -9,6 +9,7 @@ import { Empty, fmtTime, PageHeader, ROLE_LABELS, useStaff } from '@/components/
 export default function AdminDashboard() {
   const { can, role, name, email } = useStaff()
   const reviews = useQuery(api.admin.content.pendingReviews, can('content.read') ? {} : 'skip')
+  const tickets = useQuery(api.admin.tickets.counts, can('tickets.read') ? {} : 'skip')
   const incidents = useQuery(api.admin.incidents.list, can('streaks.read') ? {} : 'skip')
   const recent = useQuery(
     api.admin.audit.list,
@@ -28,6 +29,14 @@ export default function AdminDashboard() {
             href="/admin/users"
             title="Find a user"
             body="Search by email, phone or name to restore a streak, edit a profile or suspend an account."
+          />
+        )}
+        {can('tickets.read') && (
+          <Tile
+            href="/admin/tickets"
+            title="Tickets needing a reply"
+            count={tickets?.open}
+            body="Requests raised by learners. Replies show up in their app."
           />
         )}
         {can('content.read') && (

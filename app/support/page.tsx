@@ -107,7 +107,8 @@ export default function SupportPage() {
       <section className="max-w-7xl mx-auto px-4 md:px-8 pb-20">
         <div className="grid md:grid-cols-2 gap-12">
           <Card className="p-8">
-            <h2 className="text-2xl font-bold mb-6">Submit a Support Ticket</h2>
+            <h2 className="text-2xl font-bold mb-2">Submit a Support Ticket</h2>
+            <p className="text-sm text-muted-foreground mb-6">Signed in? <Link href="/dashboard/support" className="underline text-primary">Raise a ticket from your dashboard</Link> to see replies in the app.</p>
 
             {submitted ? (
               <div className="text-center py-12">

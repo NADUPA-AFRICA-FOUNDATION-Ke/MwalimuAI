@@ -50,6 +50,34 @@ export const record = mutation({
   },
 });
 
+/**
+ * Everything the device needs to rebuild the streak from the server, including days staff restored.
+ * `revokedDates` are restored days that staff later took back and no real activity backs up.
+ */
+export const syncState = query({
+  args: {},
+  returns: v.object({
+    rows: v.array(v.object({ date: v.string(), type: activityType, restored: v.boolean() })),
+    revokedDates: v.array(v.string()),
+  }),
+  handler: async (ctx) => {
+    const profile = await requireCurrentProfile(ctx);
+    const today = eatDateKey(Date.now());
+    const rows = await ctx.db.query("activityLog")
+      .withIndex("by_user_and_date", (q) => q.eq("userId", profile._id).gte("date", addDays(today, -400)))
+      .take(3000);
+    const have = new Set(rows.map((r) => r.date));
+    const adjustments = await ctx.db.query("streakAdjustments")
+      .withIndex("by_profile", (q) => q.eq("profileId", profile._id)).order("desc").take(30);
+    const revokedDates = [...new Set(adjustments.filter((a) => a.revokedAt !== undefined).flatMap((a) => a.dates))]
+      .filter((d) => !have.has(d));
+    return {
+      rows: rows.map((r) => ({ date: r.date, type: r.type, restored: r.source === "restored" })),
+      revokedDates,
+    };
+  },
+});
+
 export const mine = listMine;
 export const recordToolUsed = mutation({
   args: { toolId: v.string() },

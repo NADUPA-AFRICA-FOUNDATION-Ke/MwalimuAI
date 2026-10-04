@@ -17,6 +17,8 @@ const PERMISSIONS = [
   "content.publish",
   "audit.read",
   "audit.read_all",
+  "tickets.read",
+  "tickets.reply",
   "staff.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
@@ -34,9 +36,11 @@ export const ROLE_PERMISSIONS: Record<StaffRole, readonly Permission[]> = {
     "profiles.edit",
     "accounts.suspend",
     "auth.send_reset_link",
+    "tickets.read",
+    "tickets.reply",
     "audit.read",
   ],
-  viewer: ["users.read", "streaks.read", "content.read", "audit.read", "audit.read_all"],
+  viewer: ["users.read", "streaks.read", "content.read", "tickets.read", "audit.read", "audit.read_all"],
 };
 
 export function roleHasPermission(role: StaffRole, permission: Permission) {

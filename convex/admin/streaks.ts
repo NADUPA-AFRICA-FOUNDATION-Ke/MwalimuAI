@@ -4,6 +4,7 @@ import { MAX_RESTORE_LOOKBACK_DAYS } from "../lib/permissions";
 import { computeStreak, eatDateKey } from "../lib/streakMath";
 import { loadActivity, missingDays, restoreDays, validateRestoreWindow } from "../lib/streakRestore";
 import { fail, notFound } from "../lib/errors";
+import { describeDates, notify } from "../lib/notices";
 
 export const get = staffQuery({
   permission: "streaks.read",
@@ -113,6 +114,24 @@ export const restore = staffMutation({
       ticketRef: args.ticketRef?.trim() || undefined,
     });
     const after = computeStreak([...rows.map((r) => r.date), ...missing], today);
+    // A ticketRef that matches one of this learner's tickets gets the outcome posted on the thread.
+    const ref = args.ticketRef?.trim().toUpperCase();
+    if (ref) {
+      const ticket = await ctx.db.query("tickets").withIndex("by_number", (q) => q.eq("number", ref)).first();
+      if (ticket && ticket.profileId === profile._id) {
+        const now = Date.now();
+        await ctx.db.insert("ticketMessages", {
+          ticketId: ticket._id,
+          author: "staff",
+          staffId: staff._id,
+          authorLabel: "Mwalimu AI Support",
+          body: `We restored your streak for ${describeDates(missing)}. Your current streak is now ${after.current} day${after.current === 1 ? "" : "s"}.`,
+          internal: false,
+          createdAt: now,
+        });
+        await ctx.db.patch(ticket._id, { status: "pending_user", lastMessageAt: now, lastMessageBy: "staff", assignedTo: ticket.assignedTo ?? staff._id });
+      }
+    }
     await log({
       action: "streak.restore",
       targetType: "profile",
@@ -147,6 +166,11 @@ export const revoke = staffMutation({
         }
     }
     await ctx.db.patch(adj._id, { revokedAt: Date.now(), revokedBy: staff._id });
+    await notify(ctx, adj.profileId, {
+      title: "A streak restoration was reversed",
+      body: `Support reversed the restoration for ${describeDates(adj.dates)}. Contact support if you have questions.`,
+      link: "/dashboard/support",
+    });
     await log({
       action: "streak.revoke_restore",
       targetType: "profile",

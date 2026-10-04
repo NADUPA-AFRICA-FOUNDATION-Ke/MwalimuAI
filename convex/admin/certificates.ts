@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { MutationCtx } from "../_generated/server";
 import { staffMutation } from "../lib/staff";
 import { fail, notFound } from "../lib/errors";
+import { notify } from "../lib/notices";
 
 const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // same alphabet as the learner app's serials
 const block = (n: number) =>
@@ -30,6 +31,11 @@ export const revoke = staffMutation({
     if (!c) throw notFound("Certificate");
     if (c.revokedAt !== undefined) throw fail("NO_CHANGES", "Already revoked");
     await ctx.db.patch(c._id, { revokedAt: Date.now(), revocationReason: args.reason.trim() });
+    await notify(ctx, c.userId, {
+      title: "A certificate was revoked",
+      body: `${c.programTitle} (${c.serial}): ${args.reason.trim()}`,
+      link: "/support",
+    });
     await log({
       action: "certificate.revoke",
       targetType: "certificate",
@@ -51,6 +57,11 @@ export const reinstate = staffMutation({
     if (!c) throw notFound("Certificate");
     if (c.revokedAt === undefined) throw fail("NO_CHANGES", "Not revoked");
     await ctx.db.patch(c._id, { revokedAt: undefined, revocationReason: undefined });
+    await notify(ctx, c.userId, {
+      title: "Your certificate was reinstated",
+      body: `${c.programTitle} (${c.serial}) is valid again.`,
+      link: `/dashboard/learning/${c.programId}/certificate`,
+    });
     await log({
       action: "certificate.reinstate",
       targetType: "certificate",
@@ -94,6 +105,11 @@ export const reissue = staffMutation({
       .withIndex("by_user_and_program", (q) => q.eq("userId", old.userId).eq("programId", old.programId))
       .unique();
     if (progress) await ctx.db.patch(progress._id, { certificateSerial: serial });
+    await notify(ctx, old.userId, {
+      title: "Your certificate was reissued",
+      body: `${old.programTitle} now has the new serial ${serial}.`,
+      link: `/dashboard/learning/${old.programId}/certificate`,
+    });
     await log({
       action: "certificate.reissue",
       targetType: "certificate",

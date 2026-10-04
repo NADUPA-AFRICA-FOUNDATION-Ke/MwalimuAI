@@ -15,6 +15,7 @@ const translations = {
     'nav.achievements':'Achievements',
     'nav.progress':    'My Progress',
     'nav.settings':    'Settings',
+    'nav.support':     'Help & support',
     // Short labels for the phone tab bar (must fit on one line at 12px)
     'nav.tabHome':     'Home',
     'nav.tabLearn':    'Learn',
@@ -133,6 +134,7 @@ const translations = {
     'nav.achievements':'Mafanikio',
     'nav.progress':    'Maendeleo Yangu',
     'nav.settings':    'Mipangilio',
+    'nav.support':     'Msaada',
     'nav.tabHome':     'Nyumbani',
     'nav.tabLearn':    'Jifunze',
     'nav.tabCoach':    'Kocha',

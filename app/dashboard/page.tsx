@@ -8,7 +8,7 @@ import {
   Sparkles, Clock, ChevronRight, Flame, Check, CheckCircle2, X,
 } from 'lucide-react'
 import Link from 'next/link'
-import { getStreak, recordActivity, getBadgeInput, computeBadges } from '@/lib/streak'
+import { getStreak, recordActivity, getBadgeInput, computeBadges, ACTIVITY_SYNCED_EVENT } from '@/lib/streak'
 import { useProfile } from '@/context/profile-context'
 
 export default function DashboardPage() {
@@ -49,6 +49,16 @@ export default function DashboardPage() {
     const params = new URLSearchParams(window.location.search)
     if (params.get('payment') === 'success') setShowPaymentSuccess(true)
   }, [syncReady, user])
+
+  // Staff can restore streak days while the learner has the app open; re-read when the server data lands.
+  useEffect(() => {
+    const refresh = () => {
+      setStreak(getStreak())
+      setBadgesEarned(computeBadges(getBadgeInput()).filter(b => b.earned).length)
+    }
+    window.addEventListener(ACTIVITY_SYNCED_EVENT, refresh)
+    return () => window.removeEventListener(ACTIVITY_SYNCED_EVENT, refresh)
+  }, [])
 
   const teacherName = profile?.name && profile.name !== 'Teacher' ? profile.name : 'Teacher'
   const hour = new Date().getHours()

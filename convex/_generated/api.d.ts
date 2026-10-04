@@ -9,6 +9,7 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as admin_activity from "../admin/activity.js";
 import type * as admin_audit from "../admin/audit.js";
 import type * as admin_certificates from "../admin/certificates.js";
 import type * as admin_content from "../admin/content.js";
@@ -18,6 +19,7 @@ import type * as admin_mfa from "../admin/mfa.js";
 import type * as admin_migrations from "../admin/migrations.js";
 import type * as admin_staff from "../admin/staff.js";
 import type * as admin_streaks from "../admin/streaks.js";
+import type * as admin_tickets from "../admin/tickets.js";
 import type * as admin_users from "../admin/users.js";
 import type * as ai from "../ai.js";
 import type * as assessments from "../assessments.js";
@@ -36,6 +38,7 @@ import type * as lib_contentRead from "../lib/contentRead.js";
 import type * as lib_contentValidation from "../lib/contentValidation.js";
 import type * as lib_eligibility from "../lib/eligibility.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_notices from "../lib/notices.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_profileSearch from "../lib/profileSearch.js";
 import type * as lib_staff from "../lib/staff.js";
@@ -51,6 +54,7 @@ import type * as preferences from "../preferences.js";
 import type * as profiles from "../profiles.js";
 import type * as progress from "../progress.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as tickets from "../tickets.js";
 import type * as tools from "../tools.js";
 
 import type {
@@ -61,6 +65,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  "admin/activity": typeof admin_activity;
   "admin/audit": typeof admin_audit;
   "admin/certificates": typeof admin_certificates;
   "admin/content": typeof admin_content;
@@ -70,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   "admin/migrations": typeof admin_migrations;
   "admin/staff": typeof admin_staff;
   "admin/streaks": typeof admin_streaks;
+  "admin/tickets": typeof admin_tickets;
   "admin/users": typeof admin_users;
   ai: typeof ai;
   assessments: typeof assessments;
@@ -88,6 +94,7 @@ declare const fullApi: ApiFromModules<{
   "lib/contentValidation": typeof lib_contentValidation;
   "lib/eligibility": typeof lib_eligibility;
   "lib/errors": typeof lib_errors;
+  "lib/notices": typeof lib_notices;
   "lib/permissions": typeof lib_permissions;
   "lib/profileSearch": typeof lib_profileSearch;
   "lib/staff": typeof lib_staff;
@@ -103,6 +110,7 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   progress: typeof progress;
   subscriptions: typeof subscriptions;
+  tickets: typeof tickets;
   tools: typeof tools;
 }>;
 

@@ -29,6 +29,7 @@ export const MORE_ROUTES: { href: string; labelKey: TranslationKey }[] = [
   { href: '/dashboard/resources', labelKey: 'nav.resources' },
   { href: '/dashboard/modules', labelKey: 'nav.modules' },
   { href: '/dashboard/assessment', labelKey: 'nav.assessment' },
+  { href: '/dashboard/support', labelKey: 'nav.support' },
   { href: '/dashboard/settings', labelKey: 'nav.settings' },
 ]
 
@@ -68,6 +69,7 @@ export function screenTitle(pathname: string, t: (k: TranslationKey) => string):
   if (more) return t(more.labelKey)
   const s = segments(pathname)
   const last = s[s.length - 1] ?? ''
+  if (s[0] === 'dashboard' && s[1] === 'support' && s.length === 3) return 'Ticket'
   if (s[0] === 'dashboard' && s[1] === 'learning') return s.length === 3 ? 'Program' : TITLES[last] ?? 'Lesson'
   return TITLES[last] ?? last.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase())
 }

@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   ScrollText,
+  LifeBuoy,
   ShieldCheck,
   Siren,
   Users,
@@ -23,6 +24,7 @@ import { ROLE_LABELS, useStaff } from './common'
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, perm: null },
   { href: '/admin/users', label: 'Users', icon: Users, perm: 'users.read' },
+  { href: '/admin/tickets', label: 'Tickets', icon: LifeBuoy, perm: 'tickets.read' },
   { href: '/admin/incidents', label: 'Incidents', icon: Siren, perm: 'streaks.read' },
   { href: '/admin/content', label: 'Content', icon: BookMarked, perm: 'content.read' },
   { href: '/admin/audit', label: 'Audit log', icon: ScrollText, perm: 'audit.read' },

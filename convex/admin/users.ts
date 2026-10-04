@@ -7,6 +7,7 @@ import { assertReason, requireStaff, staffMutation, staffQuery } from "../lib/st
 import { writeAudit } from "../lib/audit";
 import { buildSearchText, normalizePhone } from "../lib/profileSearch";
 import { fail, notFound } from "../lib/errors";
+import { notify } from "../lib/notices";
 
 const lightProfile = (p: Doc<"profiles">) => ({
   _id: p._id,
@@ -192,6 +193,11 @@ export const updateProfile = staffMutation({
     if (Object.keys(after).length === 0) throw fail("NO_CHANGES", "Nothing to change");
     const merged = { ...p, ...patch };
     await ctx.db.patch(p._id, { ...patch, searchText: buildSearchText(merged), updatedAt: Date.now() });
+    await notify(ctx, p._id, {
+      title: "Support updated your profile",
+      body: `Changed: ${Object.keys(after).map((k) => (k === "cbcLevel" ? "experience level" : k)).join(", ")}. Check Settings if something looks wrong.`,
+      link: "/dashboard/settings",
+    });
     await log({
       action: "profile.update",
       targetType: "profile",
@@ -244,6 +250,12 @@ export const setStatus = staffMutation({
         }
       }
     }
+    // Suspended learners can't sign in, so this mainly serves reactivation; it is also kept for their return.
+    await notify(ctx, p._id, {
+      title: args.status === "active" ? "Your account was reactivated" : "Your account was suspended",
+      body: args.status === "active" ? "You can use Mwalimu AI again." : `Reason: ${args.reason.trim()}. Contact support if you think this is a mistake.`,
+      link: "/support",
+    });
     await log({
       action: "account.set_status",
       targetType: "profile",

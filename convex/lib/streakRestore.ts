@@ -4,6 +4,7 @@ import { fail } from "./errors";
 import { MAX_RESTORE_LOOKBACK_DAYS } from "./permissions";
 import { addDays, dateRange, daysBetween } from "./streakMath";
 import { requireDateKey } from "./validation";
+import { describeDates, notify } from "./notices";
 
 const HISTORY_DAYS = 400;
 const OVERRIDE_MAX_DAYS = 365;
@@ -68,5 +69,10 @@ export async function restoreDays(
       metadata: { restored: true },
     });
   }
+  await notify(ctx, args.profileId, {
+    title: "Your streak was restored",
+    body: `Support restored ${describeDates(args.dates)} on your streak${args.ticketRef ? ` (ticket ${args.ticketRef})` : ""}.`,
+    link: "/dashboard",
+  });
   return adjustmentId;
 }

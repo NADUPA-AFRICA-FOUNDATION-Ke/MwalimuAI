@@ -10,6 +10,7 @@ import type { Id } from '@/convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { fmtTime, Loading, PageHeader, ReasonDialog, StatusPill, useRun, useStaff } from '@/components/admin/common'
+import { ActivityTab } from '@/components/admin/user/activity-tab'
 import { HistoryTab } from '@/components/admin/user/history-tab'
 import { LearningTab } from '@/components/admin/user/learning-tab'
 import { ProfileTab } from '@/components/admin/user/profile-tab'
@@ -66,6 +67,7 @@ export default function UserDetailPage() {
       <Tabs defaultValue="streak">
         <TabsList className="mb-4 flex w-full flex-wrap justify-start gap-1 h-auto">
           <TabsTrigger value="streak">Streak</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="learning">Learning</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
@@ -73,6 +75,9 @@ export default function UserDetailPage() {
         </TabsList>
         <TabsContent value="streak">
           <StreakTab profileId={profileId} />
+        </TabsContent>
+        <TabsContent value="activity">
+          <ActivityTab profileId={profileId} />
         </TabsContent>
         <TabsContent value="profile">
           <ProfileTab profileId={profileId} profile={profile} />
