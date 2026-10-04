@@ -19,6 +19,9 @@ const PERMISSIONS = [
   "audit.read_all",
   "tickets.read",
   "tickets.reply",
+  "analytics.read",
+  "analytics.export",
+  "analytics.rebuild",
   "staff.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
@@ -27,7 +30,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 // admin function enforces it server-side through convex/lib/staff.ts.
 export const ROLE_PERMISSIONS: Record<StaffRole, readonly Permission[]> = {
   super_admin: PERMISSIONS,
-  content_manager: ["content.read", "content.edit", "content.review", "content.publish", "audit.read"],
+  content_manager: ["content.read", "content.edit", "content.review", "content.publish", "analytics.read", "audit.read"],
   support_agent: [
     "users.read",
     "streaks.read",
@@ -38,9 +41,11 @@ export const ROLE_PERMISSIONS: Record<StaffRole, readonly Permission[]> = {
     "auth.send_reset_link",
     "tickets.read",
     "tickets.reply",
+    "analytics.read",
+    "analytics.export",
     "audit.read",
   ],
-  viewer: ["users.read", "streaks.read", "content.read", "tickets.read", "audit.read", "audit.read_all"],
+  viewer: ["users.read", "streaks.read", "content.read", "tickets.read", "analytics.read", "analytics.export", "audit.read", "audit.read_all"],
 };
 
 export function roleHasPermission(role: StaffRole, permission: Permission) {

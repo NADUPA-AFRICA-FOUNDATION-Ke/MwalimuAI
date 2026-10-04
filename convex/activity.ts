@@ -4,6 +4,7 @@ import { requireCurrentProfile } from "./lib/auth";
 import { boundedLimit, requireDateKey } from "./lib/validation";
 import { addDays, eatDateKey } from "./lib/streakMath";
 import { fail } from "./lib/errors";
+import { bump } from "./lib/analytics";
 
 const activityType = v.union(v.literal("lesson"), v.literal("tool"), v.literal("journal"), v.literal("community"), v.literal("login"), v.literal("assessment"));
 const activityDoc = v.object({
@@ -46,6 +47,7 @@ export const record = mutation({
       if (args.metadata !== undefined) await ctx.db.patch(existing._id, { metadata: args.metadata });
       return existing._id;
     }
+    await bump(ctx, `d:${date}:${args.type}`);
     return await ctx.db.insert("activityLog", { userId: profile._id, date, type: args.type, createdAt: Date.now(), ...(args.metadata !== undefined ? { metadata: args.metadata } : {}) });
   },
 });

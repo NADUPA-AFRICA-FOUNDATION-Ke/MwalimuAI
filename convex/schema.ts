@@ -156,7 +156,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_user_and_program", ["userId", "programId"]),
+    .index("by_user_and_program", ["userId", "programId"])
+    .index("by_program", ["programId", "updatedAt"]),
 
   userProgress: defineTable({
     userId: v.id("profiles"),
@@ -611,6 +612,14 @@ export default defineSchema({
     internal: v.boolean(), // staff-only note, never returned to the learner
     createdAt: v.number(),
   }).index("by_ticket", ["ticketId", "createdAt"]),
+
+  // Pre-aggregated learning analytics, so dashboards never scan learner tables. Each counter is split over a few
+  // shard rows so concurrent learners don't contend on one document; readers sum the shards.
+  analyticsCounters: defineTable({
+    key: v.string(),
+    shard: v.number(),
+    value: v.number(),
+  }).index("by_key_and_shard", ["key", "shard"]),
 
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;

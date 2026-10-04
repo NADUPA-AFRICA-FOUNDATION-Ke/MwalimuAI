@@ -10,6 +10,7 @@
 
 import type * as activity from "../activity.js";
 import type * as admin_activity from "../admin/activity.js";
+import type * as admin_analytics from "../admin/analytics.js";
 import type * as admin_audit from "../admin/audit.js";
 import type * as admin_certificates from "../admin/certificates.js";
 import type * as admin_content from "../admin/content.js";
@@ -32,6 +33,7 @@ import type * as goals from "../goals.js";
 import type * as http from "../http.js";
 import type * as journal from "../journal.js";
 import type * as learningProgress from "../learningProgress.js";
+import type * as lib_analytics from "../lib/analytics.js";
 import type * as lib_audit from "../lib/audit.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_contentRead from "../lib/contentRead.js";
@@ -66,6 +68,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   "admin/activity": typeof admin_activity;
+  "admin/analytics": typeof admin_analytics;
   "admin/audit": typeof admin_audit;
   "admin/certificates": typeof admin_certificates;
   "admin/content": typeof admin_content;
@@ -88,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   journal: typeof journal;
   learningProgress: typeof learningProgress;
+  "lib/analytics": typeof lib_analytics;
   "lib/audit": typeof lib_audit;
   "lib/auth": typeof lib_auth;
   "lib/contentRead": typeof lib_contentRead;

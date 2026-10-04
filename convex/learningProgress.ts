@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { requireCurrentProfile } from "./lib/auth";
 import { isProgramCompleteServer, loadProgramDef, rescoreAssessment, SERIAL_PATTERN } from "./lib/eligibility";
 import { fail } from "./lib/errors";
+import { applyProgressDelta } from "./lib/analytics";
 
 export const mine = query({
   args: {},
@@ -53,6 +54,7 @@ export const save = mutation({
       ...(serial ? { certificateSerial: serial } : {}),
       cohortJoined: progress?.cohortJoined === true, updatedAt: Date.now(),
     };
+    await applyProgressDelta(ctx, programId, existing, value, existing?._creationTime ?? Date.now());
     if (existing) { await ctx.db.patch(existing._id, value); return existing._id; }
     return await ctx.db.insert("learningProgress", value);
   },
