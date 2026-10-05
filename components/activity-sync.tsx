@@ -3,7 +3,8 @@
 import { Component, useEffect, type ReactNode } from 'react'
 import { useConvexAuth, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
-import { applyServerActivity } from '@/lib/streak'
+import { applyServerActivity, flushPendingActivity } from '@/lib/streak'
+import { flushPendingProgress } from '@/lib/learning-progress'
 
 /**
  * Keeps this device's streak in step with the server. The query is live, so a streak restored by support
@@ -15,6 +16,13 @@ function Inner() {
   useEffect(() => {
     if (state) applyServerActivity(state)
   }, [state])
+  // Work done offline is sent as soon as the connection is back (and on the next visit if the tab was closed).
+  useEffect(() => {
+    const flush = () => { flushPendingActivity(); flushPendingProgress() }
+    flush()
+    window.addEventListener('online', flush)
+    return () => window.removeEventListener('online', flush)
+  }, [])
   return null
 }
 

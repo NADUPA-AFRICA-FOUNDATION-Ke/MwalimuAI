@@ -20,6 +20,9 @@ export default function OfflinePage() {
       </p>
       <div className="mt-6 flex w-full max-w-xs flex-col gap-3">
         <OfflineRetry />
+        <Link href="/offline/lessons" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary/90">
+          Read my downloaded lessons
+        </Link>
         <Link href="/dashboard" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-5 font-semibold hover:bg-secondary">
           Go to my dashboard
         </Link>
