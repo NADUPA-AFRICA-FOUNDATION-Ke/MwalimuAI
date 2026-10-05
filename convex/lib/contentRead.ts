@@ -36,12 +36,17 @@ const children = (ctx: Ctx, parent: Doc<"cmsItems">) =>
 const dataOf = <T>(version: Doc<"cmsVersions">) => version.data as T;
 
 /** Item tree + chosen versions (published, or draft over published) → the learner's Program shape. */
+/** Use the Kiswahili copy of a field when there is one, otherwise keep the English. */
+const pick = <T>(sw: T | undefined, en: T): T => (typeof sw === "string" ? (sw.trim() ? sw : en) : Array.isArray(sw) ? (sw.length ? sw : en) : (sw ?? en));
+
 export async function assembleProgram(
   ctx: Ctx,
   program: Doc<"cmsItems">,
   mode: Mode,
   includeArchived = false,
+  lang: "en" | "sw" = "en",
 ): Promise<ProgramShape | null> {
+  const sw = lang === "sw";
   const visible = (item: Doc<"cmsItems">) => item.archivedAt === undefined || includeArchived;
   const programVersion = await chosenVersion(ctx, program, mode);
   if (!programVersion || !visible(program)) return null;
@@ -53,20 +58,48 @@ export async function assembleProgram(
     if (!version) continue;
     if (child.kind === "quiz") {
       const quiz = dataOf<QuizData>(version);
-      quizzes[quiz.kind] = quiz.questions;
+      quizzes[quiz.kind] = sw && quiz.sw
+        ? quiz.questions.map((q, i) => {
+            const t = quiz.sw!.questions[i];
+            return t && t.question.trim() && t.options.every((o) => o.trim()) ? { ...q, question: t.question, options: t.options, explanation: pick(t.explanation, q.explanation) } : q;
+          })
+        : quiz.questions;
     } else if (child.kind === "module") {
-      const { orderIndex: _o, tags: _t, ...module } = dataOf<ModuleData>(version);
+      const { orderIndex: _o, tags: _t, sw: moduleSw, ...moduleEn } = dataOf<ModuleData>(version);
+      const module = sw && moduleSw ? { ...moduleEn, title: pick(moduleSw.title, moduleEn.title), description: pick(moduleSw.description, moduleEn.description) } : moduleEn;
       const lessons: ProgramShape["modules"][number]["lessons"] = [];
       for (const lessonItem of (await children(ctx, child)).filter((i) => i.kind === "lesson" && visible(i))) {
         const lessonVersion = await chosenVersion(ctx, lessonItem, mode);
         if (!lessonVersion) continue;
-        const { orderIndex: _lo, tags: _lt, ...lesson } = dataOf<LessonData>(lessonVersion);
+        const { orderIndex: _lo, tags: _lt, sw: lessonSw, ...lessonEn } = dataOf<LessonData>(lessonVersion);
+        const lesson = sw && lessonSw
+          ? {
+              ...lessonEn,
+              title: pick(lessonSw.title, lessonEn.title),
+              videoTitle: pick(lessonSw.videoTitle, lessonEn.videoTitle),
+              videoPoints: pick(lessonSw.videoPoints, lessonEn.videoPoints),
+              reading: pick(lessonSw.reading, lessonEn.reading),
+              reflectionPrompt: pick(lessonSw.reflectionPrompt, lessonEn.reflectionPrompt),
+              reflectionPlaceholder: pick(lessonSw.reflectionPlaceholder, lessonEn.reflectionPlaceholder),
+            }
+          : lessonEn;
         lessons.push({ id: lessonItem.key, ...lesson });
       }
       modules.push({ id: child.key, ...module, lessons });
     }
   }
-  const { orderIndex: _o, ...data } = dataOf<ProgramData>(programVersion);
+  const { orderIndex: _o, sw: programSw, ...dataEn } = dataOf<ProgramData>(programVersion);
+  const data = sw && programSw
+    ? {
+        ...dataEn,
+        title: pick(programSw.title, dataEn.title),
+        shortTitle: pick(programSw.shortTitle, dataEn.shortTitle),
+        tagline: pick(programSw.tagline, dataEn.tagline),
+        description: pick(programSw.description, dataEn.description),
+        assignment: programSw.assignment ? { title: pick(programSw.assignment.title, dataEn.assignment.title), context: pick(programSw.assignment.context, dataEn.assignment.context), task: pick(programSw.assignment.task, dataEn.assignment.task), hints: pick(programSw.assignment.hints, dataEn.assignment.hints), rubric: pick(programSw.assignment.rubric, dataEn.assignment.rubric) } : dataEn.assignment,
+        certificate: programSw.certificate ? { subtitle: pick(programSw.certificate.subtitle, dataEn.certificate.subtitle), skills: pick(programSw.certificate.skills, dataEn.certificate.skills) } : dataEn.certificate,
+      }
+    : dataEn;
   return {
     ...data,
     id: program.key,

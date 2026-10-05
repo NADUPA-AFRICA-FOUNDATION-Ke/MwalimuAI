@@ -224,3 +224,47 @@ describe("version rollback", () => {
     expect((await t.query(api.content.blogPost, { slug: "rollback-me" }))?.title).toBe("Version one");
   });
 });
+
+describe("Kiswahili content", () => {
+  it("saves translations on a draft, reports status, and serves Kiswahili with English fallback", async () => {
+    const t = newTest();
+    const { author, reviewer, programKey } = await scaffold(t);
+    await fillIn(t, author, programKey);
+    const items = await author.as.query(api.admin.content.itemsForProgram, { programKey });
+    expect(items.find((i) => i.kind === "lesson")!.sw).toBe("none");
+
+    // Translate the program, one module, one lesson and the post test. Everything else stays English.
+    const sw: Record<string, unknown> = {
+      program: { title: "Madarasa Jumuishi", shortTitle: "Jumuishi", tagline: "Fundisha wote", description: "Jinsi ya kufundisha kila mwanafunzi" },
+      module: { title: "Sehemu ya kwanza", description: "Utangulizi" },
+      lesson: { title: "Somo la kwanza", videoTitle: "", videoPoints: ["Hoja ya kwanza"], reading: "## Karibu\nHili ni somo la Kiswahili.", reflectionPrompt: "Utajaribu nini?", reflectionPlaceholder: "" },
+      quiz: { questions: [{ question: "Lipi ni sahihi?", options: ["a", "b", "c", "d"], explanation: "b" }] },
+    };
+    const pick = (kind: string, key?: string) => items.find((i) => i.kind === kind && (!key || i.key === key))!;
+    for (const [kind, key] of [["program"], ["module", "m1"], ["lesson", "l1"], ["quiz", "post"]] as const) {
+      const item = pick(kind, key);
+      const d = await author.as.query(api.admin.content.getItem, { itemId: item._id });
+      await author.as.mutation(api.admin.content.saveDraft, { itemId: item._id, data: { ...(d.draft!.data as object), sw: sw[kind] } });
+    }
+    const after = await author.as.query(api.admin.content.itemsForProgram, { programKey });
+    expect(after.find((i) => i.kind === "program")!.sw).toBe("complete");
+    expect(after.find((i) => i.kind === "module" && i.key === "m2")!.sw).toBe("none");
+
+    await author.as.mutation(api.admin.contentBuilder.submitProgram, { programKey });
+    await reviewer.as.mutation(api.admin.contentBuilder.reviewProgram, { programKey, decision: "approve", reason: REASON });
+    await reviewer.as.mutation(api.admin.contentBuilder.publishProgram, { programKey, reason: REASON });
+
+    const en = (await t.query(api.content.publishedPrograms, {})).programs.find((p) => p.id === programKey)!;
+    const sws = (await t.query(api.content.publishedPrograms, { lang: "sw" })).programs.find((p) => p.id === programKey)!;
+    expect(en.title).toBe("Inclusive Classrooms");
+    expect(sws.title).toBe("Madarasa Jumuishi");
+    expect(sws.modules[0].title).toBe("Sehemu ya kwanza");
+    expect(sws.modules[0].lessons[0]).toMatchObject({ title: "Somo la kwanza", reading: expect.stringContaining("Kiswahili") });
+    // Untranslated items fall back to English, so nothing is ever blank.
+    expect(sws.modules[1].title).toBe(en.modules[1].title);
+    expect(sws.modules[0].lessons[1].reading).toBe(en.modules[0].lessons[1].reading);
+    // The translated quiz keeps the same correct answer position.
+    expect(sws.postAssessment[0]).toMatchObject({ question: "Lipi ni sahihi?", correct: en.postAssessment[0].correct });
+    expect(sws.preAssessment[0].question).toBe(en.preAssessment[0].question);
+  });
+});

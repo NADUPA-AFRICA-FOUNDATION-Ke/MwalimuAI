@@ -79,6 +79,29 @@ export const postSchema = z.object({
   readTime: z.string().max(30).default(''),
 })
 
+export const swLessonSchema = z.object({
+  title: z.string().min(1).max(200),
+  videoTitle: z.string().max(300).default(''),
+  videoPoints: z.array(z.string().max(500)).max(20).default([]),
+  reading: z.string().min(1).max(60000),
+  reflectionPrompt: z.string().max(1000).default(''),
+  reflectionPlaceholder: z.string().max(500).default(''),
+})
+export const swModuleSchema = z.object({ title: z.string().min(1).max(200), description: z.string().max(2000).default('') })
+export const swQuizSchema = z.object({
+  questions: z.array(z.object({ question: z.string().min(1).max(1000), options: z.array(z.string().min(1).max(500)).length(4), explanation: z.string().max(2000).default('') })).min(1).max(50),
+})
+export const swProgramSchema = z.object({
+  title: z.string().min(1).max(200),
+  shortTitle: z.string().max(100).default(''),
+  tagline: z.string().max(300).default(''),
+  description: z.string().max(3000).default(''),
+  assignment: z.object({ title: z.string().max(300).default(''), context: z.string().max(5000).default(''), task: z.string().max(5000).default(''), hints: z.array(z.string().max(500)).max(20).default([]), rubric: z.array(z.string().max(500)).max(20).default([]) }).optional(),
+  certificate: z.object({ subtitle: z.string().max(300).default(''), skills: z.array(z.string().max(200)).max(12).default([]) }).optional(),
+})
+export const TRANSLATE_SCHEMAS = { lesson: swLessonSchema, module: swModuleSchema, quiz: swQuizSchema, program: swProgramSchema } as const
+export type TranslateKind = keyof typeof TRANSLATE_SCHEMAS
+
 export const improveSchema = z.object({ text: z.string().min(1).max(60000) })
 
 export const reviewSchema = z.object({
@@ -183,6 +206,25 @@ ${trim(text, 30000)}
 """
 
 JSON shape: {"text":string}`
+}
+
+const SHAPES: Record<TranslateKind, string> = {
+  lesson: '{"title":string,"videoTitle":string,"videoPoints":string[],"reading":string,"reflectionPrompt":string,"reflectionPlaceholder":string}',
+  module: '{"title":string,"description":string}',
+  quiz: '{"questions":[{"question":string,"options":[string,string,string,string],"explanation":string}]}',
+  program: '{"title":string,"shortTitle":string,"tagline":string,"description":string,"assignment":{"title":string,"context":string,"task":string,"hints":string[],"rubric":string[]},"certificate":{"subtitle":string,"skills":string[]}}',
+}
+
+/** English content in, the same fields in clear, natural Kiswahili out. */
+export function translatePrompt(kind: TranslateKind, source: unknown) {
+  return `Translate this ${kind} for Kenyan teachers into clear, natural Kiswahili (Kiswahili sanifu, friendly and professional, the way a good teacher trainer in Nairobi would write).
+
+Rules: keep the Markdown formatting exactly (headings, lists, bold, tables, links). Keep the same meaning, order and number of items. Keep established English terms teachers use (CBC, KICD, STEM, AI) and proper names as they are; where a Kiswahili term is more natural, use it and put the English in brackets the first time. For quiz questions, keep exactly 4 options in the same order so the correct answer position does not change. Do not add, remove or explain anything.
+
+SOURCE (JSON):
+${JSON.stringify(source).slice(0, 40000)}
+
+Return the translation as JSON with exactly these fields: ${SHAPES[kind]}`
 }
 
 export function reviewPrompt(kind: string, content: string) {

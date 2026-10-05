@@ -19,6 +19,18 @@ export type Track = "core" | "stem" | "languages" | "humanities" | "leadership" 
 
 // The shape stored in cmsVersions.data for each kind (validated on every write).
 type Common = { orderIndex: number; tags: Tags };
+// Kiswahili copies. Optional everywhere: the learner sees English wherever a translation is missing.
+export type LessonSw = { title: string; videoTitle: string; videoPoints: string[]; reading: string; reflectionPrompt: string; reflectionPlaceholder: string };
+export type ModuleSw = { title: string; description: string };
+export type QuizSw = { questions: { question: string; options: [string, string, string, string]; explanation: string }[] };
+export type ProgramSw = {
+  title: string;
+  shortTitle: string;
+  tagline: string;
+  description: string;
+  assignment?: { title: string; context: string; task: string; hints: string[]; rubric: string[] };
+  certificate?: { subtitle: string; skills: string[] };
+};
 export type LessonData = Common & {
   title: string;
   duration: string;
@@ -27,9 +39,10 @@ export type LessonData = Common & {
   reading: string;
   reflectionPrompt: string;
   reflectionPlaceholder: string;
+  sw?: LessonSw;
 };
-export type ModuleData = Common & { title: string; description: string };
-export type QuizData = Common & { kind: "pre" | "post"; questions: QuizQuestion[] };
+export type ModuleData = Common & { title: string; description: string; sw?: ModuleSw };
+export type QuizData = Common & { kind: "pre" | "post"; questions: QuizQuestion[]; sw?: QuizSw };
 export type ProgramData = Common & {
   title: string;
   shortTitle: string;
@@ -44,6 +57,7 @@ export type ProgramData = Common & {
   shortCourse: boolean;
   assignment: { title: string; context: string; task: string; hints: string[]; rubric: string[] };
   certificate: { subtitle: string; skills: string[] };
+  sw?: ProgramSw;
 };
 /** The needs assessment: sections of questions, plus rules that turn answers into recommended learning paths. */
 export type NeedsQuestion = {
@@ -183,6 +197,7 @@ function build(kind: ContentKind, raw: Record<string, any>, lenient: boolean): I
       reading: str(raw.reading, "reading", 60_000),
       reflectionPrompt: str(raw.reflectionPrompt, "reflectionPrompt", 1000, true),
       reflectionPlaceholder: str(raw.reflectionPlaceholder ?? "", "reflectionPlaceholder", 500, true),
+      ...(swLesson(raw.sw) ? { sw: swLesson(raw.sw) } : {}),
       orderIndex: order(raw.orderIndex),
       tags,
     };
@@ -191,14 +206,18 @@ function build(kind: ContentKind, raw: Record<string, any>, lenient: boolean): I
     return {
       title: str(raw.title, "title", 200),
       description: str(raw.description, "description", 2000, true),
+      ...(swModule(raw.sw) ? { sw: swModule(raw.sw) } : {}),
       orderIndex: order(raw.orderIndex),
       tags,
     };
   if (kind === "quiz") {
     if (raw.kind !== "pre" && raw.kind !== "post") throw bad("Quiz kind must be pre or post");
+    const qs = questions(raw.questions, "Quiz", lenient);
+    const sw = swQuiz(raw.sw, qs.length);
     return {
       kind: raw.kind,
-      questions: questions(raw.questions, "Quiz", lenient),
+      questions: qs,
+      ...(sw ? { sw } : {}),
       orderIndex: order(raw.orderIndex ?? 0),
       tags,
     };
@@ -235,6 +254,7 @@ function build(kind: ContentKind, raw: Record<string, any>, lenient: boolean): I
       subtitle: str(c.subtitle, "certificate subtitle", 300, lenient),
       skills: strList(c.skills ?? [], "certificate skills", 12, 200),
     },
+    ...(swProgram(raw.sw) ? { sw: swProgram(raw.sw) } : {}),
     orderIndex: order(raw.orderIndex),
     tags,
   };
@@ -253,6 +273,46 @@ export function assertPublishable(kind: ContentKind, data: ItemData[ContentKind]
     if (!p.certificate.subtitle.trim())
       throw bad("Add the certificate subtitle before publishing an available program");
   }
+}
+
+
+/** Kiswahili copy of a piece of content. Lenient: blanks are allowed (a half-finished translation is still saved). */
+function swLesson(v: any): LessonSw | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  return {
+    title: str(v.title ?? "", "Kiswahili title", 200, true),
+    videoTitle: str(v.videoTitle ?? "", "Kiswahili video title", 300, true),
+    videoPoints: strListLenient(v.videoPoints ?? [], "Kiswahili key points", 20, 500, true),
+    reading: str(v.reading ?? "", "Kiswahili reading", 60_000, true),
+    reflectionPrompt: str(v.reflectionPrompt ?? "", "Kiswahili reflection", 1000, true),
+    reflectionPlaceholder: str(v.reflectionPlaceholder ?? "", "Kiswahili reflection hint", 500, true),
+  };
+}
+function swModule(v: any): ModuleSw | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  return { title: str(v.title ?? "", "Kiswahili title", 200, true), description: str(v.description ?? "", "Kiswahili description", 2000, true) };
+}
+function swQuiz(v: any, count: number): QuizSw | undefined {
+  if (!v || typeof v !== "object" || !Array.isArray(v.questions)) return undefined;
+  return {
+    questions: v.questions.slice(0, count).map((q: any, i: number) => {
+      const options = strListLenient(q?.options ?? [], `Kiswahili question ${i + 1} options`, 4, 500, true);
+      while (options.length < 4) options.push("");
+      return { question: str(q?.question ?? "", `Kiswahili question ${i + 1}`, 1000, true), options: options as [string, string, string, string], explanation: str(q?.explanation ?? "", `Kiswahili explanation ${i + 1}`, 2000, true) };
+    }),
+  };
+}
+function swProgram(v: any): ProgramSw | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  const a = v.assignment, c = v.certificate;
+  return {
+    title: str(v.title ?? "", "Kiswahili title", 200, true),
+    shortTitle: str(v.shortTitle ?? "", "Kiswahili short title", 100, true),
+    tagline: str(v.tagline ?? "", "Kiswahili tagline", 300, true),
+    description: str(v.description ?? "", "Kiswahili description", 3000, true),
+    ...(a && typeof a === "object" ? { assignment: { title: str(a.title ?? "", "Kiswahili assignment title", 300, true), context: str(a.context ?? "", "Kiswahili assignment context", 5000, true), task: str(a.task ?? "", "Kiswahili assignment task", 5000, true), hints: strListLenient(a.hints ?? [], "Kiswahili hints", 20, 500, true), rubric: strListLenient(a.rubric ?? [], "Kiswahili rubric", 20, 500, true) } } : {}),
+    ...(c && typeof c === "object" ? { certificate: { subtitle: str(c.subtitle ?? "", "Kiswahili certificate subtitle", 300, true), skills: strListLenient(c.skills ?? [], "Kiswahili skills", 12, 200, true) } } : {}),
+  };
 }
 
 const QUESTION_TYPES = ["scale", "radio", "multiple", "knowledge"] as const;

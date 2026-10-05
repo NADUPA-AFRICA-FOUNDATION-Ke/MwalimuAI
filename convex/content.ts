@@ -12,8 +12,8 @@ import { getCurrentProfile } from "./lib/auth";
  * started them can keep going.
  */
 export const publishedPrograms = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { lang: v.optional(v.union(v.literal("en"), v.literal("sw"))) },
+  handler: async (ctx, { lang }) => {
     const items = await ctx.db
       .query("cmsItems")
       .withIndex("by_kind_and_program", (q) => q.eq("kind", "program"))
@@ -22,7 +22,7 @@ export const publishedPrograms = query({
       archivedPrograms: ProgramShape[] = [];
     for (const item of items) {
       if (!item.publishedVersionId) continue;
-      const assembled = await assembleProgram(ctx, item, "published", item.archivedAt !== undefined);
+      const assembled = await assembleProgram(ctx, item, "published", item.archivedAt !== undefined, lang ?? "en");
       // "Launching soon" placeholders have no lessons yet but still belong in the catalogue.
       if (!assembled || (assembled.lessons === 0 && !assembled.launchingSoon)) continue;
       (item.archivedAt !== undefined ? archivedPrograms : programs).push(assembled);

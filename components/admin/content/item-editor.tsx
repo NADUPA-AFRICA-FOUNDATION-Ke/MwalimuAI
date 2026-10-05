@@ -12,6 +12,7 @@ import { ModuleForm, LessonForm, ProgramForm, QuizForm, type Data } from '@/comp
 import { AssessmentForm } from '@/components/admin/content/assessment-form'
 import { LessonAssist, QuizAssist } from '@/components/admin/content/ai-assist'
 import { FaqForm, PostForm, ResourcesForm } from '@/components/admin/content/page-forms'
+import { SwEditor } from '@/components/admin/content/sw-editor'
 import { TagPicker } from '@/components/admin/content/tag-picker'
 import {
   Empty,
@@ -60,6 +61,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
   )
   const draftId = detail?.draft?._id
   const [restoreId, setRestoreId] = useState<Id<'cmsVersions'> | null>(null)
+  const [lang, setLang] = useState<'en' | 'sw'>('en')
   const items = useQuery(api.admin.content.itemsForProgram, detail ? { programKey: detail.item.programKey } : 'skip')
 
   // Reset the form when the server copy changes (and there is nothing unsaved).
@@ -166,6 +168,18 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
       )}
 
       <div className="space-y-6">
+        {['lesson', 'module', 'quiz', 'program'].includes(item.kind) && (
+          <div role="tablist" aria-label="Language" className="flex gap-2">
+            {([['en', 'English'], ['sw', 'Kiswahili']] as const).map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={lang === id} onClick={() => setLang(id)} className={`min-h-10 rounded-full border px-4 text-sm ${lang === id ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}>{label}</button>
+            ))}
+          </div>
+        )}
+        {lang === 'sw' && ['lesson', 'module', 'quiz', 'program'].includes(item.kind) ? (
+          <fieldset disabled={!canEdit} className="space-y-6 rounded-lg border bg-background p-4 disabled:opacity-90">
+            <SwEditor kind={item.kind as 'lesson' | 'module' | 'quiz' | 'program'} data={data} set={set} canEdit={canEdit} />
+          </fieldset>
+        ) : (
         <fieldset disabled={!canEdit} className="space-y-6 rounded-lg border bg-background p-4 disabled:opacity-90">
           {item.kind === 'program' && <ProgramForm data={data} set={set} />}
           {item.kind === 'module' && <ModuleForm data={data} set={set} />}
@@ -190,6 +204,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
           )}
           {!ROOT_DOCS.includes(item.kind) && <TagPicker tags={data.tags} tax={tax} onChange={(tags) => set({ tags })} />}
         </fieldset>
+        )}
 
         <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t bg-background/95 p-3 backdrop-blur md:static md:mx-0 md:rounded-lg md:border">
           {canEdit && (

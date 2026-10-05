@@ -26,6 +26,21 @@ async function item(ctx: { db: MutationCtx["db"] }, id: Id<"cmsItems">) {
   return doc;
 }
 
+/** "none" no translation, "partial" some fields still blank, "complete", or null when this kind is not translated. */
+function swStatus(kind: Doc<"cmsItems">["kind"], data: unknown): "none" | "partial" | "complete" | null {
+  if (!data || typeof data !== "object") return null;
+  const d = data as Record<string, any>;
+  const filled = (...vals: unknown[]) => vals.map((x) => (Array.isArray(x) ? x.length > 0 && x.every((y) => typeof y !== "string" || y.trim()) : typeof x === "string" && x.trim().length > 0));
+  let flags: boolean[];
+  if (kind === "lesson") flags = d.sw ? filled(d.sw.title, d.sw.reading) : [];
+  else if (kind === "module") flags = d.sw ? filled(d.sw.title) : [];
+  else if (kind === "program") flags = d.sw ? filled(d.sw.title, d.sw.description) : [];
+  else if (kind === "quiz") flags = d.sw ? [Array.isArray(d.sw.questions) && d.sw.questions.length >= (d.questions?.length ?? 0) && d.sw.questions.every((q: any) => q.question?.trim() && q.options?.every((o: string) => o?.trim()))] : [];
+  else return null;
+  if (!d.sw || flags.length === 0) return "none";
+  return flags.every(Boolean) ? "complete" : "partial";
+}
+
 const summarize = (v: Doc<"cmsVersions"> | null) =>
   v && { _id: v._id, version: v.version, status: v.status, createdAt: v.createdAt, publishedAt: v.publishedAt };
 
@@ -92,6 +107,8 @@ export const itemsForProgram = staffQuery({
           published: summarize(published),
           // Why the working copy (draft, else live) cannot be submitted or published yet.
           problem: i.archivedAt !== undefined ? null : readinessProblem(i.kind, (draft ?? published)?.data),
+          // Whether a Kiswahili copy exists (filled in) on the working copy. Only some kinds have one.
+          sw: swStatus(i.kind, (draft ?? published)?.data),
           cbcLevels: i.cbcLevels,
           subjects: i.subjects,
           counties: i.counties,
