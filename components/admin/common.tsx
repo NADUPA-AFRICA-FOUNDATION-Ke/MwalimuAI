@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-type StaffInfo = { email: string; name?: string; role: string; permissions: string[] }
+type StaffInfo = { email: string; name?: string; role: string; permissions: string[]; backupCodesLeft?: number }
 const StaffContext = createContext<StaffInfo>({ email: '', role: '', permissions: [] })
 export const StaffProvider = ({ staff, children }: { staff: StaffInfo; children: ReactNode }) => (
   <StaffContext.Provider value={staff}>{children}</StaffContext.Provider>

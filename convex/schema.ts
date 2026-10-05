@@ -473,6 +473,10 @@ export default defineSchema({
     mfaFailedAttempts: v.optional(v.number()),
     mfaLockedUntil: v.optional(v.number()),
     lastTotpStep: v.optional(v.number()),
+    // Single-use recovery codes (salted hashes), for a lost authenticator. Shown once when created.
+    backupCodes: v.optional(v.array(v.string())),
+    // Set when someone is invited. An invite that is never used (no 2FA set up) stops working after 14 days.
+    invitedAt: v.optional(v.number()),
     updatedAt: v.number(),
   }).index("by_email", ["email"]),
 

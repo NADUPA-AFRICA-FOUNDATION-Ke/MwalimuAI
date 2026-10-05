@@ -49,6 +49,7 @@ import type * as learningProgress from "../learningProgress.js";
 import type * as lib_analytics from "../lib/analytics.js";
 import type * as lib_audit from "../lib/audit.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_backupCodes from "../lib/backupCodes.js";
 import type * as lib_contentRead from "../lib/contentRead.js";
 import type * as lib_contentValidation from "../lib/contentValidation.js";
 import type * as lib_contentWrite from "../lib/contentWrite.js";
@@ -126,6 +127,7 @@ declare const fullApi: ApiFromModules<{
   "lib/analytics": typeof lib_analytics;
   "lib/audit": typeof lib_audit;
   "lib/auth": typeof lib_auth;
+  "lib/backupCodes": typeof lib_backupCodes;
   "lib/contentRead": typeof lib_contentRead;
   "lib/contentValidation": typeof lib_contentValidation;
   "lib/contentWrite": typeof lib_contentWrite;

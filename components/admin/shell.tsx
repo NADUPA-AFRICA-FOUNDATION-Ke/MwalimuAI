@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ROLE_LABELS, useStaff } from './common'
+import { BackupCodes } from './backup-codes'
 
 /** The signed-in layout: sidebar (drawer on phones) filtered by what the role may open. */
 const NAV = [
@@ -111,6 +112,7 @@ function Account({ email, role, onSignOut }: { email: string; role: string; onSi
         <div className="truncate font-medium">{email}</div>
         <div className="text-muted-foreground">{ROLE_LABELS[role] ?? role}</div>
       </div>
+      <BackupCodes />
       <Button variant="outline" size="sm" className="w-full" onClick={onSignOut}>
         <LogOut className="mr-2 h-3.5 w-3.5" />
         Sign out

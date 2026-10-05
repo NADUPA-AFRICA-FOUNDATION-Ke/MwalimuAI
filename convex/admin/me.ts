@@ -24,6 +24,7 @@ export const me = query({
       name: staff.name,
       role: staff.role,
       permissions: mfaVerified ? [...ROLE_PERMISSIONS[staff.role]] : [],
+      backupCodesLeft: mfaVerified ? (staff.backupCodes?.length ?? 0) : 0,
     };
   },
 });
