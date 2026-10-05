@@ -192,8 +192,8 @@ export const pendingReviews = staffQuery({
 /** Renders the program as a learner would see it. mode=draft overlays unpublished drafts on the published tree. */
 export const preview = staffQuery({
   permission: "content.read",
-  args: { programKey: v.string(), mode: v.union(v.literal("draft"), v.literal("published")) },
-  handler: async (ctx, { programKey, mode }) => {
+  args: { programKey: v.string(), mode: v.union(v.literal("draft"), v.literal("published")), lang: v.optional(v.union(v.literal("en"), v.literal("sw"))) },
+  handler: async (ctx, { programKey, mode, lang }) => {
     const p = await ctx.db
       .query("cmsItems")
       .withIndex("by_program_and_key", (q) =>
@@ -201,7 +201,7 @@ export const preview = staffQuery({
       )
       .first();
     if (!p) throw fail("NOT_FOUND", "Program not found");
-    return await assembleProgram(ctx, p, mode, true);
+    return await assembleProgram(ctx, p, mode, true, lang ?? "en");
   },
 });
 

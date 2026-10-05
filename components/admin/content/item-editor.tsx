@@ -124,6 +124,13 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
                 {status.replace('_', ' ')}
               </Pill>
             )}
+            {item.kind === 'lesson' && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/admin/content/${programKey}/preview?mode=draft&device=phone&item=${encodeURIComponent(`${items?.find((i) => i._id === item.parentId)?.key ?? ''}/${item.key}`)}`} target="_blank">
+                  Preview on a phone
+                </Link>
+              </Button>
+            )}
             {!embedded && !ROOT_DOCS.includes(item.kind) && (
               <Button asChild variant="outline" size="sm">
                 <Link href={`/admin/content/${programKey}/preview?mode=draft`}>
