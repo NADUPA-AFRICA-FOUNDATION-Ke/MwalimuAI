@@ -1,0 +1,84 @@
+name: Verify and deploy
+
+# Every push to main is checked, then deployed: Convex backend first, then the website, so the site never
+# calls backend functions that are not there yet. Pull requests are only checked.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Type-check, lint, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: npx tsc --noEmit
+      - run: npx tsc --noEmit -p convex
+      - run: pnpm lint
+      - run: pnpm test
+      - run: npx vitest run
+
+  deploy:
+    name: Deploy to production
+    needs: verify
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      SITE_URL: https://mwalimu-ai-nu.vercel.app
+      CONVEX_URL: https://savory-mallard-562.convex.cloud
+    steps:
+      - name: Check deploy credentials
+        run: |
+          missing=""
+          [ -z "$CONVEX_DEPLOY_KEY" ] && missing="$missing CONVEX_DEPLOY_KEY"
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID(variable)"
+          [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PROJECT_ID(variable)"
+          if [ -n "$missing" ]; then
+            echo "::error::Deploy skipped. Add these in GitHub > Settings > Secrets and variables > Actions:$missing (see docs/deploying.md)"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy the Convex backend
+        run: npx convex deploy --yes
+      - name: Deploy the website to Vercel
+        run: npx vercel@latest deploy --prod --yes --token="$VERCEL_TOKEN"
+      - name: Smoke test
+        run: |
+          set -e
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL/")
+          [ "$code" = "200" ] || { echo "::error::Home page returned $code"; exit 1; }
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL/admin")
+          [ "$code" = "200" ] || { echo "::error::/admin returned $code"; exit 1; }
+          me=$(curl -s "$CONVEX_URL/api/query" -H 'content-type: application/json' -d '{"path":"admin/me:me","args":{},"format":"json"}')
+          echo "$me" | grep -q signed_out || { echo "::error::Backend check failed: $me"; exit 1; }
+          echo "Deployed and healthy."
