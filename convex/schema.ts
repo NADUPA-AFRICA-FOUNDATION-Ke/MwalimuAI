@@ -700,6 +700,14 @@ export default defineSchema({
   // One row: the lease that keeps a single sender running at a time.
   emailRuntime: defineTable({ leaseUntil: v.number() }),
 
+  // Accountability record of privacy requests (Kenya Data Protection Act). Holds no personal data: the learner is
+  // identified only by a one-way hash, so it survives the erasure it records.
+  privacyRequests: defineTable({
+    kind: v.union(v.literal("export"), v.literal("erasure_requested"), v.literal("erasure_completed")),
+    ref: v.string(),
+    at: v.number(),
+  }).index("by_at", ["at"]),
+
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;
   // feature-specific backfills can promote records into typed tables later.

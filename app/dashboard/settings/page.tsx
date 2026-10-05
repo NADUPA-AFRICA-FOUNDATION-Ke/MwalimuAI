@@ -24,9 +24,11 @@ import {
 import { getLowBandwidth, setLowBandwidth } from '@/lib/accessibility'
 import { useProfile } from '@/context/profile-context'
 import { useAuthActions } from '@convex-dev/auth/react'
-import { useMutation, useQuery } from 'convex/react'
+import { useConvex, useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { toast } from 'sonner'
+import { authedFetch } from '@/lib/authed-fetch'
+import { errorMessage } from '@/lib/support'
 import { Wifi, WifiOff, Globe, Download, KeyRound, Trash2, AlertCircle, Check } from 'lucide-react'
 
 const ALL_USER_KEYS = [
@@ -46,7 +48,12 @@ export default function SettingsPage() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isDeleting, setIsDeleting]  = useState(false)
   const [deleteError, setDeleteError] = useState('')
-  const [reAuthPassword, setReAuthPassword] = useState('')
+  const [deleteText, setDeleteText] = useState('')
+  const [isCancelling, setIsCancelling] = useState(false)
+  const convex = useConvex()
+  const deleteMine = useMutation(api.dataRights.deleteMine)
+  const logExport = useMutation(api.dataRights.logExport)
+  const billing = useQuery(api.subscriptions.mine, {})
 
   const [formData, setFormData] = useState({
     name:      '',
@@ -123,22 +130,10 @@ export default function SettingsPage() {
     }
   }
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setIsDownloading(true)
     try {
-      const data: Record<string, unknown> = {
-        exportedAt: new Date().toISOString(),
-        email: user?.email ?? null,
-        profile,
-      }
-      ALL_USER_KEYS.forEach(key => {
-        try {
-          const raw = localStorage.getItem(key)
-          if (raw) data[key] = JSON.parse(raw)
-        } catch {
-          // ignore parse errors on individual keys
-        }
-      })
+      const data = await convex.query(api.dataRights.exportMine, {})
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
@@ -146,34 +141,40 @@ export default function SettingsPage() {
       a.download = `mwalimu-data-${new Date().toISOString().slice(0, 10)}.json`
       a.click()
       URL.revokeObjectURL(url)
-      toast.success('Data downloaded')
+      void logExport({}).catch(() => {})
+      toast.success(data.truncated.length ? 'Data downloaded. Some long lists were shortened. Contact support for the full set.' : 'Data downloaded')
     } catch {
-      toast.error('Download failed')
+      toast.error('Download failed. Check your connection and try again.')
     } finally {
       setIsDownloading(false)
     }
   }
 
-  const handleDeleteAccount = async () => {
-    if (!user?.email) return
-    setDeleteError('')
-    setIsDeleting(true)
-    // Supabase requires re-authentication via password before deleting
-    setDeleteError('requires-recent-login')
-    setIsDeleting(false)
+  const handleCancelPlan = async () => {
+    setIsCancelling(true)
+    try {
+      const res = await authedFetch('/api/stripe/cancel', { method: 'POST' })
+      const body = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) throw new Error(body.error ?? 'Could not cancel your plan.')
+      toast.success('Your paid plan was cancelled.')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not cancel your plan.')
+    } finally {
+      setIsCancelling(false)
+    }
   }
 
-  const handleReAuthAndDelete = async () => {
-    if (!user?.email || !reAuthPassword) return
+  const handleDeleteAccount = async () => {
     setIsDeleting(true)
     setDeleteError('')
     try {
-      if (!reAuthPassword) return
-      // Convex Auth owns the session. Sign out after the user confirms the
-      // destructive action; account records remain auditable in Convex.
-      await signOut()
-    } catch {
-      toast.error('Could not delete account — try again or contact support')
+      await deleteMine({ confirm: deleteText })
+      // The server has ended every session; clear this device and leave.
+      ALL_USER_KEYS.forEach(key => { try { localStorage.removeItem(key) } catch { /* ignore */ } })
+      toast.success('Your account is being deleted.')
+      window.location.href = '/'
+    } catch (e) {
+      setDeleteError(errorMessage(e, 'We could not delete your account. Please try again or contact support.'))
       setIsDeleting(false)
     }
   }
@@ -341,11 +342,11 @@ export default function SettingsPage() {
           {isDownloading ? 'Preparing download…' : 'Download My Data'}
         </Button>
         <p className="text-xs text-muted-foreground -mt-2">
-          Downloads your profile, learning progress, journal, and activity as a JSON file.
+          Downloads everything we hold about you as a file you can keep: profile, progress, certificates, activity, journal, AI conversations, community posts and support tickets.
         </p>
 
         {/* Delete Account */}
-        <AlertDialog onOpenChange={() => { setDeleteError(''); setReAuthPassword('') }}>
+        <AlertDialog onOpenChange={() => { setDeleteError(''); setDeleteText('') }}>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" className="w-full rounded-xl gap-2">
               <Trash2 className="w-4 h-4" /> Delete Account
@@ -355,44 +356,34 @@ export default function SettingsPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete your account?</AlertDialogTitle>
               <AlertDialogDescription>
-                This cannot be undone. All your progress, badges, journal entries, and learning data will be permanently deleted.
+                This cannot be undone. We will permanently delete your profile, progress, journal, AI conversations, activity and support tickets. Your community posts are removed. A certificate you earned stays verifiable, but no longer shows your name. Download your data first if you want a copy.
               </AlertDialogDescription>
             </AlertDialogHeader>
 
-            {deleteError === 'requires-recent-login' && (
-              <div className="space-y-3 pt-2">
-                <p className="text-sm text-muted-foreground">
-                  For security, please re-enter your password to confirm deletion.
-                </p>
-                <Input
-                  type="password"
-                  placeholder="Your current password"
-                  value={reAuthPassword}
-                  onChange={e => setReAuthPassword(e.target.value)}
-                  className="rounded-xl"
-                />
+            {billing?.entitlement.isPaid && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+                <p>You have a paid plan. Cancel it first so you are not charged after your account is gone.</p>
+                <Button type="button" size="sm" variant="outline" className="mt-2 min-h-11" onClick={handleCancelPlan} disabled={isCancelling}>
+                  {isCancelling ? 'Cancelling…' : 'Cancel my paid plan'}
+                </Button>
               </div>
             )}
 
+            <div className="space-y-2 pt-1">
+              <Label htmlFor="delete-confirm">Type DELETE to confirm</Label>
+              <Input id="delete-confirm" value={deleteText} onChange={e => setDeleteText(e.target.value)} autoComplete="off" className="rounded-xl min-h-11" />
+              {deleteError && <p role="alert" className="text-sm text-destructive">{deleteError}</p>}
+            </div>
+
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              {deleteError === 'requires-recent-login' ? (
-                <Button
-                  variant="destructive"
-                  onClick={handleReAuthAndDelete}
-                  disabled={isDeleting || !reAuthPassword}
-                >
-                  {isDeleting ? 'Deleting…' : 'Confirm delete'}
-                </Button>
-              ) : (
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={e => { e.preventDefault(); handleDeleteAccount() }}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting…' : 'Yes, delete my account'}
-                </AlertDialogAction>
-              )}
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={e => { e.preventDefault(); void handleDeleteAccount() }}
+                disabled={isDeleting || deleteText.trim() !== 'DELETE' || Boolean(billing?.entitlement.isPaid)}
+              >
+                {isDeleting ? 'Deleting…' : 'Yes, delete my account'}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
