@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { staffMutation, staffQuery } from "../lib/staff";
 import { notify } from "../lib/notices";
+import { queueEmail } from "../lib/emailQueue";
 import { fail, notFound } from "../lib/errors";
 import type { Doc } from "../_generated/dataModel";
 
@@ -123,6 +124,8 @@ export const reply = staffMutation({
       body: body.length > 140 ? `${body.slice(0, 140)}…` : body,
       link: `/dashboard/support/${t._id}`,
     });
+    // The in-app notice only helps people who open the app; email reaches the ones who do not.
+    await queueEmail(ctx, { profileId: t.profileId, kind: "ticket_reply", dedupeKey: `ticket:${t._id}:${now}`, data: { number: t.number, subject: t.subject, excerpt: body.length > 280 ? `${body.slice(0, 280)}…` : body, ticketId: t._id, resolved } });
     await log({
       action: resolved ? "ticket.reply_resolve" : "ticket.reply",
       targetType: "ticket",

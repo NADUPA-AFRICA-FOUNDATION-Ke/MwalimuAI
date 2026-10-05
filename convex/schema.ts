@@ -82,6 +82,8 @@ export default defineSchema({
     statusReason: v.optional(v.string()),
     statusChangedAt: v.optional(v.number()),
     searchText: v.optional(v.string()),
+    // Which emails this learner wants. Absent means "yes" for each, so existing learners need no backfill.
+    emailPrefs: v.optional(v.object({ streak: v.optional(v.boolean()), tickets: v.optional(v.boolean()), certificates: v.optional(v.boolean()), weekly: v.optional(v.boolean()) })),
     updatedAt: v.number(),
   })
     .index("by_token_identifier", ["tokenIdentifier"])
@@ -676,6 +678,27 @@ export default defineSchema({
     .index("by_fingerprint", ["fingerprint"])
     .index("by_last_seen", ["lastSeen"])
     .index("by_first_seen", ["firstSeen"]),
+
+  // Outgoing email: a queue (so sending is paced and retryable) that doubles as the record of what was sent.
+  emailLog: defineTable({
+    profileId: v.id("profiles"),
+    kind: v.union(v.literal("ticket_reply"), v.literal("certificate"), v.literal("streak"), v.literal("weekly")),
+    dedupeKey: v.string(),
+    to: v.string(),
+    data: v.any(), // small facts for the template; the email is rendered when it is sent, not stored
+    status: v.union(v.literal("queued"), v.literal("sending"), v.literal("sent"), v.literal("failed"), v.literal("skipped")),
+    claimedAt: v.optional(v.number()),
+    attempts: v.number(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    sentAt: v.optional(v.number()),
+  })
+    .index("by_dedupe", ["dedupeKey"])
+    .index("by_status_and_created_at", ["status", "createdAt"])
+    .index("by_profile_and_created_at", ["profileId", "createdAt"]),
+
+  // One row: the lease that keeps a single sender running at a time.
+  emailRuntime: defineTable({ leaseUntil: v.number() }),
 
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;

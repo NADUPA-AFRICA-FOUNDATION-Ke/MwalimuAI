@@ -24,6 +24,8 @@ import {
 import { getLowBandwidth, setLowBandwidth } from '@/lib/accessibility'
 import { useProfile } from '@/context/profile-context'
 import { useAuthActions } from '@convex-dev/auth/react'
+import { useMutation, useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 import { toast } from 'sonner'
 import { Wifi, WifiOff, Globe, Download, KeyRound, Trash2, AlertCircle, Check } from 'lucide-react'
 
@@ -306,6 +308,8 @@ export default function SettingsPage() {
         </div>
       </Card>
 
+      <EmailPreferences />
+
       {/* Account */}
       <Card className="p-6 space-y-4">
         <h2 className="text-xl font-semibold">Account</h2>
@@ -394,5 +398,43 @@ export default function SettingsPage() {
         </AlertDialog>
       </Card>
     </div>
+  )
+}
+
+const EMAIL_OPTIONS = [
+  { key: 'tickets', label: 'Replies to my support tickets', hint: 'So you never miss an answer when you are not in the app.' },
+  { key: 'certificates', label: 'Certificates I earn', hint: 'A copy of your certificate number and a link to share it.' },
+  { key: 'streak', label: 'Streak reminders', hint: 'One short note in the evening when your streak is at risk.' },
+  { key: 'weekly', label: 'Weekly summary', hint: 'What you learned this week, on Sunday.' },
+] as const
+
+/** Which emails the learner wants. Every email also carries a one-click unsubscribe link. */
+function EmailPreferences() {
+  const data = useQuery(api.emails.myPrefs, {})
+  const save = useMutation(api.emails.setPrefs)
+  if (!data) return null
+  const set = async (key: (typeof EMAIL_OPTIONS)[number]['key'], on: boolean) => {
+    try {
+      await save({ prefs: { ...data.prefs, [key]: on } })
+    } catch {
+      toast.error('Could not save. Check your connection and try again.')
+    }
+  }
+  return (
+    <Card className="p-6 space-y-4" aria-labelledby="email-prefs-h">
+      <div>
+        <h2 id="email-prefs-h" className="text-xl font-semibold">Email</h2>
+        <p className="text-sm text-muted-foreground">{data.hasEmail ? 'Choose what we may email you.' : 'Add an email address to your account to get emails.'}</p>
+      </div>
+      {EMAIL_OPTIONS.map((o) => (
+        <div key={o.key} className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-medium text-sm" id={`email-${o.key}`}>{o.label}</p>
+            <p className="text-sm text-muted-foreground">{o.hint}</p>
+          </div>
+          <Switch checked={data.prefs[o.key]} onCheckedChange={(v) => void set(o.key, v)} aria-labelledby={`email-${o.key}`} disabled={!data.hasEmail} />
+        </div>
+      ))}
+    </Card>
   )
 }
