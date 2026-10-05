@@ -49,6 +49,8 @@ export interface Program {
   accent: 'primary' | 'accent'
   available: boolean
   launchingSoon?: boolean
+  /** A short course has lessons and progress but no assignment, graded assessments or certificate. */
+  shortCourse?: boolean
   modules: LearningModule[]
   preAssessment: AssessmentQuestion[]
   postAssessment: AssessmentQuestion[]

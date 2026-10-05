@@ -41,6 +41,7 @@ export type ProgramData = Common & {
   accent: "primary" | "accent";
   available: boolean;
   launchingSoon: boolean;
+  shortCourse: boolean;
   assignment: { title: string; context: string; task: string; hints: string[]; rubric: string[] };
   certificate: { subtitle: string; skills: string[] };
 };
@@ -222,6 +223,7 @@ function build(kind: ContentKind, raw: Record<string, any>, lenient: boolean): I
     accent: raw.accent === "accent" ? "accent" : "primary",
     available: raw.available !== false,
     launchingSoon: raw.launchingSoon === true,
+    shortCourse: raw.shortCourse === true,
     assignment: {
       title: str(a.title, "assignment title", 300, lenient),
       context: str(a.context, "assignment context", 5000, true),
@@ -245,7 +247,7 @@ export const titleOf = (data: ItemData[ContentKind]) => ("title" in data ? data.
 export function assertPublishable(kind: ContentKind, data: ItemData[ContentKind]) {
   if (kind !== "program") return;
   const p = data as ProgramData;
-  if (p.available && !p.launchingSoon) {
+  if (p.available && !p.launchingSoon && !p.shortCourse) {
     if (!p.assignment.title.trim() || !p.assignment.task.trim())
       throw bad("Add the assignment before publishing an available program");
     if (!p.certificate.subtitle.trim())

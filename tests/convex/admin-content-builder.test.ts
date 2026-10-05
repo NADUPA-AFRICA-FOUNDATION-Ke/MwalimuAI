@@ -154,3 +154,39 @@ describe("needs assessment in the CMS", () => {
     expect(live?.questions[0].question).toBe("Which level do you teach most?");
   });
 });
+
+describe("older Learning Modules library", () => {
+  it("becomes short courses that keep the ids learners' saved progress already uses", async () => {
+    const { modulesData } = await import("../../lib/modules-data");
+    const t = newTest();
+    const manager = await makeStaff(t, "content_manager");
+    const learner = await (await import("./helpers")).makeLearner(t);
+    const m = modulesData[0];
+    const first = m.lessons[0];
+
+    // Before: progress under module-N cannot sync (unknown program).
+    await expect(
+      learner.as.mutation(api.learningProgress.save, { programId: `module-${m.id}`, progress: { completedLessons: [`${m.id}/${first.id}`], reflections: {}, cohortJoined: false } }),
+    ).rejects.toThrow(/Unknown program/);
+
+    const r = await manager.as.mutation(api.admin.content.importLegacyModules, {});
+    expect(r.created).toBe(modulesData.length);
+    await expect(manager.as.mutation(api.admin.content.importLegacyModules, {})).rejects.toThrow(/already/);
+
+    // After: the same device progress now saves, and the course is in the catalogue as a short course.
+    await learner.as.mutation(api.learningProgress.save, { programId: `module-${m.id}`, progress: { completedLessons: [`${m.id}/${first.id}`], reflections: {}, cohortJoined: false } });
+    const rows = await learner.as.query(api.learningProgress.mine, {});
+    expect(rows.find((x) => x.programId === `module-${m.id}`)?.completedLessons).toEqual([`${m.id}/${first.id}`]);
+    const cat = await t.query(api.content.publishedPrograms, {});
+    const course = cat.programs.find((p) => p.id === `module-${m.id}`)!;
+    expect(course).toMatchObject({ shortCourse: true, title: m.title });
+    expect(course.modules[0].lessons).toHaveLength(m.lessons.length);
+
+    // Staff can still edit and publish a short course without inventing an assignment or certificate.
+    const items = await manager.as.query(api.admin.content.itemsForProgram, { programKey: `module-${m.id}` });
+    const prog = items.find((i) => i.kind === "program")!;
+    const d = await manager.as.query(api.admin.content.getItem, { itemId: prog._id });
+    await manager.as.mutation(api.admin.content.saveDraft, { itemId: prog._id, data: { ...(d.published!.data as object), tagline: "Updated" } });
+    await manager.as.mutation(api.admin.content.submitForReview, { itemId: prog._id });
+  });
+});

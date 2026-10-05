@@ -21,6 +21,7 @@ import {
 import Link from 'next/link'
 import { getModuleById } from '@/lib/modules-data'
 import { QuizComponent, parseQuizFromContent } from '@/components/quiz'
+import { LegacyRedirect } from '@/components/legacy-redirect'
 import { getProgress, completeLesson, uncompleteLesson, isLessonComplete } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
 import { recordActivity } from '@/lib/streak'
@@ -253,6 +254,7 @@ export default function LessonPage() {
 
   return (
     <div className="space-y-6 max-w-[var(--reading-max)]">
+      <LegacyRedirect programId={programId} to={`/dashboard/learning/${programId}/${moduleId}/${lessonId}`} />
       <BackButton fallbackHref={`/dashboard/modules/${moduleId}`} label={`Back to ${lessonModule.title}`} />
       
       {/* Progress Bar */}

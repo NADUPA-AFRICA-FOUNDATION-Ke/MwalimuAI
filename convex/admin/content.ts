@@ -11,6 +11,7 @@ import { insertItem, insertPublishedItem, publishDraft, readinessProblem } from 
 import { FAQS } from "../../lib/faq-data";
 import { RESOURCES } from "../../lib/resources-data";
 import { blogPosts } from "../../lib/blog-data";
+import { modulesData } from "../../lib/modules-data";
 import { NEEDS_FALLBACK, NEEDS_QUESTIONS, NEEDS_RULES, NEEDS_SECTIONS } from "../../lib/needs-assessment-data";
 
 const kindV = v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"), v.literal("assessment"), v.literal("resources"), v.literal("faq"), v.literal("post"));
@@ -693,5 +694,49 @@ export const generateUploadUrl = staffMutation({
   handler: async (ctx, _args, _staff, log) => {
     await log({ action: "content.upload_url", targetType: "content", targetId: "resource-file" });
     return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/**
+ * Brings the older "Learning Modules" library into the CMS as short courses, keeping the ids the learner app and
+ * learners' saved progress already use (program `module-N`, module `N`, lessons by their number). Their progress
+ * then syncs to the cloud, counts in analytics, and staff manage them like any other learning path.
+ */
+export const importLegacyModules = staffMutation({
+  permission: "content.publish",
+  args: {},
+  handler: async (ctx, _args, { staff }, log) => {
+    const tags = { cbcLevels: [], subjects: [], counties: [] };
+    let created = 0, skipped = 0;
+    for (const [i, m] of modulesData.entries()) {
+      const key = `module-${m.id}`;
+      const exists = await ctx.db.query("cmsItems").withIndex("by_program_and_key", (q) => q.eq("programKey", key).eq("kind", "program").eq("key", key)).first();
+      if (exists) { skipped++; continue; }
+      const goals = m.objectives.length ? `\n\n**You will learn to:**\n${m.objectives.map((o) => `- ${o}`).join("\n")}` : "";
+      const needs = m.prerequisites.length ? `\n\n**Before you start:** ${m.prerequisites.join("; ")}` : "";
+      const programId = await insertPublishedItem(ctx, staff._id, {
+        kind: "program",
+        key,
+        data: {
+          title: m.title, shortTitle: m.title.slice(0, 60), tagline: `${m.difficulty[0].toUpperCase()}${m.difficulty.slice(1)} · ${m.lessons.length} lessons`,
+          description: `${m.description}${goals}${needs}`.slice(0, 3000), track: m.category === "technology" ? "stem" : "core", kicdAlignment: "",
+          hours: Math.max(0.5, Math.round((m.duration / 60) * 10) / 10), accent: "primary", available: true, launchingSoon: false, shortCourse: true,
+          assignment: { title: "", context: "", task: "", hints: [], rubric: [] }, certificate: { subtitle: "", skills: [] }, orderIndex: 100 + i, tags,
+        },
+      });
+      const program = (await ctx.db.get(programId))!;
+      const moduleId = await insertPublishedItem(ctx, staff._id, { kind: "module", key: String(m.id), parent: program, data: { title: m.title, description: "", orderIndex: 0, tags } });
+      const mod = (await ctx.db.get(moduleId))!;
+      for (const [li, l] of m.lessons.entries()) {
+        await insertPublishedItem(ctx, staff._id, {
+          kind: "lesson", key: String(l.id), parent: mod,
+          data: { title: l.title, duration: `${l.duration} min`, videoTitle: l.type === "video" ? l.title : "", videoPoints: [], reading: l.content || l.title, reflectionPrompt: "", reflectionPlaceholder: "", orderIndex: li, tags },
+        });
+      }
+      created++;
+    }
+    if (created === 0 && skipped > 0) throw fail("ALREADY_EXISTS", "The library modules are already managed here");
+    await log({ action: "content.import_legacy_modules", targetType: "content", targetId: "legacy-modules", after: { created, skipped } });
+    return { created, skipped };
   },
 });

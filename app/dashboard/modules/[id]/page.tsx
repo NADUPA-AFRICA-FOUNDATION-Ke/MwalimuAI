@@ -31,6 +31,7 @@ import Link from 'next/link'
 import { getModuleById, type Lesson } from '@/lib/modules-data'
 import { getLegacyModuleGuide } from '@/lib/curriculum-guidance'
 import { ModuleImplementationGuide } from '@/components/module-implementation-guide'
+import { LegacyRedirect } from '@/components/legacy-redirect'
 import { getProgress, completeLesson, uncompleteLesson } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
 import { recordActivity } from '@/lib/streak'
@@ -121,6 +122,7 @@ export default function ModuleDetailPage() {
 
   return (
     <div className="space-y-8">
+      <LegacyRedirect programId={programId} to={`/dashboard/learning/${programId}`} />
       <BackButton fallbackHref="/dashboard/modules" label="Back to Modules" />
       
       {/* Module Header */}

@@ -200,14 +200,15 @@ export async function publishDraft(ctx: Pick<MutationCtx, "db">, i: Doc<"cmsItem
 export async function insertPublishedItem(
   ctx: Pick<MutationCtx, "db">,
   staffId: Id<"staff">,
-  args: { kind: ContentKind; key: string; data: unknown },
+  args: { kind: ContentKind; key: string; data: unknown; parent?: Doc<"cmsItems"> },
 ) {
   const data = validateContent(args.kind, args.data, true);
   const now = Date.now();
   const itemId = await ctx.db.insert("cmsItems", {
     kind: args.kind,
     key: args.key,
-    programKey: args.key,
+    ...(args.parent ? { parentId: args.parent._id } : {}),
+    programKey: args.parent ? args.parent.programKey : args.key,
     title: titleOf(data),
     orderIndex: data.orderIndex,
     cbcLevels: [],

@@ -48,6 +48,7 @@ function ContentStudio() {
   const importStatic = useMutation(api.admin.content.importStaticCurriculum)
   const assessments = useQuery(api.admin.content.assessments, {})
   const importNeeds = useMutation(api.admin.content.importNeedsAssessment)
+  const importLegacy = useMutation(api.admin.content.importLegacyModules)
   const { run, ok } = useRun()
   const router = useRouter()
   const search = useSearchParams()
@@ -185,6 +186,16 @@ function ContentStudio() {
               </div>
             </div>
           )}
+        </section>
+      )}
+
+      {can('content.publish') && programs && !programs.some((p) => p.key === 'module-1') && (
+        <section className="mb-6 rounded-lg border bg-background p-4" aria-labelledby="legacy-h">
+          <h2 id="legacy-h" className="font-semibold">Older Learning Modules library</h2>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Learners still see the original Modules pages, whose progress only lives on each device. Bring them in as short courses and they become normal learning paths you can edit, with progress saved to the account and counted in analytics. Existing device progress carries over, and the old addresses forward to the new ones.
+          </p>
+          <Button onClick={() => void run(() => importLegacy({}), 'Library modules are now short courses')}>Bring the library modules in</Button>
         </section>
       )}
 

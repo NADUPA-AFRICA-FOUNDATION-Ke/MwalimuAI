@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { modulesData } from '@/lib/modules-data'
 import { getProgress } from '@/lib/learning-progress'
 import { useProfile } from '@/context/profile-context'
+import { LegacyRedirect } from '@/components/legacy-redirect'
 
 const MODULE_ICONS: Record<string, LucideIcon> = {
   CBC: BookMarked,
@@ -58,6 +59,7 @@ export default function ModulesPage() {
 
   return (
     <div className="space-y-8">
+      <LegacyRedirect programId="module-1" to="/dashboard/learning" />
       <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
       <div>
         <h1 className="text-3xl font-bold mb-2">Learning Modules</h1>

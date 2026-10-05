@@ -88,9 +88,19 @@ export function ProgramForm({ data, set }: FormProps) {
             />
             Launching soon
           </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={data.shortCourse === true}
+              onChange={(e) => set({ shortCourse: e.target.checked })}
+            />
+            Short course (no assignment or certificate)
+          </label>
         </div>
       </div>
       <Text label="KICD alignment" k="kicdAlignment" data={data} set={set} />
+      {data.shortCourse !== true && (
+        <>
       <fieldset className="space-y-3 rounded-md border p-3">
         <legend className="px-1 text-sm font-semibold">Assignment</legend>
         <Field label="Title">
@@ -138,6 +148,8 @@ export function ProgramForm({ data, set }: FormProps) {
           />
         </Field>
       </fieldset>
+        </>
+      )}
     </>
   )
 }
