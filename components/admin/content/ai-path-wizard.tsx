@@ -21,12 +21,12 @@ const CONCURRENCY = 3
 const emptyTags = { cbcLevels: [], subjects: [], counties: [] }
 
 /** From a one-paragraph brief to a drafted learning path: outline, lessons, quizzes. Everything stays a draft for review. */
-export function AiPathWizard({ onClose }: { onClose: () => void }) {
+export function AiPathWizard({ onClose, initialTopic = '' }: { onClose: () => void; initialTopic?: string }) {
   const router = useRouter()
   const createFromOutline = useMutation(api.admin.contentBuilder.createProgramFromOutline)
   const saveDraft = useMutation(api.admin.content.saveDraft)
   const [phase, setPhase] = useState<Phase>('brief')
-  const [form, setForm] = useState({ topic: '', audience: LEVELS[2] as string, outcomes: '', notes: '', modules: 3, lessons: 3 })
+  const [form, setForm] = useState({ topic: initialTopic, audience: LEVELS[2] as string, outcomes: '', notes: '', modules: 3, lessons: 3 })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [outline, setOutline] = useState<Outline | null>(null)

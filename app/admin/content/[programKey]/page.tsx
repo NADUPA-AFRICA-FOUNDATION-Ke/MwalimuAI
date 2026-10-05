@@ -10,6 +10,7 @@ import type { Id } from '@/convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
 import { ItemEditor } from '@/components/admin/content/item-editor'
 import { Loading, PageHeader, Pill, ReasonDialog, useRun, useStaff } from '@/components/admin/common'
+import { InsightsPanel } from '@/components/admin/content/insights-panel'
 
 type Item = NonNullable<ReturnType<typeof useItems>>[number]
 const useItems = (programKey: string) => useQuery(api.admin.content.itemsForProgram, { programKey })
@@ -45,6 +46,7 @@ function Builder() {
   const reorder = useMutation(api.admin.contentBuilder.reorder)
   const duplicate = useMutation(api.admin.contentBuilder.duplicate)
   const [dialog, setDialog] = useState<null | 'approve' | 'reject' | 'publish'>(null)
+  const showInsights = search.get('view') === 'insights'
 
   const tree = useMemo(() => {
     if (!items) return null
@@ -148,6 +150,13 @@ function Builder() {
                 Preview as learner
               </Link>
             </Button>
+            {can('analytics.read') && (
+              <Button asChild variant={showInsights ? 'secondary' : 'outline'} size="sm">
+                <Link href={showInsights ? `/admin/content/${programKey}` : `/admin/content/${programKey}?view=insights`} scroll={false}>
+                  {showInsights ? 'Back to editing' : 'Learner insights'}
+                </Link>
+              </Button>
+            )}
             {edit && (
               <Button variant="outline" size="sm" onClick={() => void copy(program)}>
                 <Copy className="mr-2 h-4 w-4" />
@@ -158,6 +167,16 @@ function Builder() {
         }
       />
 
+      {showInsights ? (
+        <InsightsPanel
+          programKey={programKey}
+          onOpenItem={(key) => {
+            const hit = items.find((i) => i.kind === 'lesson' && `${items.find((m) => m._id === i.parentId)?.key}/${i.key}` === key)
+            router.replace(hit ? `/admin/content/${programKey}?item=${hit._id}` : `/admin/content/${programKey}`)
+          }}
+        />
+      ) : (
+      <>
       <ReleasePanel
         programKey={programKey}
         counts={counts}
@@ -212,6 +231,8 @@ function Builder() {
           <ItemEditor key={selectedId} itemId={selectedId} embedded />
         </div>
       </div>
+      </>
+      )}
     </>
   )
 }

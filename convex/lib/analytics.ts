@@ -9,6 +9,8 @@ import { assembleProgram, type ProgramShape } from "./contentRead";
  *
  * Keys:
  *   p:{program}:enrolled | lessons | pre | preSum | post | postSum | assign | cert | certDays
+ *   p:{program}:qa:{pre|post}:{questionIndex}:{answerIndex}     how many learners chose each option (item analysis)
+ *   na:{questionId}:{answer} | na:_total                          needs-assessment answers (what teachers say they need)
  *   p:{program}:l:{moduleId/lessonId}      learners who completed that lesson
  *   d:{YYYY-MM-DD}:login | lesson | tool | journal | community | assessment   learners with that activity that day (EAT)
  *   ("login" is recorded on every visit, so d:*:login is the day's active learners)
@@ -38,6 +40,25 @@ export async function readCounters(ctx: QueryCtx, keys: string[]) {
     }),
   );
   return out;
+}
+
+async function bumpAnswers(ctx: MutationCtx, prefix: string, answers: number[] | undefined) {
+  for (const [i, a] of (answers ?? []).entries()) if (Number.isInteger(a) && a >= 0 && a <= 3) await bump(ctx, `${prefix}:${i}:${a}`);
+}
+
+/** Counts a learner's needs-assessment answers once, so staff can see what teachers say they need. */
+export async function countNeedsAnswers(ctx: MutationCtx, responses: unknown) {
+  if (!responses || typeof responses !== "object") return;
+  let n = 0;
+  for (const [qid, ans] of Object.entries(responses as Record<string, unknown>)) {
+    if (++n > 40) break;
+    const picks = Array.isArray(ans) ? ans : [ans];
+    for (const a of picks.slice(0, 8)) {
+      if (typeof a === "string" && a) await bump(ctx, `na:${qid.slice(0, 40)}:${a.slice(0, 100)}`);
+      else if (typeof a === "number") await bump(ctx, `na:${qid.slice(0, 40)}:#${a}`);
+    }
+  }
+  await bump(ctx, "na:_total");
 }
 
 type Progress = Pick<
@@ -77,10 +98,12 @@ export async function applyProgressDelta(
   if (next.preAssessment && !prev?.preAssessment) {
     await bump(ctx, k("pre"));
     await bump(ctx, k("preSum"), pct(next.preAssessment));
+    await bumpAnswers(ctx, k("qa:pre"), next.preAssessment.answers);
   }
   if (next.postAssessment && !prev?.postAssessment) {
     await bump(ctx, k("post"));
     await bump(ctx, k("postSum"), pct(next.postAssessment));
+    await bumpAnswers(ctx, k("qa:post"), next.postAssessment.answers);
   }
   if (next.assignment && !prev?.assignment) await bump(ctx, k("assign"));
   if (next.certificateSerial && !prev?.certificateSerial) {

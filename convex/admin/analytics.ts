@@ -3,7 +3,7 @@ import { paginationOptsValidator } from "convex/server";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import { staffMutation, staffQuery } from "../lib/staff";
-import { applyProgressDelta, bump, programCatalog, readCounters } from "../lib/analytics";
+import { applyProgressDelta, bump, countNeedsAnswers, programCatalog, readCounters } from "../lib/analytics";
 import { getProgramDef } from "../lib/contentRead";
 import { addDays, eatDateKey } from "../lib/streakMath";
 import { fail } from "../lib/errors";
@@ -177,9 +177,9 @@ export const rebuild = staffMutation({
 
 /** Idempotent when run on its own; run it when learners are quiet, since live updates during a run can double count. */
 export const rebuildStep = internalMutation({
-  args: { phase: v.union(v.literal("clear"), v.literal("progress"), v.literal("activity")), cursor: v.optional(v.string()) },
+  args: { phase: v.union(v.literal("clear"), v.literal("progress"), v.literal("needs"), v.literal("activity")), cursor: v.optional(v.string()) },
   handler: async (ctx, { phase, cursor }) => {
-    const again = (args: { phase: "clear" | "progress" | "activity"; cursor?: string }) =>
+    const again = (args: { phase: "clear" | "progress" | "needs" | "activity"; cursor?: string }) =>
       ctx.scheduler.runAfter(0, internal.admin.analytics.rebuildStep, args);
 
     if (phase === "clear") {
@@ -191,7 +191,13 @@ export const rebuildStep = internalMutation({
     if (phase === "progress") {
       const page = await ctx.db.query("learningProgress").paginate({ numItems: 100, cursor: cursor ?? null });
       for (const r of page.page) await applyProgressDelta(ctx, r.programId, null, r, r._creationTime);
-      await again(page.isDone ? { phase: "activity" } : { phase: "progress", cursor: page.continueCursor });
+      await again(page.isDone ? { phase: "needs" } : { phase: "progress", cursor: page.continueCursor });
+      return;
+    }
+    if (phase === "needs") {
+      const page = await ctx.db.query("assessmentResults").paginate({ numItems: 100, cursor: cursor ?? null });
+      for (const r of page.page) await countNeedsAnswers(ctx, r.responses);
+      await again(page.isDone ? { phase: "activity" } : { phase: "needs", cursor: page.continueCursor });
       return;
     }
     const since = addDays(eatDateKey(Date.now()), -REBUILD_DAYS);

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentProfile } from "./lib/auth";
 import { requireArrayLimit, requireIntegerRange } from "./lib/validation";
+import { countNeedsAnswers } from "./lib/analytics";
 
 const resultDoc = v.object({
   _id: v.id("assessmentResults"), _creationTime: v.number(), userId: v.id("profiles"),
@@ -34,6 +35,7 @@ export const save = mutation({
       ...(args.recommendedProgramIds !== undefined ? { recommendedProgramIds: args.recommendedProgramIds } : {}),
     };
     if (existing) { await ctx.db.patch(existing._id, value); return existing._id; }
+    await countNeedsAnswers(ctx, args.responses);
     return await ctx.db.insert("assessmentResults", { ...value, userId: profile._id });
   },
 });

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,14 @@ import {
 const TRACKS = ['core', 'stem', 'languages', 'humanities', 'leadership', 'wellbeing']
 
 export default function ContentPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ContentStudio />
+    </Suspense>
+  )
+}
+
+function ContentStudio() {
   const { can, role } = useStaff()
   const programs = useQuery(api.admin.content.programs, {})
   const reviews = useQuery(api.admin.content.pendingReviews, {})
@@ -34,10 +42,12 @@ export default function ContentPage() {
   const importNeeds = useMutation(api.admin.content.importNeedsAssessment)
   const { run, ok } = useRun()
   const router = useRouter()
+  const search = useSearchParams()
   const [form, setForm] = useState({ title: '', track: 'core', description: '', modules: 3, lessons: 3, quizzes: true })
   const [importOpen, setImportOpen] = useState(false)
   const [creating, setCreating] = useState(false)
-  const [aiOpen, setAiOpen] = useState(false)
+  const aiTopic = search.get('ai')
+  const [aiOpen, setAiOpen] = useState(Boolean(aiTopic))
 
   const createProgram = async () => {
     const r = await run(
@@ -60,8 +70,15 @@ export default function ContentPage() {
       <PageHeader
         title="Content"
         description="Draft → review → published. Nothing reaches learners until a second person approves it. Content is archived, never deleted."
+        actions={
+          can('analytics.read') && (
+            <Button asChild variant="outline" size="sm">
+              <Link href="/admin/content/insights">Content insights</Link>
+            </Button>
+          )
+        }
       />
-      {can('content.edit') && aiOpen && <AiPathWizard onClose={() => setAiOpen(false)} />}
+      {can('content.edit') && aiOpen && <AiPathWizard initialTopic={aiTopic ?? ''} onClose={() => setAiOpen(false)} />}
       {can('content.edit') && (
         <section className="mb-8 rounded-lg border bg-background p-4" aria-labelledby="new-path-h">
           <div className="flex flex-wrap items-center justify-between gap-2">
