@@ -732,6 +732,18 @@ export default defineSchema({
     .index("by_school_and_status", ["schoolId", "status"])
     .index("by_profile", ["profileId", "status"]),
 
+  // Daily AI allowance per learner, so one heavy user (or a script) cannot run up the bill.
+  aiUsage: defineTable({
+    profileId: v.id("profiles"),
+    day: v.string(), // YYYY-MM-DD, Kenya time
+    count: v.number(),
+  })
+    .index("by_profile_and_day", ["profileId", "day"])
+    .index("by_day_and_count", ["day", "count"]),
+
+  // Small switches staff can change without a deploy (AI limits, emergency stop).
+  appSettings: defineTable({ key: v.string(), value: v.any(), updatedAt: v.number() }).index("by_key", ["key"]),
+
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;
   // feature-specific backfills can promote records into typed tables later.

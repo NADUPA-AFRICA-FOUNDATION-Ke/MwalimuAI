@@ -10,6 +10,7 @@
 
 import type * as activity from "../activity.js";
 import type * as admin_activity from "../admin/activity.js";
+import type * as admin_aiUsage from "../admin/aiUsage.js";
 import type * as admin_analytics from "../admin/analytics.js";
 import type * as admin_announcements from "../admin/announcements.js";
 import type * as admin_audit from "../admin/audit.js";
@@ -29,6 +30,7 @@ import type * as admin_streaks from "../admin/streaks.js";
 import type * as admin_tickets from "../admin/tickets.js";
 import type * as admin_users from "../admin/users.js";
 import type * as ai from "../ai.js";
+import type * as aiUsage from "../aiUsage.js";
 import type * as announcements from "../announcements.js";
 import type * as assessments from "../assessments.js";
 import type * as auth from "../auth.js";
@@ -58,6 +60,7 @@ import type * as lib_errors from "../lib/errors.js";
 import type * as lib_notices from "../lib/notices.js";
 import type * as lib_permissions from "../lib/permissions.js";
 import type * as lib_profileSearch from "../lib/profileSearch.js";
+import type * as lib_settings from "../lib/settings.js";
 import type * as lib_staff from "../lib/staff.js";
 import type * as lib_streakMath from "../lib/streakMath.js";
 import type * as lib_streakRestore from "../lib/streakRestore.js";
@@ -84,6 +87,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   "admin/activity": typeof admin_activity;
+  "admin/aiUsage": typeof admin_aiUsage;
   "admin/analytics": typeof admin_analytics;
   "admin/announcements": typeof admin_announcements;
   "admin/audit": typeof admin_audit;
@@ -103,6 +107,7 @@ declare const fullApi: ApiFromModules<{
   "admin/tickets": typeof admin_tickets;
   "admin/users": typeof admin_users;
   ai: typeof ai;
+  aiUsage: typeof aiUsage;
   announcements: typeof announcements;
   assessments: typeof assessments;
   auth: typeof auth;
@@ -132,6 +137,7 @@ declare const fullApi: ApiFromModules<{
   "lib/notices": typeof lib_notices;
   "lib/permissions": typeof lib_permissions;
   "lib/profileSearch": typeof lib_profileSearch;
+  "lib/settings": typeof lib_settings;
   "lib/staff": typeof lib_staff;
   "lib/streakMath": typeof lib_streakMath;
   "lib/streakRestore": typeof lib_streakRestore;

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthActions } from '@convex-dev/auth/react'
 import {
   BarChart3,
+  Bot,
   Megaphone,
   BookMarked,
   ClipboardList,
@@ -33,6 +34,7 @@ const NAV = [
   { href: '/admin/community', label: 'Community', icon: MessagesSquare, perm: 'community.moderate' },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone, perm: 'announcements.send' },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3, perm: 'analytics.read' },
+  { href: '/admin/ai-usage', label: 'AI usage', icon: Bot, perm: 'analytics.read' },
   { href: '/admin/tickets', label: 'Tickets', icon: LifeBuoy, perm: 'tickets.read' },
   { href: '/admin/incidents', label: 'Incidents', icon: Siren, perm: 'streaks.read' },
   { href: '/admin/content', label: 'Content', icon: BookMarked, perm: 'content.read' },

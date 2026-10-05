@@ -1,6 +1,7 @@
 import { streamText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { requireAuthUser } from '@/lib/require-auth'
+import { consumeAi } from '@/lib/ai-guard'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 const groq = createOpenAI({
@@ -240,6 +241,8 @@ export async function POST(req: Request) {
 
   const limit = rateLimit(`tools:${userId}`, RATE_MAX, RATE_WINDOW_MS)
   if (!limit.ok) return rateLimitResponse(limit)
+  const capped = await consumeAi(req, 'tools')
+  if (capped) return capped
 
   let tool: string, prompt: string, lang: string | undefined
   try {
