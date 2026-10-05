@@ -67,3 +67,31 @@ describe("community moderation", () => {
     await expect(learner.as.mutation(api.community.createPost, { title: " ", content: "x", category: "Pedagogy" })).rejects.toThrow();
   });
 });
+
+describe("error reporting", () => {
+  it("groups repeats, scrubs identifying text, reopens on regression and stays bounded", async () => {
+    const t = newTest();
+    const admin = await makeStaff(t, "super_admin");
+    const viewer = await makeStaff(t, "viewer");
+    const report = (message: string, stack?: string) => t.mutation(api.errors.report, { source: "browser", message, stack, route: "/dashboard/lesson?token=abc123" });
+
+    await report("Cannot read properties of undefined (reading 'x') for jane@school.ke", "Error\n    at Lesson (app.js:10:5)");
+    await report("Cannot read properties of undefined (reading 'x') for joe@other.ke", "Error\n    at Lesson (app.js:99:1)"); // same cause, different person and line numbers
+    const list = await viewer.as.query(api.admin.errors.list, {});
+    expect(list).toHaveLength(1);
+    expect(list[0].count).toBe(2);
+    expect(list[0].message).not.toMatch(/@school\.ke/);
+    expect(list[0].route).toBe("/dashboard/lesson");
+
+    await expect(viewer.as.mutation(api.admin.errors.resolve, { errorId: list[0]._id })).rejects.toThrow(/FORBIDDEN/);
+    await admin.as.mutation(api.admin.errors.resolve, { errorId: list[0]._id });
+    expect(await viewer.as.query(api.admin.errors.list, {})).toHaveLength(0);
+    await report("Cannot read properties of undefined (reading 'x') for a@b.ke", "Error\n    at Lesson (app.js:1:1)");
+    expect(await viewer.as.query(api.admin.errors.list, {})).toHaveLength(1); // came back, so it reopened
+
+    for (let i = 0; i < 210; i++) await t.mutation(api.errors.report, { source: "server", message: `Distinct failure kind ${"x".repeat(i % 50)}${String.fromCharCode(65 + (i % 26))}${i > 25 ? "z".repeat(Math.floor(i / 26)) : ""}` });
+    const stored = await t.run(async (ctx) => (await ctx.db.query("clientErrors").collect()).length);
+    expect(stored).toBeLessThanOrEqual(201);
+    expect(await t.query(api.errors.ping, {})).toMatchObject({ ok: true });
+  });
+});

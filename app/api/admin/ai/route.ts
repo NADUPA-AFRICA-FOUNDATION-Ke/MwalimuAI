@@ -5,6 +5,7 @@ import { ConvexHttpClient } from 'convex/browser'
 import type { ZodType } from 'zod'
 import { api } from '@/convex/_generated/api'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { reportServerError } from '@/lib/report-error'
 import {
   IMPROVE_ACTIONS, SYSTEM, improvePrompt, improveSchema, lessonPrompt, lessonSchema, outlinePrompt, outlineSchema,
   parseJsonLoose, postPrompt, postSchema, quizPrompt, quizSchema, recommendPrompt, recommendSchema, reviewPrompt, reviewSchema,
@@ -138,6 +139,7 @@ export async function POST(req: Request) {
     return json({ ok: true, data })
   } catch (e) {
     console.error('[admin-ai]', task, e instanceof Error ? e.message : e)
+    void reportServerError('api', e, `/api/admin/ai:${task}`)
     return json({ error: 'The AI assistant could not finish that. Please try again.', code: 'ai_failed' }, 502)
   }
 }

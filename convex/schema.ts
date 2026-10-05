@@ -658,6 +658,25 @@ export default defineSchema({
     cancelledAt: v.optional(v.number()),
   }).index("by_start", ["startsAt"]),
 
+  // Grouped application errors from browsers and server routes, so problems are seen before users complain.
+  // One row per distinct error (fingerprint); repeats only bump the counter, so storage stays bounded.
+  clientErrors: defineTable({
+    fingerprint: v.string(),
+    source: v.union(v.literal("browser"), v.literal("server"), v.literal("api")),
+    message: v.string(),
+    stack: v.optional(v.string()),
+    route: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    count: v.number(),
+    firstSeen: v.number(),
+    lastSeen: v.number(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.id("staff")),
+  })
+    .index("by_fingerprint", ["fingerprint"])
+    .index("by_last_seen", ["lastSeen"])
+    .index("by_first_seen", ["firstSeen"]),
+
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;
   // feature-specific backfills can promote records into typed tables later.

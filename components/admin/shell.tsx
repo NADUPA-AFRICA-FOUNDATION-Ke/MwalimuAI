@@ -9,6 +9,7 @@ import {
   Megaphone,
   BookMarked,
   ClipboardList,
+  AlertTriangle,
   LayoutDashboard,
   MessagesSquare,
   LogOut,
@@ -33,6 +34,7 @@ const NAV = [
   { href: '/admin/tickets', label: 'Tickets', icon: LifeBuoy, perm: 'tickets.read' },
   { href: '/admin/incidents', label: 'Incidents', icon: Siren, perm: 'streaks.read' },
   { href: '/admin/content', label: 'Content', icon: BookMarked, perm: 'content.read' },
+  { href: '/admin/errors', label: 'Errors', icon: AlertTriangle, perm: 'audit.read_all' },
   { href: '/admin/audit', label: 'Audit log', icon: ScrollText, perm: 'audit.read' },
   { href: '/admin/staff', label: 'Staff', icon: ClipboardList, perm: 'staff.manage' },
 ] as const
