@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "test": "node scripts/run-tests.mjs",
     "test:convex": "vitest run",
-    "convex:sync-api": "node scripts/sync-convex-api.mjs"
+    "convex:sync-api": "node scripts/sync-convex-api.mjs",
+    "ai:eval": "node --experimental-strip-types scripts/ai-eval.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.80",
