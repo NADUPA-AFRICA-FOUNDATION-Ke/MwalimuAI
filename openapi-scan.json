@@ -1,0 +1,275 @@
+{
+ "openapi": "3.0.0",
+ "info": {
+  "title": "MwalimuAI API",
+  "version": "1"
+ },
+ "paths": {
+  "/api/chat": {
+   "post": {
+    "summary": "chat",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "messages": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "role": {
+             "type": "string"
+            },
+            "content": {
+             "type": "string"
+            }
+           }
+          }
+         },
+         "lang": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/tools": {
+   "post": {
+    "summary": "tools",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "tool": {
+          "type": "string"
+         },
+         "prompt": {
+          "type": "string"
+         },
+         "lang": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/rehearsal": {
+   "post": {
+    "summary": "rehearsal",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "messages": {
+          "type": "array",
+          "items": {
+           "type": "object",
+           "properties": {
+            "role": {
+             "type": "string"
+            },
+            "content": {
+             "type": "string"
+            }
+           }
+          }
+         },
+         "scenario": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/assignment-review": {
+   "post": {
+    "summary": "assignment review",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "text": {
+          "type": "string"
+         },
+         "title": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/detect-ai": {
+   "post": {
+    "summary": "detect ai",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "text": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/admin/ai": {
+   "post": {
+    "summary": "admin ai",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "task": {
+          "type": "string"
+         },
+         "topic": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/stripe/checkout": {
+   "post": {
+    "summary": "checkout",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "plan": {
+          "type": "string"
+         },
+         "email": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/stripe/cancel": {
+   "post": {
+    "summary": "cancel",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {}
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/unsubscribe": {
+   "get": {
+    "parameters": [
+     {
+      "name": "t",
+      "in": "query",
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  },
+  "/api/health": {
+   "get": {
+    "responses": {
+     "200": {
+      "description": "ok"
+     }
+    }
+   }
+  }
+ }
+}

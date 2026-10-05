@@ -1,0 +1,29 @@
+app:
+  applicationId: ad667249-444d-4207-b8f3-313fb137d584
+  env: Development
+  host: ${APP_HOST:http://localhost:3101}
+  # Outbound email form is never fuzzed.
+  excludePaths:
+    - "/api/contact"
+  openApiConf:
+    filePath: openapi-scan.json
+  authentication:
+    external:
+      type: TOKEN
+      values:
+        - type: TOKEN
+          tokenType: Bearer
+          value:
+            name: Authorization
+            val: ${SCAN_TOKEN}
+    testPath:
+      path: /api/stripe/cancel
+      type: HEADER
+      fail: ".*401 Unauthorized.*"
+hawk:
+  spider:
+    base: true
+    ajax: true
+    maxDurationMinutes: 5
+  scan:
+    maxDurationMinutes: 20
