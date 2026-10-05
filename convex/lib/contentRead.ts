@@ -66,7 +66,7 @@ export async function assembleProgram(
         : quiz.questions;
     } else if (child.kind === "module") {
       const { orderIndex: _o, tags: _t, sw: moduleSw, ...moduleEn } = dataOf<ModuleData>(version);
-      const module = sw && moduleSw ? { ...moduleEn, title: pick(moduleSw.title, moduleEn.title), description: pick(moduleSw.description, moduleEn.description) } : moduleEn;
+      const localModule = sw && moduleSw ? { ...moduleEn, title: pick(moduleSw.title, moduleEn.title), description: pick(moduleSw.description, moduleEn.description) } : moduleEn;
       const lessons: ProgramShape["modules"][number]["lessons"] = [];
       for (const lessonItem of (await children(ctx, child)).filter((i) => i.kind === "lesson" && visible(i))) {
         const lessonVersion = await chosenVersion(ctx, lessonItem, mode);
@@ -85,7 +85,7 @@ export async function assembleProgram(
           : lessonEn;
         lessons.push({ id: lessonItem.key, ...lesson });
       }
-      modules.push({ id: child.key, ...module, lessons });
+      modules.push({ id: child.key, ...localModule, lessons });
     }
   }
   const { orderIndex: _o, sw: programSw, ...dataEn } = dataOf<ProgramData>(programVersion);
