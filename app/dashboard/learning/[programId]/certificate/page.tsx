@@ -11,7 +11,8 @@ import { useProfile } from '@/context/profile-context'
 import { usePrograms } from '@/context/content-context'
 import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/back-button'
-import { Award, Printer, Share2, CheckCircle2, Lock, ShieldCheck, RotateCw } from 'lucide-react'
+import { CertificateShare } from '@/components/certificate-share'
+import { Award, Printer, CheckCircle2, Lock, ShieldCheck, RotateCw } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 import { getSiteUrl } from '@/lib/site-url'
 
@@ -79,17 +80,6 @@ export default function CertificatePage() {
     }
   }
 
-  const handleShare = async () => {
-    const text = `I just completed the ${program.title} program on Mwalimu AI — a CBC professional development platform for Kenyan teachers! 🎓 #MwalimuAI #CBC #KenyanTeachers`
-    if (navigator.share) {
-      try { await navigator.share({ title: `${program.title} Certificate`, text }) } catch {}
-    } else {
-      await navigator.clipboard.writeText(text)
-      setShared(true)
-      setTimeout(() => setShared(false), 3000)
-    }
-  }
-
   if (mounted && !isUnlocked) {
     return (
       <div className="max-w-2xl">
@@ -121,10 +111,7 @@ export default function CertificatePage() {
               <RotateCw className="w-4 h-4" />
               {flipped ? 'Front' : 'Flip'}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleShare} className="rounded-xl gap-2">
-              <Share2 className="w-4 h-4" />
-              {shared ? 'Copied!' : 'Share'}
-            </Button>
+            <CertificateShare programTitle={program.title} serial={serial} earnedAt={progress.certificateEarnedAt} verifyUrl={`${getSiteUrl()}/verify?serial=${encodeURIComponent(serial)}`} />
             <Button size="sm" onClick={handlePrint} disabled={isPrinting} className="rounded-xl gap-2">
               {isPrinting ? 'Generating…' : <><Printer className="w-4 h-4" /> Save as PDF</>}
             </Button>
