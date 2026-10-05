@@ -160,7 +160,7 @@ function HeadView({ name, county, code }: { name: string; county: string | null;
         {roster.status === 'LoadingFirstPage' ? <p className="text-sm text-muted-foreground">Loading…</p> : (
           <div className="overflow-x-auto rounded-lg border bg-card">
             <table className="w-full min-w-[40rem] text-left text-sm">
-              <thead className="border-b text-xs text-muted-foreground"><tr><th className="p-3">Teacher</th><th className="p-3">Lessons</th><th className="p-3">Programs</th><th className="p-3">Certificates</th><th className="p-3">Streak</th><th className="p-3">Last active</th><th className="p-3"><span className="sr-only">Actions</span></th></tr></thead>
+              <thead className="border-b text-xs text-muted-foreground"><tr><th scope="col" className="p-3">Teacher</th><th scope="col" className="p-3">Lessons</th><th scope="col" className="p-3">Programs</th><th scope="col" className="p-3">Certificates</th><th scope="col" className="p-3">Streak</th><th scope="col" className="p-3">Last active</th><th scope="col" className="p-3"><span className="sr-only">Actions</span></th></tr></thead>
               <tbody className="divide-y">
                 {roster.results.map((r) => (
                   <tr key={r.profileId}>

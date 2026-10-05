@@ -70,6 +70,7 @@ export function Shell({ children }: { children: ReactNode }) {
   )
   return (
     <div className="min-h-svh bg-muted/20 md:grid md:grid-cols-[14rem_1fr]">
+      <a href="#admin-main" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow">Skip to main content</a>
       <aside className="hidden border-r bg-background p-4 md:flex md:flex-col md:justify-between">
         <div className="space-y-6">
           <div className="flex items-center gap-2 px-1">
@@ -99,7 +100,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Account email={email} role={role} onSignOut={() => void signOut()} />
           </div>
         )}
-        <main className="mx-auto max-w-6xl p-4 md:p-8">{children}</main>
+        <main id="admin-main" tabIndex={-1} className="mx-auto max-w-6xl p-4 outline-none md:p-8">{children}</main>
       </div>
     </div>
   )

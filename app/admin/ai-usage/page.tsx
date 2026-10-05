@@ -37,7 +37,7 @@ export default function AiUsagePage() {
             {data.days.map((d) => <div key={d.date} title={`${d.date}: ${d.total}`} className="flex-1 rounded-t bg-primary" style={{ height: `${Math.max(2, (d.total / peak) * 100)}%` }} />)}
           </div>
           <details className="mt-3 text-sm"><summary className="cursor-pointer text-primary">Show as a table</summary>
-            <table className="mt-2 w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th className="p-1.5">Date</th><th className="p-1.5">Total</th><th className="p-1.5">Coach</th><th className="p-1.5">Tools</th><th className="p-1.5">Assignment review</th><th className="p-1.5">Rehearsal</th><th className="p-1.5">Detector</th></tr></thead>
+            <table className="mt-2 w-full text-left text-xs"><thead className="text-muted-foreground"><tr><th scope="col" className="p-1.5">Date</th><th scope="col" className="p-1.5">Total</th><th scope="col" className="p-1.5">Coach</th><th scope="col" className="p-1.5">Tools</th><th scope="col" className="p-1.5">Assignment review</th><th scope="col" className="p-1.5">Rehearsal</th><th scope="col" className="p-1.5">Detector</th></tr></thead>
               <tbody className="divide-y">{[...data.days].reverse().map((d) => <tr key={d.date}><td className="p-1.5">{d.date}</td><td className="p-1.5">{d.total}</td><td className="p-1.5">{d.byTool.chat}</td><td className="p-1.5">{d.byTool.tools}</td><td className="p-1.5">{d.byTool['assignment-review']}</td><td className="p-1.5">{d.byTool.rehearsal}</td><td className="p-1.5">{d.byTool['detect-ai']}</td></tr>)}</tbody></table>
           </details>
         </div>
