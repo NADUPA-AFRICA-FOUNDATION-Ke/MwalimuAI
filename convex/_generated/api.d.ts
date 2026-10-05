@@ -14,6 +14,7 @@ import type * as admin_analytics from "../admin/analytics.js";
 import type * as admin_announcements from "../admin/announcements.js";
 import type * as admin_audit from "../admin/audit.js";
 import type * as admin_certificates from "../admin/certificates.js";
+import type * as admin_community from "../admin/community.js";
 import type * as admin_content from "../admin/content.js";
 import type * as admin_contentBuilder from "../admin/contentBuilder.js";
 import type * as admin_incidents from "../admin/incidents.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   "admin/announcements": typeof admin_announcements;
   "admin/audit": typeof admin_audit;
   "admin/certificates": typeof admin_certificates;
+  "admin/community": typeof admin_community;
   "admin/content": typeof admin_content;
   "admin/contentBuilder": typeof admin_contentBuilder;
   "admin/incidents": typeof admin_incidents;

@@ -198,11 +198,15 @@ export default defineSchema({
     likesCount: v.number(),
     commentsCount: v.number(),
     isPinned: v.boolean(),
-    status: v.union(v.literal("active"), v.literal("deleted")),
+    status: v.union(v.literal("active"), v.literal("deleted"), v.literal("hidden")),
     createdAt: v.number(),
     updatedAt: v.number(),
     editedAt: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
+    // Set when staff hide a post. Hidden posts are kept (never deleted) and can be restored.
+    moderatedAt: v.optional(v.number()),
+    moderatedBy: v.optional(v.id("staff")),
+    moderationReason: v.optional(v.string()),
   })
     .index("by_status_and_created_at", ["status", "createdAt"])
     .index("by_status_category_and_created_at", ["status", "category", "createdAt"])
@@ -216,9 +220,28 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
     editedAt: v.optional(v.number()),
+    hiddenAt: v.optional(v.number()),
+    hiddenBy: v.optional(v.id("staff")),
+    hiddenReason: v.optional(v.string()),
   })
     .index("by_post_and_created_at", ["postId", "createdAt"])
     .index("by_user_and_created_at", ["userId", "createdAt"]),
+
+  // Learner reports of posts or replies, worked by staff in the console.
+  communityReports: defineTable({
+    postId: v.id("communityPosts"),
+    commentId: v.optional(v.id("communityComments")),
+    reporterId: v.id("profiles"),
+    reason: v.union(v.literal("spam"), v.literal("abusive"), v.literal("misleading"), v.literal("personal_info"), v.literal("other")),
+    note: v.optional(v.string()),
+    status: v.union(v.literal("open"), v.literal("actioned"), v.literal("dismissed")),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.id("staff")),
+  })
+    .index("by_status_and_created_at", ["status", "createdAt"])
+    .index("by_post_and_status", ["postId", "status"])
+    .index("by_reporter_and_created_at", ["reporterId", "createdAt"]),
 
   communityPostLikes: defineTable({
     postId: v.id("communityPosts"),

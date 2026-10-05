@@ -23,6 +23,7 @@ const PERMISSIONS = [
   "analytics.export",
   "analytics.rebuild",
   "announcements.send",
+  "community.moderate",
   "staff.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
@@ -44,6 +45,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, readonly Permission[]> = {
     "tickets.reply",
     "analytics.read",
     "analytics.export",
+    "community.moderate",
     "audit.read",
   ],
   viewer: ["users.read", "streaks.read", "content.read", "tickets.read", "analytics.read", "analytics.export", "audit.read", "audit.read_all"],
