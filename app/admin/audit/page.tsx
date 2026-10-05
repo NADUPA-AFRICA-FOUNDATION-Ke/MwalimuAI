@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useConvex, usePaginatedQuery } from 'convex/react'
+import { useConvex, usePaginatedQuery, useQuery } from 'convex/react'
 import { ShieldCheck, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/convex/_generated/api'
@@ -44,6 +44,7 @@ const ACTIONS = [
 export default function AuditPage() {
   const { can } = useStaff()
   const convex = useConvex()
+  const checkpoint = useQuery(api.admin.audit.lastCheckpoint, can('audit.read_all') ? {} : 'skip')
   const [action, setAction] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -127,6 +128,15 @@ export default function AuditPage() {
           </>
         }
       />
+      {checkpoint !== undefined && (
+        <p role="status" className={`mb-4 rounded-md border p-3 text-sm ${checkpoint?.status === 'broken' ? 'border-red-300 bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100' : 'bg-muted/40'}`}>
+          {checkpoint === null
+            ? 'No daily integrity check has run yet. The first one runs overnight.'
+            : checkpoint.status === 'ok'
+              ? `Integrity check passed ${fmtTime(checkpoint.at)}: ${checkpoint.newRows} new entr${checkpoint.newRows === 1 ? 'y' : 'ies'} verified. Fingerprint ${checkpoint.headHash.slice(0, 12)}…, also emailed to Super Admins.`
+              : `Integrity check FAILED ${fmtTime(checkpoint.at)}: ${checkpoint.note ?? 'the chain does not match'} Investigate now.`}
+        </p>
+      )}
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <Field label="Action">
           <select className={selectClass} value={action} onChange={(e) => setAction(e.target.value)}>

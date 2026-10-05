@@ -91,3 +91,13 @@ export const verifyChain = staffQuery({
     };
   },
 });
+
+/** The most recent daily integrity check, shown at the top of the audit log. */
+export const lastCheckpoint = staffQuery({
+  permission: "audit.read_all",
+  args: {},
+  handler: async (ctx) => {
+    const c = await ctx.db.query("auditCheckpoints").withIndex("by_at").order("desc").first();
+    return c ? { at: c.at, status: c.status, newRows: c.newRows, note: c.note ?? null, headHash: c.headHash } : null;
+  },
+});

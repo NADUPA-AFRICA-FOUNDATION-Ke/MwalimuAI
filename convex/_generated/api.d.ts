@@ -33,6 +33,7 @@ import type * as ai from "../ai.js";
 import type * as aiUsage from "../aiUsage.js";
 import type * as announcements from "../announcements.js";
 import type * as assessments from "../assessments.js";
+import type * as auditWitness from "../auditWitness.js";
 import type * as auth from "../auth.js";
 import type * as certificates from "../certificates.js";
 import type * as community from "../community.js";
@@ -111,6 +112,7 @@ declare const fullApi: ApiFromModules<{
   aiUsage: typeof aiUsage;
   announcements: typeof announcements;
   assessments: typeof assessments;
+  auditWitness: typeof auditWitness;
   auth: typeof auth;
   certificates: typeof certificates;
   community: typeof community;

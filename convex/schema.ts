@@ -748,6 +748,17 @@ export default defineSchema({
   // Small switches staff can change without a deploy (AI limits, emergency stop).
   appSettings: defineTable({ key: v.string(), value: v.any(), updatedAt: v.number() }).index("by_key", ["key"]),
 
+  // Daily proof that the audit log has not been rewritten: the chain is re-checked since the last checkpoint and the
+  // newest hash is emailed to Super Admins, so a copy exists outside the database that an attacker cannot edit.
+  auditCheckpoints: defineTable({
+    at: v.number(),
+    headHash: v.string(),
+    headCreatedAt: v.number(),
+    newRows: v.number(),
+    status: v.union(v.literal("ok"), v.literal("broken")),
+    note: v.optional(v.string()),
+  }).index("by_at", ["at"]),
+
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;
   // feature-specific backfills can promote records into typed tables later.
