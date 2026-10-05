@@ -72,6 +72,13 @@ export const outlineSchema = z.object({
   certificate: z.object({ subtitle: z.string().max(300).default(''), skills: z.array(z.string().max(200)).max(10).default([]) }),
 })
 
+export const postSchema = z.object({
+  excerpt: z.string().min(10).max(500),
+  content: z.string().min(300).max(40000),
+  category: z.string().max(60).default(''),
+  readTime: z.string().max(30).default(''),
+})
+
 export const improveSchema = z.object({ text: z.string().min(1).max(60000) })
 
 export const reviewSchema = z.object({
@@ -138,6 +145,20 @@ ${trim(i.context, 14000)}
 Rules: exactly 4 options per question, exactly one clearly correct option, plausible wrong options that reflect real misconceptions, similar length across options, no "all of the above" or "none of the above", vary the position of the correct answer (correct is the index 0 to 3), and give a one-sentence explanation of why the answer is right.
 
 JSON shape: {"questions":[{"question":string,"options":[string,string,string,string],"correct":0|1|2|3,"explanation":string}]}`
+}
+
+export type PostInput = { topic: string; audience?: string; notes?: string; existing?: string }
+export function postPrompt(i: PostInput) {
+  return `Write a blog article for the Mwalimu AI blog, read by Kenyan teachers.
+
+Topic: ${trim(i.topic, 300)}
+Audience: ${trim(i.audience, 100) || 'Kenyan teachers'}
+Author's notes: ${trim(i.notes, 1500) || 'none'}
+${i.existing?.trim() ? `Build on this draft:\n"""\n${trim(i.existing, 8000)}\n"""` : ''}
+
+Write 600 to 900 words in Markdown: a short opening that names a real classroom problem, 3 to 5 "##" sections with practical steps and Kenyan examples, and a closing "Try this week" list. "excerpt" is a two-sentence summary for the blog list. "category" is one of: Pedagogy, Assessment, Inclusion, Technology, Community, Wellbeing. "readTime" like "5 min read".
+
+JSON shape: {"excerpt":string,"content":string,"category":string,"readTime":string}`
 }
 
 export const IMPROVE_ACTIONS = {

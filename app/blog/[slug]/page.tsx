@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { BackButton } from '@/components/back-button'
-import { getBlogPost, getAllBlogPosts } from '@/lib/blog-data'
+import { loadPost, loadPosts } from '@/lib/blog-source'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Calendar, Clock, User, ArrowRight } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 
+export const revalidate = 300
+
 export async function generateStaticParams() {
-  const posts = getAllBlogPosts()
+  const posts = await loadPosts()
   return posts.map((post) => ({
     slug: post.slug,
   }))
@@ -19,7 +21,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = getBlogPost(slug)
+  const post = await loadPost(slug)
 
   if (!post) {
     return {
@@ -35,13 +37,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = getBlogPost(slug)
+  const post = await loadPost(slug)
 
   if (!post) {
     notFound()
   }
 
-  const allPosts = getAllBlogPosts()
+  const allPosts = await loadPosts()
   const relatedPosts = allPosts.filter((p) => p.slug !== slug).slice(0, 3)
 
   return (

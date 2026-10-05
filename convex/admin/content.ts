@@ -7,10 +7,14 @@ import { assembleProgram } from "../lib/contentRead";
 import { CBC_LEVELS, COUNTIES, SUBJECTS } from "../lib/taxonomy";
 import { PROGRAMS } from "../../lib/learning-paths-data";
 import { fail } from "../lib/errors";
-import { insertItem, publishDraft, readinessProblem } from "../lib/contentWrite";
+import { insertItem, insertPublishedItem, publishDraft, readinessProblem } from "../lib/contentWrite";
+import { FAQS } from "../../lib/faq-data";
+import { RESOURCES } from "../../lib/resources-data";
+import { blogPosts } from "../../lib/blog-data";
 import { NEEDS_FALLBACK, NEEDS_QUESTIONS, NEEDS_RULES, NEEDS_SECTIONS } from "../../lib/needs-assessment-data";
 
-const kindV = v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"), v.literal("assessment"));
+const kindV = v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"), v.literal("assessment"), v.literal("resources"), v.literal("faq"), v.literal("post"));
+const ROOT_KINDS = ["program", "assessment", "resources", "faq", "post"] as const;
 const KEY = /^[a-z0-9][a-z0-9-]{0,59}$/;
 
 const label = (i: Doc<"cmsItems">) => `${i.kind}:${i.programKey}/${i.key}`;
@@ -197,8 +201,8 @@ export const createItem = staffMutation({
     if (!KEY.test(key)) throw fail("INVALID_CONTENT", "Key must be lowercase letters, numbers and dashes");
     let programKey = key,
       parent: Doc<"cmsItems"> | null = null;
-    if (args.kind === "program" || args.kind === "assessment") {
-      const rootKind = args.kind;
+    if ((ROOT_KINDS as readonly string[]).includes(args.kind)) {
+      const rootKind = args.kind as (typeof ROOT_KINDS)[number];
       if (args.parentId) throw fail("INVALID_CONTENT", `A ${rootKind} has no parent`);
       if (
         await ctx.db
@@ -627,5 +631,67 @@ export const importNeedsAssessment = staffMutation({
       after: { questions: data.questions.length, importedBuiltIn: true },
     });
     return id;
+  },
+});
+
+/** Resource library, FAQ and blog posts, for the Content studio. */
+export const collections = staffQuery({
+  permission: "content.read",
+  args: {},
+  handler: async (ctx) => {
+    const out: Record<"resources" | "faq" | "post", { _id: Id<"cmsItems">; key: string; title: string; published: boolean; hasDraft: boolean; archived: boolean; updatedAt: number }[]> = { resources: [], faq: [], post: [] };
+    for (const kind of ["resources", "faq", "post"] as const) {
+      const items = await ctx.db.query("cmsItems").withIndex("by_kind_and_program", (q) => q.eq("kind", kind)).take(300);
+      out[kind] = items.map((i) => ({ _id: i._id, key: i.key, title: i.title, published: i.publishedVersionId !== undefined, hasDraft: i.draftVersionId !== undefined, archived: i.archivedAt !== undefined, updatedAt: i.updatedAt }));
+    }
+    return out;
+  },
+});
+
+/** Brings the built-in resource list, FAQ or blog posts under management, live and unchanged. Skips what exists. */
+export const importBuiltIn = staffMutation({
+  permission: "content.publish",
+  args: { what: v.union(v.literal("resources"), v.literal("faq"), v.literal("posts")) },
+  handler: async (ctx, args, { staff }, log) => {
+    const has = async (kind: "resources" | "faq" | "post", key: string) =>
+      Boolean(await ctx.db.query("cmsItems").withIndex("by_program_and_key", (q) => q.eq("programKey", key).eq("kind", kind).eq("key", key)).first());
+    const tags = { cbcLevels: [], subjects: [], counties: [] };
+    let created = 0;
+    if (args.what === "resources") {
+      if (await has("resources", "resources")) throw fail("ALREADY_EXISTS", "The resource library is already managed here");
+      const types: Record<string, string> = { PDF: "PDF", Video: "Video" };
+      await insertPublishedItem(ctx, staff._id, {
+        kind: "resources",
+        key: "resources",
+        data: { title: "Resource library", orderIndex: 0, tags, items: RESOURCES.map((r) => ({ id: String(r.id), title: r.title, description: r.description, type: types[r.type] ?? "Link", url: r.url ?? "", size: r.size, tags: r.tags, free: r.free })) },
+      });
+      created = RESOURCES.length;
+    } else if (args.what === "faq") {
+      if (await has("faq", "faq")) throw fail("ALREADY_EXISTS", "The FAQ is already managed here");
+      await insertPublishedItem(ctx, staff._id, { kind: "faq", key: "faq", data: { title: "FAQ", orderIndex: 0, tags, sections: FAQS.map((s) => ({ title: s.category, items: s.questions })) } });
+      created = FAQS.reduce((n, s) => n + s.questions.length, 0);
+    } else {
+      for (const p of blogPosts) {
+        if (await has("post", p.slug)) continue;
+        await insertPublishedItem(ctx, staff._id, {
+          kind: "post",
+          key: p.slug,
+          data: { title: p.title, excerpt: p.excerpt, content: p.content.trim(), author: p.author, authorRole: p.authorRole, category: p.category, readTime: p.readTime, date: p.date, image: p.image, orderIndex: p.id, tags },
+        });
+        created++;
+      }
+    }
+    await log({ action: "content.import_builtin", targetType: "content", targetId: args.what, after: { created } });
+    return { created };
+  },
+});
+
+/** One-time upload address for attaching a file (PDF, audio…) to a resource. */
+export const generateUploadUrl = staffMutation({
+  permission: "content.edit",
+  args: {},
+  handler: async (ctx, _args, _staff, log) => {
+    await log({ action: "content.upload_url", targetType: "content", targetId: "resource-file" });
+    return await ctx.storage.generateUploadUrl();
   },
 });

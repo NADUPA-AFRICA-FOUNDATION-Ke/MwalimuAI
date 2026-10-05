@@ -5,7 +5,7 @@
 import { canonicalCounty, canonicalLevel, canonicalSubject } from "./taxonomy";
 import { fail } from "./errors";
 
-export type ContentKind = "program" | "module" | "lesson" | "quiz" | "assessment";
+export type ContentKind = "program" | "module" | "lesson" | "quiz" | "assessment" | "resources" | "faq" | "post";
 export type Tags = { cbcLevels: string[]; subjects: string[]; counties: string[] };
 
 export type QuizQuestion = {
@@ -67,7 +67,40 @@ export type AssessmentData = Common & {
   rules: RecommendationRule[];
   fallbackProgramIds: string[];
 };
-export type ItemData = { lesson: LessonData; module: ModuleData; quiz: QuizData; program: ProgramData; assessment: AssessmentData };
+export type ResourceEntry = {
+  id: string;
+  title: string;
+  description: string;
+  type: "PDF" | "Video" | "Link" | "Template" | "Audio";
+  url: string; // external link; empty when a file is attached or the item is not downloadable yet
+  size: string;
+  tags: string[];
+  free: boolean;
+  file?: { storageId: string; name: string };
+};
+export type ResourcesData = Common & { title: string; items: ResourceEntry[] };
+export type FaqData = Common & { title: string; sections: { title: string; items: { q: string; a: string }[] }[] };
+export type PostData = Common & {
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  authorRole: string;
+  category: string;
+  readTime: string;
+  date: string;
+  image: string;
+};
+export type ItemData = {
+  lesson: LessonData;
+  module: ModuleData;
+  quiz: QuizData;
+  program: ProgramData;
+  assessment: AssessmentData;
+  resources: ResourcesData;
+  faq: FaqData;
+  post: PostData;
+};
 
 const bad = (message: string) => fail("INVALID_CONTENT", message);
 const str = (v: unknown, field: string, max: number, allowEmpty = false) => {
@@ -137,6 +170,9 @@ function build(kind: ContentKind, raw: Record<string, any>, lenient: boolean): I
   if (!raw || typeof raw !== "object") throw bad("Content is required");
   const tags = normalizeTags(raw.tags);
   if (kind === "assessment") return buildAssessment(raw, tags, lenient);
+  if (kind === "resources") return buildResources(raw, tags, lenient);
+  if (kind === "faq") return buildFaq(raw, tags, lenient);
+  if (kind === "post") return buildPost(raw, tags, lenient);
   if (kind === "lesson") {
     return {
       title: str(raw.title, "title", 200),
@@ -290,5 +326,95 @@ export function assessmentProblem(data: AssessmentData): string | null {
   }
   if (data.rules.some((r) => !r.programId.trim() || r.when.length === 0 || r.when.some((w) => w.answers.length === 0)))
     return "A recommendation rule is incomplete";
+  return null;
+}
+
+const RESOURCE_TYPES = ["PDF", "Video", "Link", "Template", "Audio"] as const;
+const httpsUrl = (v: unknown, field: string, lenient: boolean) => {
+  const u = typeof v === "string" ? v.trim() : "";
+  if (u === "") return "";
+  if (!/^https:\/\/[^\s]+$/i.test(u) || u.length > 1000) {
+    if (lenient && u.length <= 1000) return u; // drafts may hold a half-typed address; readiness rejects it
+    throw bad(`${field} must be a web address starting with https://`);
+  }
+  return u;
+};
+
+function buildResources(raw: Record<string, any>, tags: Tags, lenient: boolean): ResourcesData {
+  if (!Array.isArray(raw.items) || raw.items.length > 200) throw bad("A resource library holds up to 200 resources");
+  const ids = new Set<string>();
+  const items: ResourceEntry[] = raw.items.map((r: any, i: number) => {
+    const at = `Resource ${i + 1}`;
+    const id = str(r?.id, `${at} id`, 40);
+    if (ids.has(id)) throw bad(`${at} reuses id ${id}`);
+    ids.add(id);
+    if (!RESOURCE_TYPES.includes(r?.type)) throw bad(`${at} has an unknown type`);
+    const file = r?.file && typeof r.file.storageId === "string" ? { storageId: r.file.storageId.slice(0, 100), name: str(r.file.name ?? "file", `${at} file name`, 200, true) } : undefined;
+    return {
+      id,
+      title: str(r.title, `${at} title`, 200, lenient),
+      description: str(r.description ?? "", `${at} description`, 1000, true),
+      type: r.type,
+      url: httpsUrl(r.url, `${at} link`, lenient),
+      size: str(r.size ?? "", `${at} size`, 40, true),
+      tags: strListLenient(r.tags ?? [], `${at} tags`, 8, 40, lenient),
+      free: r.free !== false,
+      ...(file ? { file } : {}),
+    };
+  });
+  return { title: str(raw.title ?? "Resource library", "title", 200), items, orderIndex: order(raw.orderIndex ?? 0), tags };
+}
+
+function buildFaq(raw: Record<string, any>, tags: Tags, lenient: boolean): FaqData {
+  if (!Array.isArray(raw.sections) || raw.sections.length < 1 || raw.sections.length > 20) throw bad("Use 1 to 20 FAQ sections");
+  const sections = raw.sections.map((s: any, i: number) => ({
+    title: str(s?.title, `Section ${i + 1} title`, 120, lenient),
+    items: (Array.isArray(s?.items) ? s.items : []).slice(0, 60).map((x: any, n: number) => ({
+      q: str(x?.q, `Section ${i + 1} question ${n + 1}`, 300, lenient),
+      a: str(x?.a, `Section ${i + 1} answer ${n + 1}`, 4000, lenient),
+    })),
+  }));
+  return { title: str(raw.title ?? "FAQ", "title", 200), sections, orderIndex: order(raw.orderIndex ?? 0), tags };
+}
+
+function buildPost(raw: Record<string, any>, tags: Tags, lenient: boolean): PostData {
+  const image = typeof raw.image === "string" ? raw.image.trim() : "";
+  if (image && !/^(\/[\w./-]+|https:\/\/images\.unsplash\.com\/[^\s]+)$/.test(image))
+    throw bad("Image must be one of the site pictures or an images.unsplash.com address");
+  return {
+    title: str(raw.title, "title", 200),
+    excerpt: str(raw.excerpt ?? "", "excerpt", 500, true),
+    content: str(raw.content ?? "", "content", 100_000, true),
+    author: str(raw.author ?? "", "author", 100, true),
+    authorRole: str(raw.authorRole ?? "", "author role", 100, true),
+    category: str(raw.category ?? "", "category", 60, true),
+    readTime: str(raw.readTime ?? "", "read time", 30, true),
+    date: str(raw.date ?? "", "date", 40, true),
+    image,
+    orderIndex: order(raw.orderIndex ?? 0),
+    tags,
+  };
+}
+
+/** What still has to be filled in before these can go live. */
+export function resourcesProblem(d: ResourcesData): string | null {
+  for (const [i, r] of d.items.entries()) {
+    if (!r.title.trim()) return `Resource ${i + 1} has no title`;
+    if (r.url && !/^https:\/\/\S+$/i.test(r.url)) return `Resource ${i + 1} has a link that does not start with https://`;
+    if (r.free && !r.url && !r.file) return `Resource ${i + 1} is free but has no link or file`;
+  }
+  return null;
+}
+export function faqProblem(d: FaqData): string | null {
+  if (d.sections.some((s) => !s.title.trim())) return "Every FAQ section needs a title";
+  if (d.sections.every((s) => s.items.length === 0)) return "Add at least one question";
+  if (d.sections.some((s) => s.items.some((x) => !x.q.trim() || !x.a.trim()))) return "A question or answer is blank";
+  return null;
+}
+export function postProblem(d: PostData): string | null {
+  if (!d.excerpt.trim()) return "Write a short summary (excerpt)";
+  if (d.content.trim().length < 200) return "The article is too short";
+  if (!d.author.trim()) return "Add an author";
+  if (!d.category.trim()) return "Choose a category";
   return null;
 }

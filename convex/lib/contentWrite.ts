@@ -1,6 +1,9 @@
 import type { MutationCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
-import { assertPublishable, assessmentProblem, titleOf, validateContent, type AssessmentData, type ContentKind, type ItemData } from "./contentValidation";
+import {
+  assertPublishable, assessmentProblem, faqProblem, postProblem, resourcesProblem, titleOf, validateContent,
+  type AssessmentData, type ContentKind, type FaqData, type ItemData, type PostData, type ResourcesData,
+} from "./contentValidation";
 import { fail } from "./errors";
 
 /** Shared write helpers for the content builder: creating items, starter content, and going live. */
@@ -135,6 +138,9 @@ export async function insertItem(
 /** Placeholder text left in a body must never reach learners. */
 export function placeholderProblem(kind: ContentKind, data: ItemData[ContentKind]): string | null {
   if (kind === "assessment") return assessmentProblem(data as AssessmentData);
+  if (kind === "resources") return resourcesProblem(data as ResourcesData);
+  if (kind === "faq") return faqProblem(data as FaqData);
+  if (kind === "post") return postProblem(data as PostData);
   if (kind === "lesson" && (data as ItemData["lesson"]).reading.includes(LESSON_PLACEHOLDER))
     return "The lesson text still says “Write the lesson here.”";
   if (kind === "quiz") {
@@ -188,4 +194,36 @@ export async function publishDraft(ctx: Pick<MutationCtx, "db">, i: Doc<"cmsItem
     updatedAt: now,
   });
   return { before: before ? { version: before.version } : null, after: { version: draft.version } };
+}
+
+/** Inserts a root item as already-live v1 (used to bring built-in content under management unchanged). */
+export async function insertPublishedItem(
+  ctx: Pick<MutationCtx, "db">,
+  staffId: Id<"staff">,
+  args: { kind: ContentKind; key: string; data: unknown },
+) {
+  const data = validateContent(args.kind, args.data, true);
+  const now = Date.now();
+  const itemId = await ctx.db.insert("cmsItems", {
+    kind: args.kind,
+    key: args.key,
+    programKey: args.key,
+    title: titleOf(data),
+    orderIndex: data.orderIndex,
+    cbcLevels: [],
+    subjects: [],
+    counties: [],
+    updatedAt: now,
+  });
+  const versionId = await ctx.db.insert("cmsVersions", {
+    itemId,
+    version: 1,
+    status: "published",
+    data,
+    authorId: staffId,
+    createdAt: now,
+    publishedAt: now,
+  });
+  await ctx.db.patch(itemId, { publishedVersionId: versionId });
+  return itemId;
 }

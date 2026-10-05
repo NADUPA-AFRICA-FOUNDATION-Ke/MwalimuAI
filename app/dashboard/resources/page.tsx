@@ -6,78 +6,22 @@ import { Badge } from '@/components/ui/badge'
 import { BackButton } from '@/components/back-button'
 import { Download, BookOpen, Video, FileText, ExternalLink, Lock } from 'lucide-react'
 import { toast } from 'sonner'
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { RESOURCES } from '@/lib/resources-data'
 import Link from 'next/link'
 
-const resources = [
-  {
-    id: 1,
-    title: 'CBC Implementation Guide 2024',
-    type: 'PDF',
-    size: '2.4 MB',
-    icon: FileText,
-    description: 'Comprehensive guide on CBC curriculum implementation strategies.',
-    tags: ['CBC', 'Implementation', 'Guidelines'],
-    url: 'https://kicd.ac.ke/curriculum-designs/',
-    free: true,
-  },
-  {
-    id: 2,
-    title: 'Formative Assessment Toolkit',
-    type: 'PDF',
-    size: '1.8 MB',
-    icon: BookOpen,
-    description: 'Ready-to-use templates and tools for formative assessments.',
-    tags: ['Assessment', 'Templates', 'Tools'],
-    url: null,
-    free: false,
-  },
-  {
-    id: 3,
-    title: 'Video: Competency-Based Grading',
-    type: 'Video',
-    size: '45 min',
-    icon: Video,
-    description: 'Expert video on implementing competency-based grading systems.',
-    tags: ['Grading', 'Video', 'Assessment'],
-    url: 'https://www.youtube.com/@KICDKenya',
-    free: true,
-  },
-  {
-    id: 4,
-    title: 'Inclusive Classroom Strategies',
-    type: 'PDF',
-    size: '2.1 MB',
-    icon: FileText,
-    description: 'Practical strategies for supporting diverse learners in CBC.',
-    tags: ['Inclusion', 'Diversity', 'Strategies'],
-    url: null,
-    free: false,
-  },
-  {
-    id: 5,
-    title: 'Digital Tools for CBC',
-    type: 'Video',
-    size: '30 min',
-    icon: Video,
-    description: 'Overview of digital tools that support CBC implementation.',
-    tags: ['Technology', 'Tools', 'Video'],
-    url: null,
-    free: false,
-  },
-  {
-    id: 6,
-    title: 'Parent Communication Templates',
-    type: 'PDF',
-    size: '0.9 MB',
-    icon: FileText,
-    description: 'Templates for communicating CBC changes to parents.',
-    tags: ['Communication', 'Templates', 'Parents'],
-    url: null,
-    free: false,
-  },
-]
+type Row = { id: string; title: string; description: string; type: string; size: string; tags: string[]; free: boolean; url: string | null; locked: boolean }
+
+const ICONS: Record<string, typeof FileText> = { PDF: FileText, Video, Link: ExternalLink, Template: FileText, Audio: Video }
+
+/** Staff manage the library in the admin console; until they publish a copy, the built-in list is shown. */
+const BUILT_IN: Row[] = RESOURCES.map((r) => ({ ...r, id: String(r.id), locked: !r.free }))
+
 
 export default function ResourcesPage() {
+  const managed = useQuery(api.content.resources, {})
+  const resources: Row[] = managed ?? BUILT_IN
   return (
     <div className="space-y-8">
       <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
@@ -91,7 +35,7 @@ export default function ResourcesPage() {
       {/* Resources Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {resources.map((resource) => {
-          const Icon = resource.icon
+          const Icon = ICONS[resource.type] ?? FileText
           return (
             <Card key={resource.id} className="p-6 hover:shadow-lg transition-shadow flex flex-col">
               <div className="flex gap-4 mb-4">
@@ -125,16 +69,16 @@ export default function ResourcesPage() {
               </div>
 
               {resource.url ? (
-                <Button className="w-full gap-2" asChild>
+                <Button className="w-full gap-2 min-h-11" asChild>
                   <a href={resource.url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="w-4 h-4" />
                     {resource.type === 'Video' ? 'Watch Resource' : 'Open Resource'}
                   </a>
                 </Button>
-              ) : (
+              ) : resource.locked ? (
                 <Button
-                  className="w-full gap-2"
-                  variant={resource.free ? 'default' : 'outline'}
+                  className="w-full gap-2 min-h-11"
+                  variant="outline"
                   onClick={() =>
                     toast.info('Professional plan required', {
                       description: 'Upgrade to Professional to download all resources.',
@@ -142,11 +86,11 @@ export default function ResourcesPage() {
                     })
                   }
                 >
-                  {resource.free ? (
-                    <><Download className="w-4 h-4" /> Download Resource</>
-                  ) : (
-                    <><Lock className="w-4 h-4" /> Unlock on Professional</>
-                  )}
+                  <Lock className="w-4 h-4" /> Unlock on Professional
+                </Button>
+              ) : (
+                <Button className="w-full gap-2 min-h-11" variant="outline" disabled>
+                  <Download className="w-4 h-4" /> Coming soon
                 </Button>
               )}
             </Card>

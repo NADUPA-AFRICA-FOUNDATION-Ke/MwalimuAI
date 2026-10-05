@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { ModuleForm, LessonForm, ProgramForm, QuizForm, type Data } from '@/components/admin/content/forms'
 import { AssessmentForm } from '@/components/admin/content/assessment-form'
 import { LessonAssist, QuizAssist } from '@/components/admin/content/ai-assist'
+import { FaqForm, PostForm, ResourcesForm } from '@/components/admin/content/page-forms'
 import { TagPicker } from '@/components/admin/content/tag-picker'
 import {
   Empty,
@@ -24,12 +25,16 @@ import {
   useStaff,
 } from '@/components/admin/common'
 
+const ROOT_DOCS = ['assessment', 'resources', 'faq', 'post']
 const KIND_LABEL: Record<string, string> = {
   program: 'Learning path details',
   module: 'Module',
   lesson: 'Lesson',
   quiz: 'Assessment',
   assessment: 'Needs assessment',
+  resources: 'Resource library',
+  faq: 'FAQ',
+  post: 'Blog post',
 }
 
 export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'cmsItems'>; embedded?: boolean; onGone?: () => void }) {
@@ -86,7 +91,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
     <>
       {!embedded && (
         <Link
-          href={item.kind === 'assessment' ? '/admin/content' : `/admin/content/${programKey}`}
+          href={ROOT_DOCS.includes(item.kind) ? '/admin/content' : `/admin/content/${programKey}`}
           className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -115,7 +120,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
                 {status.replace('_', ' ')}
               </Pill>
             )}
-            {!embedded && item.kind !== 'assessment' && (
+            {!embedded && !ROOT_DOCS.includes(item.kind) && (
               <Button asChild variant="outline" size="sm">
                 <Link href={`/admin/content/${programKey}/preview?mode=draft`}>
                   <Eye className="mr-2 h-4 w-4" />
@@ -167,7 +172,10 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
           {item.kind === 'quiz' && canEdit && <QuizAssist data={data} set={set} path={pathTitle} programKey={programKey} disabled={!canEdit} />}
           {item.kind === 'quiz' && <QuizForm data={data} set={set} />}
           {item.kind === 'assessment' && <AssessmentForm data={data} set={set} />}
-          {!embedded && item.kind !== 'assessment' && (
+          {item.kind === 'resources' && <ResourcesForm data={data} set={set} />}
+          {item.kind === 'faq' && <FaqForm data={data} set={set} />}
+          {item.kind === 'post' && <PostForm data={data} set={set} />}
+          {!embedded && !ROOT_DOCS.includes(item.kind) && (
           <Field label="Display order" hint="Lower numbers come first.">
             <Input
               type="number"
@@ -178,7 +186,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
             />
           </Field>
           )}
-          {item.kind !== 'assessment' && <TagPicker tags={data.tags} tax={tax} onChange={(tags) => set({ tags })} />}
+          {!ROOT_DOCS.includes(item.kind) && <TagPicker tags={data.tags} tax={tax} onChange={(tags) => set({ tags })} />}
         </fieldset>
 
         <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t bg-background/95 p-3 backdrop-blur md:static md:mx-0 md:rounded-lg md:border">

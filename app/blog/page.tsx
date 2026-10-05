@@ -6,7 +6,7 @@ import { MarketingFooter } from '@/components/marketing-footer'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, Clock, User, ArrowRight } from 'lucide-react'
-import { getAllBlogPosts } from '@/lib/blog-data'
+import { loadPosts } from '@/lib/blog-source'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -14,8 +14,11 @@ export const metadata: Metadata = {
   description: 'Practical insights, tips, and resources for Kenyan teachers implementing the Competency-Based Curriculum.',
 }
 
-export default function BlogPage() {
-  const blogPosts = getAllBlogPosts()
+// Posts are managed in the admin console; new and edited posts appear within a few minutes.
+export const revalidate = 300
+
+export default async function BlogPage() {
+  const blogPosts = await loadPosts()
   const featuredPost = blogPosts[0]
   const otherPosts = blogPosts.slice(1)
 

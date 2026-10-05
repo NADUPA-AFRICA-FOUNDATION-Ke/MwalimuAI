@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthActions } from '@convex-dev/auth/react'
 import {
   BarChart3,
+  Megaphone,
   BookMarked,
   ClipboardList,
   LayoutDashboard,
@@ -25,6 +26,7 @@ import { ROLE_LABELS, useStaff } from './common'
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, perm: null },
   { href: '/admin/users', label: 'Users', icon: Users, perm: 'users.read' },
+  { href: '/admin/announcements', label: 'Announcements', icon: Megaphone, perm: 'announcements.send' },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3, perm: 'analytics.read' },
   { href: '/admin/tickets', label: 'Tickets', icon: LifeBuoy, perm: 'tickets.read' },
   { href: '/admin/incidents', label: 'Incidents', icon: Siren, perm: 'streaks.read' },

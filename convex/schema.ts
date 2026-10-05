@@ -537,7 +537,7 @@ export default defineSchema({
 
   // ── Content management ─────────────────────────────────────────────────
   cmsItems: defineTable({
-    kind: v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"), v.literal("assessment")),
+    kind: v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"), v.literal("assessment"), v.literal("resources"), v.literal("faq"), v.literal("post")),
     // Stable id the learner app and learningProgress refer to (e.g. "cbc-foundations", "m1", "l1").
     key: v.string(),
     parentId: v.optional(v.id("cmsItems")),
@@ -620,6 +620,20 @@ export default defineSchema({
     shard: v.number(),
     value: v.number(),
   }).index("by_key_and_shard", ["key", "shard"]),
+
+  // Staff broadcasts shown in learners' notification bell. One row regardless of audience size; learners read the
+  // ones that match them, so sending to everyone costs the same as sending to one county.
+  announcements: defineTable({
+    title: v.string(),
+    body: v.string(),
+    link: v.optional(v.string()),
+    audience: v.object({ all: v.boolean(), counties: v.array(v.string()), levels: v.array(v.string()) }),
+    startsAt: v.number(),
+    endsAt: v.optional(v.number()),
+    createdBy: v.id("staff"),
+    createdAt: v.number(),
+    cancelledAt: v.optional(v.number()),
+  }).index("by_start", ["startsAt"]),
 
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;

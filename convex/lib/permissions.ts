@@ -22,6 +22,7 @@ const PERMISSIONS = [
   "analytics.read",
   "analytics.export",
   "analytics.rebuild",
+  "announcements.send",
   "staff.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
@@ -30,7 +31,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 // admin function enforces it server-side through convex/lib/staff.ts.
 export const ROLE_PERMISSIONS: Record<StaffRole, readonly Permission[]> = {
   super_admin: PERMISSIONS,
-  content_manager: ["content.read", "content.edit", "content.review", "content.publish", "analytics.read", "audit.read"],
+  content_manager: ["content.read", "content.edit", "content.review", "content.publish", "analytics.read", "announcements.send", "audit.read"],
   support_agent: [
     "users.read",
     "streaks.read",

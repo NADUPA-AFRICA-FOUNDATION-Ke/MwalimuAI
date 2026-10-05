@@ -107,3 +107,21 @@ stream logs to an external write-once store if you need stronger guarantees.
 `npm run test:convex` runs the role/permission, audit, streak, incident, content and certificate
 tests against an in-memory Convex. After adding Convex modules without `npx convex dev`, run
 `npm run convex:sync-api` to refresh `convex/_generated/api.d.ts`.
+
+## Content studio, AI assistant and insights
+
+- **Content** (`/admin/content`) is one studio with tabs: Learning paths, Needs assessment, Resource library, FAQ, Blog.
+  Anything the learner app or public site shows from the built-in copy can be brought under management with one
+  click ("Bring the built-in … here to edit"); the live content is unchanged until staff publish an edit.
+- **Learning path builder**: outline on the left, editor on the right, release the whole path at once
+  (submit all, approve all, publish all). The review rule is unchanged: nobody approves their own submission.
+- **AI assistant** (`/api/admin/ai`): drafts a whole path from a brief, writes lessons, quizzes and blog posts,
+  improves or translates text, and reviews content. Output is always a draft. Needs `GROQ_API_KEY` on the web host;
+  optional `ADMIN_AI_MODEL` (default `openai/gpt-oss-120b`) and `ADMIN_AI_PROVIDER=google` to use Gemini instead
+  (then `GOOGLE_GENERATIVE_AI_API_KEY`). Only MFA-verified staff with the right permission can call it, it is rate
+  limited per person, and each use is written to the audit log.
+- **Insights** (Content > Content insights, and "Learner insights" on each path): lesson drop-off, quiz question
+  difficulty and distractor analysis, and what teachers asked for in the needs assessment. Backed by the same
+  counters as Analytics (`Recalculate from source` rebuilds them). Nothing is flagged below 20 learners.
+- **Announcements** (`/admin/announcements`): one row per message, shown in matching learners' notification bell
+  (everyone, a county, or a level). Withdrawable.

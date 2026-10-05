@@ -35,8 +35,8 @@ async function programItems(ctx: Pick<MutationCtx, "db">, programKey: string) {
     .query("cmsItems")
     .withIndex("by_program_and_key", (q) => q.eq("programKey", programKey))
     .take(500);
-  if (!items.some((i) => i.kind === "program" || i.kind === "assessment")) throw fail("NOT_FOUND", "Program not found");
-  const depth = { program: 0, assessment: 0, module: 1, quiz: 1, lesson: 2 } as const;
+  if (!items.some((i) => i.kind === "program" || i.kind === "assessment" || i.kind === "resources" || i.kind === "faq" || i.kind === "post")) throw fail("NOT_FOUND", "Program not found");
+  const depth = { program: 0, assessment: 0, resources: 0, faq: 0, post: 0, module: 1, quiz: 1, lesson: 2 } as const;
   // Parents first, then in reading order, so release steps always see a live parent.
   return items.sort((a, b) => depth[a.kind] - depth[b.kind] || a.orderIndex - b.orderIndex);
 }

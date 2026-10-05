@@ -7,7 +7,7 @@ import { api } from '@/convex/_generated/api'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import {
   IMPROVE_ACTIONS, SYSTEM, improvePrompt, improveSchema, lessonPrompt, lessonSchema, outlinePrompt, outlineSchema,
-  parseJsonLoose, quizPrompt, quizSchema, recommendPrompt, recommendSchema, reviewPrompt, reviewSchema,
+  parseJsonLoose, postPrompt, postSchema, quizPrompt, quizSchema, recommendPrompt, recommendSchema, reviewPrompt, reviewSchema,
   type ImproveAction,
 } from '@/lib/admin-ai'
 
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
   const task = text(body.task, 40)
   const LIMITS: Record<string, [number, string]> = {
     path_outline: [20, 'content.edit'], lesson: [80, 'content.edit'], quiz: [40, 'content.edit'],
-    improve: [100, 'content.edit'], review: [80, 'content.edit'], recommend: [20, 'analytics.read'],
+    improve: [100, 'content.edit'], post: [30, 'content.edit'], review: [80, 'content.edit'], recommend: [20, 'analytics.read'],
   }
   const rule = LIMITS[task]
   if (!rule) return json({ error: 'Unknown task.' }, 400)
@@ -119,6 +119,8 @@ export async function POST(req: Request) {
         5000,
         0.3,
       )
+    } else if (task === 'post') {
+      data = await generate(postSchema, postPrompt({ topic: text(body.topic, 300), audience: text(body.audience, 100), notes: text(body.notes, 1500), existing: text(body.existing, 8000) }), 6000)
     } else if (task === 'improve') {
       const action = text(body.action, 20) as ImproveAction
       if (!(action in IMPROVE_ACTIONS)) return json({ error: 'Unknown action.' }, 400)

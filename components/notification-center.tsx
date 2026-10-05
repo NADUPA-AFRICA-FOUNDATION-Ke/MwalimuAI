@@ -20,6 +20,7 @@ interface Notification {
   time: string
   read: boolean
   link?: string
+  at?: number
 }
 
 function timeAgo(ms: number): string {
@@ -59,7 +60,14 @@ export function NotificationCenter() {
   const dismiss = useMutation(api.notifications.dismiss)
   const dismissAll = useMutation(api.notifications.dismissAll)
 
-  const notifications: Notification[] = (rows ?? []).map(r => ({
+  // Announcements from staff are shared rows; this learner's read/dismissed marks for them live in their profile.
+  const announcements = useQuery(api.announcements.listMine, user ? {} : 'skip')
+  const cloudProfile = useQuery(api.profiles.me, user ? {} : 'skip')
+  const savePrefs = useMutation(api.profiles.updatePreferences)
+  const marks = cloudProfile?.notificationsState ?? { read: [] as string[], dismissed: [] as string[] }
+  const annId = (id: string) => `ann:${id}`
+
+  const personal: Notification[] = (rows ?? []).map(r => ({
     id: r._id,
     type: r.type,
     title: r.title,
@@ -67,7 +75,21 @@ export function NotificationCenter() {
     time: timeAgo(r.createdAt),
     read: r.readAt !== undefined,
     link: r.link,
+    at: r.createdAt,
   }))
+  const shared: Notification[] = (announcements ?? [])
+    .filter(a => !marks.dismissed.includes(annId(a._id)))
+    .map(a => ({
+      id: annId(a._id),
+      type: 'announcement' as const,
+      title: a.title,
+      message: a.body,
+      time: timeAgo(a.startsAt),
+      read: marks.read.includes(annId(a._id)),
+      link: a.link,
+      at: a.startsAt,
+    }))
+  const notifications: Notification[] = [...personal, ...shared].sort((x, y) => (y.at ?? 0) - (x.at ?? 0))
 
   const unreadCount = notifications.filter(n => !n.read).length
 
@@ -90,10 +112,16 @@ export function NotificationCenter() {
   }, [])
 
   const quiet = (p: Promise<unknown>) => void p.catch(err => console.error('[mwalimu] notification update failed:', err))
-  const markAsRead = (id: string) => quiet(markRead({ notificationId: id as Id<'notifications'> }))
-  const markAllAsRead = () => quiet(markAllRead({}))
-  const deleteNotification = (id: string) => quiet(dismiss({ notificationId: id as Id<'notifications'> }))
-  const clearAll = () => quiet(dismissAll({}))
+  const isAnn = (id: string) => id.startsWith('ann:')
+  const addMarks = (kind: 'read' | 'dismissed', ids: string[]) => {
+    if (ids.length === 0) return
+    quiet(savePrefs({ notificationsState: { read: [...new Set([...marks.read, ...(kind === 'read' ? ids : [])])], dismissed: [...new Set([...marks.dismissed, ...(kind === 'dismissed' ? ids : [])])] } }))
+  }
+  const annIds = shared.map(n => n.id)
+  const markAsRead = (id: string) => (isAnn(id) ? addMarks('read', [id]) : quiet(markRead({ notificationId: id as Id<'notifications'> })))
+  const markAllAsRead = () => { quiet(markAllRead({})); addMarks('read', annIds) }
+  const deleteNotification = (id: string) => (isAnn(id) ? addMarks('dismissed', [id]) : quiet(dismiss({ notificationId: id as Id<'notifications'> })))
+  const clearAll = () => { quiet(dismissAll({})); addMarks('dismissed', annIds) }
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id)

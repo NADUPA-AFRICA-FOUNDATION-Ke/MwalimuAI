@@ -11,6 +11,7 @@
 import type * as activity from "../activity.js";
 import type * as admin_activity from "../admin/activity.js";
 import type * as admin_analytics from "../admin/analytics.js";
+import type * as admin_announcements from "../admin/announcements.js";
 import type * as admin_audit from "../admin/audit.js";
 import type * as admin_certificates from "../admin/certificates.js";
 import type * as admin_content from "../admin/content.js";
@@ -25,6 +26,7 @@ import type * as admin_streaks from "../admin/streaks.js";
 import type * as admin_tickets from "../admin/tickets.js";
 import type * as admin_users from "../admin/users.js";
 import type * as ai from "../ai.js";
+import type * as announcements from "../announcements.js";
 import type * as assessments from "../assessments.js";
 import type * as auth from "../auth.js";
 import type * as certificates from "../certificates.js";
@@ -72,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   "admin/activity": typeof admin_activity;
   "admin/analytics": typeof admin_analytics;
+  "admin/announcements": typeof admin_announcements;
   "admin/audit": typeof admin_audit;
   "admin/certificates": typeof admin_certificates;
   "admin/content": typeof admin_content;
@@ -86,6 +89,7 @@ declare const fullApi: ApiFromModules<{
   "admin/tickets": typeof admin_tickets;
   "admin/users": typeof admin_users;
   ai: typeof ai;
+  announcements: typeof announcements;
   assessments: typeof assessments;
   auth: typeof auth;
   certificates: typeof certificates;

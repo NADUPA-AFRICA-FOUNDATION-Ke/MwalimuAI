@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { AiPathWizard } from '@/components/admin/content/ai-path-wizard'
+import { StudioSections } from '@/components/admin/content/studio-sections'
 import {
   Empty,
   Field,
@@ -22,6 +23,13 @@ import {
   useStaff,
 } from '@/components/admin/common'
 
+const TABS = [
+  { id: 'paths', label: 'Learning paths' },
+  { id: 'needs', label: 'Needs assessment' },
+  { id: 'resources', label: 'Resource library' },
+  { id: 'faq', label: 'FAQ' },
+  { id: 'blog', label: 'Blog' },
+] as const
 const TRACKS = ['core', 'stem', 'languages', 'humanities', 'leadership', 'wellbeing']
 
 export default function ContentPage() {
@@ -46,6 +54,7 @@ function ContentStudio() {
   const [form, setForm] = useState({ title: '', track: 'core', description: '', modules: 3, lessons: 3, quizzes: true })
   const [importOpen, setImportOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const tab = (TABS.find((t) => t.id === search.get('tab'))?.id ?? 'paths') as (typeof TABS)[number]['id']
   const aiTopic = search.get('ai')
   const [aiOpen, setAiOpen] = useState(Boolean(aiTopic))
 
@@ -78,6 +87,49 @@ function ContentStudio() {
           )
         }
       />
+      {reviews && reviews.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-2 font-semibold">Waiting for review ({reviews.length})</h2>
+          <ul className="divide-y rounded-lg border bg-background text-sm">
+            {reviews.map((r) => (
+              <li key={r.versionId}>
+                <Link
+                  href={`/admin/content/item/${r.itemId}`}
+                  className="flex flex-wrap justify-between gap-2 p-3 hover:bg-muted/30"
+                >
+                  <span>
+                    <b>{r.title}</b>{' '}
+                    <span className="text-muted-foreground">
+                      · {r.kind} in {r.programKey} · v{r.version}
+                    </span>
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    by {r.submittedBy} · {fmtTime(r.createdAt)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <div role="tablist" aria-label="Kinds of content" className="mb-6 flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <Link
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            href={t.id === 'paths' ? '/admin/content' : `/admin/content?tab=${t.id}`}
+            scroll={false}
+            className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm ${tab === t.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
+
+      {tab === 'paths' && (
+        <>
       {can('content.edit') && aiOpen && <AiPathWizard initialTopic={aiTopic ?? ''} onClose={() => setAiOpen(false)} />}
       {can('content.edit') && (
         <section className="mb-8 rounded-lg border bg-background p-4" aria-labelledby="new-path-h">
@@ -136,32 +188,6 @@ function ContentStudio() {
         </section>
       )}
 
-      {reviews && reviews.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-2 font-semibold">Waiting for review ({reviews.length})</h2>
-          <ul className="divide-y rounded-lg border bg-background text-sm">
-            {reviews.map((r) => (
-              <li key={r.versionId}>
-                <Link
-                  href={`/admin/content/item/${r.itemId}`}
-                  className="flex flex-wrap justify-between gap-2 p-3 hover:bg-muted/30"
-                >
-                  <span>
-                    <b>{r.title}</b>{' '}
-                    <span className="text-muted-foreground">
-                      · {r.kind} in {r.programKey} · v{r.version}
-                    </span>
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    by {r.submittedBy} · {fmtTime(r.createdAt)}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       <h2 className="mb-2 font-semibold">Learning paths</h2>
       {!programs ? (
         <Loading />
@@ -203,7 +229,11 @@ function ContentStudio() {
         </ul>
       )}
 
-      <section className="mt-8 rounded-lg border bg-background p-4" aria-labelledby="needs-h">
+        </>
+      )}
+
+      {tab === 'needs' && (
+      <section className="mb-8 rounded-lg border bg-background p-4" aria-labelledby="needs-h">
         <h2 id="needs-h" className="font-semibold">Needs assessment</h2>
         <p className="text-sm text-muted-foreground">
           The questionnaire new teachers answer to get recommended learning paths. Edit the questions, sections and which paths are recommended.
@@ -241,6 +271,9 @@ function ContentStudio() {
           </ul>
         )}
       </section>
+      )}
+
+      <StudioSections tab={tab} />
 
       <ReasonDialog
         open={importOpen}
