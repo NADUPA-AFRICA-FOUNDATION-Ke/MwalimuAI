@@ -49,15 +49,17 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
   const discard = useMutation(api.admin.content.discardDraft)
   const archive = useMutation(api.admin.content.archive)
   const unarchive = useMutation(api.admin.content.unarchive)
+  const restore = useMutation(api.admin.content.restoreVersion)
   const { run, busy } = useRun()
 
   const source: Data | undefined = (detail?.draft?.data ?? detail?.published?.data) as Data | undefined
   const [data, setData] = useState<Data | null>(null)
   const [dirty, setDirty] = useState(false)
-  const [dialog, setDialog] = useState<null | 'approve' | 'reject' | 'publish' | 'discard' | 'archive' | 'unarchive'>(
+  const [dialog, setDialog] = useState<null | 'approve' | 'reject' | 'publish' | 'discard' | 'archive' | 'unarchive' | 'restore'>(
     null,
   )
   const draftId = detail?.draft?._id
+  const [restoreId, setRestoreId] = useState<Id<'cmsVersions'> | null>(null)
   const items = useQuery(api.admin.content.itemsForProgram, detail ? { programKey: detail.item.programKey } : 'skip')
 
   // Reset the form when the server copy changes (and there is nothing unsaved).
@@ -260,10 +262,15 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
                   <Pill tone={h.status === 'published' ? 'green' : 'gray'}>{h.status.replace('_', ' ')}</Pill>
                   {h.reviewComment ? <span className="ml-2 text-muted-foreground">“{h.reviewComment}”</span> : null}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   {h.author ? `by ${h.author} · ` : ''}
                   {h.reviewedBy ? `reviewed by ${h.reviewedBy} · ` : ''}
                   {fmtTime(h.publishedAt ?? h.createdAt)}
+                  {canEdit && h._id !== detail.published?._id && h._id !== draft?._id && (
+                    <Button type="button" size="sm" variant="outline" className="h-7" onClick={() => { setRestoreId(h._id); setDialog('restore') }}>
+                      Go back to this
+                    </Button>
+                  )}
                 </span>
               </li>
             ))}
@@ -283,12 +290,15 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
             discard: 'Discard the draft',
             archive: 'Archive this item',
             unarchive: 'Unarchive this item',
+            restore: 'Go back to this version',
           }[dialog ?? 'approve']
         }
         description={
           dialog === 'publish'
             ? 'This goes live for all learners immediately.'
-            : dialog === 'archive'
+            : dialog === 'restore'
+              ? 'It becomes a new draft. Nothing changes for learners until it is submitted, reviewed and published.'
+              : dialog === 'archive'
               ? 'It disappears for new learners. Nothing is deleted, and learners who started it keep access.'
               : dialog === 'reject'
                 ? 'Say what needs to change, so the author can fix it.'
@@ -303,6 +313,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
             discard: () => discard({ itemId, reason }),
             archive: () => archive({ itemId, reason }),
             unarchive: () => unarchive({ itemId, reason }),
+            restore: () => restore({ versionId: restoreId!, reason }),
           }[dialog!]
           const r = await run(fn, 'Done')
           if (r !== undefined) setDirty(false)

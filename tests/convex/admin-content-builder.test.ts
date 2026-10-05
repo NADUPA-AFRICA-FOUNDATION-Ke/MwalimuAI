@@ -190,3 +190,37 @@ describe("older Learning Modules library", () => {
     await manager.as.mutation(api.admin.content.submitForReview, { itemId: prog._id });
   });
 });
+
+describe("version rollback", () => {
+  it("makes an old version the new draft, only goes live after review, and respects locks", async () => {
+    const t = newTest();
+    const author = await makeStaff(t, "content_manager");
+    const reviewer = await makeStaff(t, "super_admin");
+    const id = await author.as.mutation(api.admin.content.createItem, {
+      kind: "post", key: "rollback-me",
+      data: { title: "Version one", excerpt: "e", content: "x".repeat(300), author: "A", authorRole: "r", category: "Pedagogy", readTime: "1 min", date: "", image: "", orderIndex: 1 },
+    });
+    const release = async () => {
+      await author.as.mutation(api.admin.content.submitForReview, { itemId: id });
+      await reviewer.as.mutation(api.admin.content.review, { itemId: id, decision: "approve", reason: REASON });
+      await reviewer.as.mutation(api.admin.content.publish, { itemId: id, reason: REASON });
+    };
+    await release();
+    const d1 = await author.as.query(api.admin.content.getItem, { itemId: id });
+    const v1 = d1.published!;
+    await author.as.mutation(api.admin.content.saveDraft, { itemId: id, data: { ...(v1.data as object), title: "Version two" } });
+    await release();
+    expect((await t.query(api.content.blogPost, { slug: "rollback-me" }))?.title).toBe("Version two");
+
+    await author.as.mutation(api.admin.content.restoreVersion, { versionId: v1._id, reason: REASON });
+    // Learners still see v2 until the restored draft is released.
+    expect((await t.query(api.content.blogPost, { slug: "rollback-me" }))?.title).toBe("Version two");
+    const d3 = await author.as.query(api.admin.content.getItem, { itemId: id });
+    expect((d3.draft!.data as { title: string }).title).toBe("Version one");
+    await author.as.mutation(api.admin.content.submitForReview, { itemId: id });
+    await expect(author.as.mutation(api.admin.content.restoreVersion, { versionId: v1._id, reason: REASON })).rejects.toThrow(/awaiting review/);
+    await reviewer.as.mutation(api.admin.content.review, { itemId: id, decision: "approve", reason: REASON });
+    await reviewer.as.mutation(api.admin.content.publish, { itemId: id, reason: REASON });
+    expect((await t.query(api.content.blogPost, { slug: "rollback-me" }))?.title).toBe("Version one");
+  });
+});

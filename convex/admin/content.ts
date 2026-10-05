@@ -740,3 +740,41 @@ export const importLegacyModules = staffMutation({
     return { created, skipped };
   },
 });
+
+/**
+ * Makes an older version the new working draft ("go back to this"). Nothing goes live until it is submitted,
+ * reviewed and published like any other edit, so a rollback gets the same second pair of eyes.
+ */
+export const restoreVersion = staffMutation({
+  permission: "content.edit",
+  requireReason: true,
+  args: { versionId: v.id("cmsVersions"), reason: v.string() },
+  handler: async (ctx, args, { staff }, log) => {
+    const ver = await ctx.db.get(args.versionId);
+    if (!ver) throw fail("NOT_FOUND", "Version not found");
+    const i = await item(ctx, ver.itemId);
+    if (i.archivedAt !== undefined) throw fail("INVALID_STATE", "Unarchive this item before restoring a version");
+    const draft = i.draftVersionId ? await ctx.db.get(i.draftVersionId) : null;
+    if (draft && (draft.status === "in_review" || draft.status === "approved"))
+      throw fail("INVALID_STATE", draft.status === "in_review" ? "This item is awaiting review. Withdraw it first." : "This item is approved. Publish it or discard the draft first.");
+    if (i.publishedVersionId === ver._id && !draft) throw fail("NO_CHANGES", "That version is already the live one");
+    const data = validateContent(i.kind, ver.data, true);
+    const now = Date.now();
+    if (draft) {
+      await ctx.db.patch(draft._id, { data, status: "draft", authorId: staff._id, reviewComment: undefined, reviewedBy: undefined, submittedBy: undefined });
+    } else {
+      const latest = await ctx.db.query("cmsVersions").withIndex("by_item", (q) => q.eq("itemId", i._id)).order("desc").first();
+      const id = await ctx.db.insert("cmsVersions", { itemId: i._id, version: (latest?.version ?? 0) + 1, status: "draft", data, authorId: staff._id, createdAt: now });
+      await ctx.db.patch(i._id, { draftVersionId: id, updatedAt: now });
+    }
+    await log({
+      action: "content.restore_version",
+      targetType: "content",
+      targetId: i._id,
+      targetLabel: label(i),
+      before: draft?.data ?? null,
+      after: { restoredFromVersion: ver.version },
+    });
+    return null;
+  },
+});
