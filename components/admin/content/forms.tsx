@@ -2,12 +2,14 @@
 
 /** One editor form per content kind. Each edits a plain data object and reports changes via `set`. */
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
+import { ArrowDown, ArrowUp, Copy, Trash2 } from 'lucide-react'
 import { Field, selectClass } from '@/components/admin/common'
+import { parseQuestions } from '@/lib/admin/quiz-import'
 
 export type Data = Record<string, any>
 const lines = (v: unknown) => (Array.isArray(v) ? v.join('\n') : '')
@@ -147,8 +149,32 @@ export const ModuleForm = ({ data, set }: FormProps) => (
   </>
 )
 
+const FORMATS = [
+  { label: 'Heading', before: '\n## ', after: '', sample: 'Heading' },
+  { label: 'Bold', before: '**', after: '**', sample: 'bold text' },
+  { label: 'List', before: '\n- ', after: '', sample: 'item' },
+  { label: 'Numbered', before: '\n1. ', after: '', sample: 'step' },
+  { label: 'Quote', before: '\n> ', after: '', sample: 'quote' },
+  { label: 'Link', before: '[', after: '](https://)', sample: 'link text' },
+]
+
 export function LessonForm({ data, set }: FormProps) {
   const [preview, setPreview] = useState(false)
+  const readingRef = useRef<HTMLTextAreaElement>(null)
+  /** Wraps the selection (or a sample word) in Markdown, then puts the cursor back in the box. */
+  const applyFormat = (f: (typeof FORMATS)[number]) => {
+    const el = readingRef.current
+    const text: string = data.reading ?? ''
+    const start = el?.selectionStart ?? text.length
+    const end = el?.selectionEnd ?? text.length
+    const picked = text.slice(start, end) || f.sample
+    set({ reading: `${text.slice(0, start)}${f.before}${picked}${f.after}${text.slice(end)}` })
+    requestAnimationFrame(() => {
+      el?.focus()
+      const at = start + f.before.length
+      el?.setSelectionRange(at, at + picked.length)
+    })
+  }
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -177,12 +203,22 @@ export function LessonForm({ data, set }: FormProps) {
             <MarkdownRenderer content={data.reading ?? ''} article />
           </div>
         ) : (
-          <Textarea
-            rows={18}
-            className="font-mono text-sm"
-            value={data.reading ?? ''}
-            onChange={(e) => set({ reading: e.target.value })}
-          />
+          <>
+            <div className="mb-1 flex flex-wrap gap-1" role="toolbar" aria-label="Formatting">
+              {FORMATS.map((f) => (
+                <Button key={f.label} type="button" size="sm" variant="outline" className="min-h-9" onClick={() => applyFormat(f)}>
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+            <Textarea
+              ref={readingRef}
+              rows={18}
+              className="font-mono text-sm"
+              value={data.reading ?? ''}
+              onChange={(e) => set({ reading: e.target.value })}
+            />
+          </>
         )}
       </Field>
       <Text label="Reflection prompt" k="reflectionPrompt" data={data} set={set} area rows={2} />
@@ -206,16 +242,20 @@ export function QuizForm({ data, set }: FormProps) {
           <li key={i} className="space-y-3 rounded-md border p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold">Question {i + 1}</span>
-              {qs.length > 1 && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => set({ questions: qs.filter((_, j) => j !== i) })}
-                >
-                  Remove
+              <div className="flex">
+                <Button type="button" size="icon" variant="ghost" aria-label={`Move question ${i + 1} up`} disabled={i === 0} onClick={() => set({ questions: moveItem(qs, i, i - 1) })}>
+                  <ArrowUp className="h-4 w-4" />
                 </Button>
-              )}
+                <Button type="button" size="icon" variant="ghost" aria-label={`Move question ${i + 1} down`} disabled={i === qs.length - 1} onClick={() => set({ questions: moveItem(qs, i, i + 1) })}>
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button type="button" size="icon" variant="ghost" aria-label={`Duplicate question ${i + 1}`} onClick={() => set({ questions: [...qs.slice(0, i + 1), { ...q, id: `q${qs.length + 1}-${Math.random().toString(36).slice(2, 6)}` }, ...qs.slice(i + 1)] })}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button type="button" size="icon" variant="ghost" aria-label={`Remove question ${i + 1}`} disabled={qs.length === 1} onClick={() => set({ questions: qs.filter((_, j) => j !== i) })}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <Textarea
               aria-label={`Question ${i + 1} text`}
@@ -270,6 +310,59 @@ export function QuizForm({ data, set }: FormProps) {
       >
         Add question
       </Button>
+      <PasteQuestions onAdd={(added) => set({ questions: [...qs, ...added] })} />
     </>
+  )
+}
+
+const moveItem = <T,>(list: T[], from: number, to: number) => {
+  const next = [...list]
+  ;[next[from], next[to]] = [next[to], next[from]]
+  return next
+}
+
+/** Drop a whole quiz in as plain text instead of typing each question into boxes. */
+function PasteQuestions({ onAdd }: { onAdd: (q: any[]) => void }) {
+  const [text, setText] = useState('')
+  const parsed = text.trim() ? parseQuestions(text) : null
+  return (
+    <details className="rounded-md border p-3">
+      <summary className="cursor-pointer text-sm font-medium">Paste several questions at once</summary>
+      <p className="mt-2 text-sm text-muted-foreground">
+        One question per block, a blank line between blocks. Put the question first, then options a) to d). Mark the right option with * or add a line like <code>Answer: B</code>. An optional <code>Why: …</code> line becomes the explanation.
+      </p>
+      <Textarea
+        aria-label="Questions to paste"
+        rows={10}
+        className="mt-2 font-mono text-sm"
+        value={text}
+        placeholder={'1. Which is a core competency?\na) Digital literacy *\nb) Cooking\nc) Sprinting\nd) Chess\nWhy: It is one of the seven.'}
+        onChange={(e) => setText(e.target.value)}
+      />
+      {parsed && (
+        <div className="mt-2 text-sm" aria-live="polite">
+          <p>{parsed.questions.length} question{parsed.questions.length === 1 ? '' : 's'} ready to add.</p>
+          {parsed.errors.length > 0 && (
+            <ul className="mt-1 list-inside list-disc text-amber-800 dark:text-amber-200">
+              {parsed.errors.map((e) => (
+                <li key={e}>{e}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      <Button
+        type="button"
+        className="mt-2"
+        disabled={!parsed || parsed.questions.length === 0}
+        onClick={() => {
+          if (!parsed) return
+          onAdd(parsed.questions)
+          setText('')
+        }}
+      >
+        Add {parsed?.questions.length ?? 0} question{parsed?.questions.length === 1 ? '' : 's'}
+      </Button>
+    </details>
   )
 }

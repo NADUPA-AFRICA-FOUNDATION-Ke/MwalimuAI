@@ -537,7 +537,7 @@ export default defineSchema({
 
   // ── Content management ─────────────────────────────────────────────────
   cmsItems: defineTable({
-    kind: v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz")),
+    kind: v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"), v.literal("assessment")),
     // Stable id the learner app and learningProgress refer to (e.g. "cbc-foundations", "m1", "l1").
     key: v.string(),
     parentId: v.optional(v.id("cmsItems")),

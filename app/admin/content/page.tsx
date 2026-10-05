@@ -7,6 +7,7 @@ import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Empty,
   Field,
@@ -26,39 +27,30 @@ export default function ContentPage() {
   const { can, role } = useStaff()
   const programs = useQuery(api.admin.content.programs, {})
   const reviews = useQuery(api.admin.content.pendingReviews, {})
-  const create = useMutation(api.admin.content.createItem)
+  const createPath = useMutation(api.admin.contentBuilder.createProgramFromTemplate)
   const importStatic = useMutation(api.admin.content.importStaticCurriculum)
+  const assessments = useQuery(api.admin.content.assessments, {})
+  const importNeeds = useMutation(api.admin.content.importNeedsAssessment)
   const { run, ok } = useRun()
   const router = useRouter()
-  const [form, setForm] = useState({ key: '', title: '', track: 'core' })
+  const [form, setForm] = useState({ title: '', track: 'core', description: '', modules: 3, lessons: 3, quizzes: true })
   const [importOpen, setImportOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
 
   const createProgram = async () => {
-    const id = await run(
+    const r = await run(
       () =>
-        create({
-          kind: 'program',
-          key: form.key,
-          data: {
-            title: form.title,
-            shortTitle: form.title,
-            tagline: '',
-            description: '',
-            track: form.track,
-            kicdAlignment: '',
-            hours: 1,
-            accent: 'primary',
-            available: true,
-            launchingSoon: false,
-            orderIndex: programs?.length ?? 0,
-            assignment: { title: '', context: '', task: '', hints: [], rubric: [] },
-            certificate: { subtitle: '', skills: [] },
-            tags: { cbcLevels: [], subjects: [], counties: [] },
-          },
+        createPath({
+          title: form.title,
+          track: form.track,
+          description: form.description,
+          moduleCount: form.modules,
+          lessonsPerModule: form.lessons,
+          includeQuizzes: form.quizzes,
         }),
-      'Program created as a draft',
+      'Learning path created. Fill in the lessons next.',
     )
-    if (id) router.push(`/admin/content/item/${id}`)
+    if (r) router.push(`/admin/content/${r.programKey}`)
   }
 
   return (
@@ -67,6 +59,58 @@ export default function ContentPage() {
         title="Content"
         description="Draft → review → published. Nothing reaches learners until a second person approves it. Content is archived, never deleted."
       />
+      {can('content.edit') && (
+        <section className="mb-8 rounded-lg border bg-background p-4" aria-labelledby="new-path-h">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 id="new-path-h" className="font-semibold">Create a learning path</h2>
+              <p className="text-sm text-muted-foreground">
+                Sets up the whole outline in one step: modules, starter lessons and the pre and post assessments. You then fill in each lesson.
+              </p>
+            </div>
+            {!creating && <Button onClick={() => setCreating(true)}>New learning path</Button>}
+          </div>
+          {creating && (
+            <div className="mt-4 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Title">
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Inclusive Classrooms" />
+                </Field>
+                <Field label="Track">
+                  <select className={selectClass} value={form.track} onChange={(e) => setForm({ ...form, track: e.target.value })}>
+                    {TRACKS.map((t) => (
+                      <option key={t}>{t}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <Field label="What teachers will learn (optional)">
+                <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              </Field>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="Modules" hint="1 to 12. You can add or remove later.">
+                  <Input type="number" min={1} max={12} value={form.modules} onChange={(e) => setForm({ ...form, modules: Math.min(12, Math.max(1, Math.floor(Number(e.target.value) || 1))) })} />
+                </Field>
+                <Field label="Lessons in each module" hint="1 to 10.">
+                  <Input type="number" min={1} max={10} value={form.lessons} onChange={(e) => setForm({ ...form, lessons: Math.min(10, Math.max(1, Math.floor(Number(e.target.value) || 1))) })} />
+                </Field>
+                <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                  <input type="checkbox" checked={form.quizzes} onChange={(e) => setForm({ ...form, quizzes: e.target.checked })} />
+                  Include pre and post assessments
+                </label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                This creates {1 + (form.quizzes ? 2 : 0) + form.modules * (1 + form.lessons)} drafts. Nothing is visible to learners until it is reviewed and published.
+              </p>
+              <div className="flex gap-2">
+                <Button disabled={form.title.trim().length < 3} onClick={createProgram}>Create learning path</Button>
+                <Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {reviews && reviews.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-2 font-semibold">Waiting for review ({reviews.length})</h2>
@@ -93,7 +137,7 @@ export default function ContentPage() {
         </section>
       )}
 
-      <h2 className="mb-2 font-semibold">Programs</h2>
+      <h2 className="mb-2 font-semibold">Learning paths</h2>
       {!programs ? (
         <Loading />
       ) : programs.length === 0 ? (
@@ -134,48 +178,44 @@ export default function ContentPage() {
         </ul>
       )}
 
-      {can('content.edit') && (
-        <section className="mt-8 rounded-lg border bg-background p-4">
-          <h2 className="mb-3 font-semibold">New program</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Title">
-              <Input
-                value={form.title}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    title: e.target.value,
-                    key:
-                      form.key ||
-                      e.target.value
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, '-')
-                        .replace(/^-|-$/g, '')
-                        .slice(0, 50),
-                  })
-                }
-              />
-            </Field>
-            <Field label="Key" hint="Permanent id used in links and progress.">
-              <Input value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value.toLowerCase() })} />
-            </Field>
-            <Field label="Track">
-              <select
-                className={selectClass}
-                value={form.track}
-                onChange={(e) => setForm({ ...form, track: e.target.value })}
+      <section className="mt-8 rounded-lg border bg-background p-4" aria-labelledby="needs-h">
+        <h2 id="needs-h" className="font-semibold">Needs assessment</h2>
+        <p className="text-sm text-muted-foreground">
+          The questionnaire new teachers answer to get recommended learning paths. Edit the questions, sections and which paths are recommended.
+        </p>
+        {assessments === undefined ? null : assessments.length === 0 ? (
+          <div className="mt-3">
+            <p className="mb-2 text-sm">Learners currently see the built-in questionnaire. Copy it here to start editing it.</p>
+            {can('content.edit') ? (
+              <Button
+                onClick={async () => {
+                  const id = await run(() => importNeeds({}), 'Copied. It is a draft until you release it.')
+                  if (id) router.push(`/admin/content/item/${id}`)
+                }}
               >
-                {TRACKS.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
-              </select>
-            </Field>
+                Copy the built-in questionnaire to edit
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">Ask a content editor to set this up.</p>
+            )}
           </div>
-          <Button className="mt-3" disabled={!form.title.trim() || !form.key} onClick={createProgram}>
-            Create draft
-          </Button>
-        </section>
-      )}
+        ) : (
+          <ul className="mt-3 divide-y rounded-lg border text-sm">
+            {assessments.map((a) => (
+              <li key={a._id}>
+                <Link href={`/admin/content/item/${a._id}`} className="flex flex-wrap items-center justify-between gap-2 p-3 hover:bg-muted/30">
+                  <span className="font-medium">{a.title}</span>
+                  <span className="flex gap-1.5">
+                    {a.archived && <Pill>archived</Pill>}
+                    {a.published ? <Pill tone="green">live</Pill> : <Pill>not live</Pill>}
+                    {a.hasDraft && <Pill tone="blue">draft</Pill>}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <ReasonDialog
         open={importOpen}

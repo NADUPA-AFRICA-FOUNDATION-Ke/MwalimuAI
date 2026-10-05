@@ -5,7 +5,7 @@
 import { canonicalCounty, canonicalLevel, canonicalSubject } from "./taxonomy";
 import { fail } from "./errors";
 
-export type ContentKind = "program" | "module" | "lesson" | "quiz";
+export type ContentKind = "program" | "module" | "lesson" | "quiz" | "assessment";
 export type Tags = { cbcLevels: string[]; subjects: string[]; counties: string[] };
 
 export type QuizQuestion = {
@@ -44,7 +44,30 @@ export type ProgramData = Common & {
   assignment: { title: string; context: string; task: string; hints: string[]; rubric: string[] };
   certificate: { subtitle: string; skills: string[] };
 };
-export type ItemData = { lesson: LessonData; module: ModuleData; quiz: QuizData; program: ProgramData };
+/** The needs assessment: sections of questions, plus rules that turn answers into recommended learning paths. */
+export type NeedsQuestion = {
+  id: string;
+  section: number;
+  type: "scale" | "radio" | "multiple" | "knowledge";
+  question: string;
+  subtext: string;
+  options: string[];
+  correctIndex: number; // knowledge only
+  explanation: string; // knowledge only
+  minLabel: string; // scale only
+  maxLabel: string;
+  maxSelect: number; // multiple only; 0 = no limit
+};
+export type RecommendationRule = { programId: string; when: { questionId: string; answers: string[] }[] };
+export type AssessmentData = Common & {
+  title: string;
+  intro: string;
+  sections: { title: string; description: string }[];
+  questions: NeedsQuestion[];
+  rules: RecommendationRule[];
+  fallbackProgramIds: string[];
+};
+export type ItemData = { lesson: LessonData; module: ModuleData; quiz: QuizData; program: ProgramData; assessment: AssessmentData };
 
 const bad = (message: string) => fail("INVALID_CONTENT", message);
 const str = (v: unknown, field: string, max: number, allowEmpty = false) => {
@@ -80,7 +103,7 @@ export function normalizeTags(raw: unknown): Tags {
   };
 }
 
-function questions(v: unknown, field: string): QuizQuestion[] {
+function questions(v: unknown, field: string, lenient: boolean): QuizQuestion[] {
   if (!Array.isArray(v) || v.length === 0 || v.length > 50) throw bad(`${field} needs between 1 and 50 questions`);
   const ids = new Set<string>();
   return v.map((q, i) => {
@@ -88,12 +111,13 @@ function questions(v: unknown, field: string): QuizQuestion[] {
     const id = str(q?.id, `${at} id`, 40);
     if (ids.has(id)) throw bad(`${at} reuses id ${id}`);
     ids.add(id);
-    const options = strList(q?.options, `${at} options`, 4, 500);
+    // Drafts may keep blank text while being typed; the readiness check (and publishing) require it filled in.
+    const options = strListLenient(q?.options, `${at} options`, 4, 500, lenient);
     if (options.length !== 4) throw bad(`${at} needs exactly 4 options`);
     if (![0, 1, 2, 3].includes(q?.correct)) throw bad(`${at} needs a correct answer (0-3)`);
     return {
       id,
-      question: str(q.question, `${at} text`, 1000),
+      question: str(q.question, `${at} text`, 1000, lenient),
       options: options as QuizQuestion["options"],
       correct: q.correct,
       explanation: str(q.explanation, `${at} explanation`, 2000, true),
@@ -112,6 +136,7 @@ export function validateContent<K extends ContentKind>(kind: K, input: unknown, 
 function build(kind: ContentKind, raw: Record<string, any>, lenient: boolean): ItemData[ContentKind] {
   if (!raw || typeof raw !== "object") throw bad("Content is required");
   const tags = normalizeTags(raw.tags);
+  if (kind === "assessment") return buildAssessment(raw, tags, lenient);
   if (kind === "lesson") {
     return {
       title: str(raw.title, "title", 200),
@@ -136,7 +161,7 @@ function build(kind: ContentKind, raw: Record<string, any>, lenient: boolean): I
     if (raw.kind !== "pre" && raw.kind !== "post") throw bad("Quiz kind must be pre or post");
     return {
       kind: raw.kind,
-      questions: questions(raw.questions, "Quiz"),
+      questions: questions(raw.questions, "Quiz", lenient),
       orderIndex: order(raw.orderIndex ?? 0),
       tags,
     };
@@ -190,4 +215,80 @@ export function assertPublishable(kind: ContentKind, data: ItemData[ContentKind]
     if (!p.certificate.subtitle.trim())
       throw bad("Add the certificate subtitle before publishing an available program");
   }
+}
+
+const QUESTION_TYPES = ["scale", "radio", "multiple", "knowledge"] as const;
+
+function buildAssessment(raw: Record<string, any>, tags: Tags, lenient: boolean): AssessmentData {
+  if (!Array.isArray(raw.sections) || raw.sections.length < 1 || raw.sections.length > 10)
+    throw bad("Use between 1 and 10 sections");
+  const sections = raw.sections.map((s: any, i: number) => ({
+    title: str(s?.title, `Section ${i + 1} title`, 120, lenient),
+    description: str(s?.description ?? "", `Section ${i + 1} description`, 500, true),
+  }));
+  if (!Array.isArray(raw.questions) || raw.questions.length < 1 || raw.questions.length > 80)
+    throw bad("Use between 1 and 80 questions");
+  const ids = new Set<string>();
+  const questions: NeedsQuestion[] = raw.questions.map((q: any, i: number) => {
+    const at = `Question ${i + 1}`;
+    const id = str(q?.id, `${at} id`, 40);
+    if (ids.has(id)) throw bad(`${at} reuses id ${id}`);
+    ids.add(id);
+    if (!QUESTION_TYPES.includes(q?.type)) throw bad(`${at} has an unknown type`);
+    if (!Number.isInteger(q.section) || q.section < 0 || q.section >= sections.length)
+      throw bad(`${at} is not in a section`);
+    const choice = q.type !== "scale";
+    const options = choice ? strListLenient(q.options ?? [], `${at} options`, 8, 300, lenient) : [];
+    if (choice && options.length < 2) throw bad(`${at} needs at least 2 options`);
+    if (q.type === "knowledge" && !(Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex < options.length))
+      throw bad(`${at} needs a correct answer`);
+    return {
+      id,
+      section: q.section,
+      type: q.type,
+      question: str(q.question, `${at} text`, 500, lenient),
+      subtext: str(q.subtext ?? "", `${at} help text`, 500, true),
+      options,
+      correctIndex: q.type === "knowledge" ? q.correctIndex : 0,
+      explanation: q.type === "knowledge" ? str(q.explanation ?? "", `${at} explanation`, 2000, true) : "",
+      minLabel: q.type === "scale" ? str(q.minLabel ?? "", `${at} low label`, 60, true) : "",
+      maxLabel: q.type === "scale" ? str(q.maxLabel ?? "", `${at} high label`, 60, true) : "",
+      maxSelect: q.type === "multiple" && Number.isInteger(q.maxSelect) && q.maxSelect >= 0 && q.maxSelect <= 8 ? q.maxSelect : 0,
+    };
+  });
+  const rules: RecommendationRule[] = (Array.isArray(raw.rules) ? raw.rules : []).slice(0, 40).map((r: any, i: number) => ({
+    programId: str(r?.programId, `Rule ${i + 1} program`, 60, lenient),
+    when: (Array.isArray(r?.when) ? r.when : []).slice(0, 12).map((w: any) => {
+      if (!ids.has(w?.questionId)) throw bad(`Rule ${i + 1} refers to a question that does not exist`);
+      return { questionId: w.questionId, answers: strListLenient(w.answers ?? [], `Rule ${i + 1} answers`, 20, 300, lenient) };
+    }),
+  }));
+  return {
+    title: str(raw.title, "title", 200),
+    intro: str(raw.intro ?? "", "intro", 1000, true),
+    sections,
+    questions,
+    rules,
+    fallbackProgramIds: strListLenient(raw.fallbackProgramIds ?? [], "fallback programs", 6, 60, lenient),
+    orderIndex: order(raw.orderIndex ?? 0),
+    tags,
+  };
+}
+
+/** Like strList but lets drafts keep blank entries while they are being typed. */
+function strListLenient(v: unknown, field: string, maxItems: number, maxLen: number, lenient: boolean) {
+  if (!Array.isArray(v) || v.length > maxItems) throw bad(`${field} must be a list of at most ${maxItems} items`);
+  return v.map((x, i) => str(x, `${field}[${i + 1}]`, maxLen, lenient));
+}
+
+/** What still has to be filled in before a needs assessment can go live. */
+export function assessmentProblem(data: AssessmentData): string | null {
+  if (data.sections.some((s) => !s.title.trim())) return "Every section needs a title";
+  for (const [i, q] of data.questions.entries()) {
+    if (!q.question.trim()) return `Question ${i + 1} has no text`;
+    if (q.type !== "scale" && q.options.some((o) => !o.trim())) return `Question ${i + 1} has an empty option`;
+  }
+  if (data.rules.some((r) => !r.programId.trim() || r.when.length === 0 || r.when.some((w) => w.answers.length === 0)))
+    return "A recommendation rule is incomplete";
+  return null;
 }

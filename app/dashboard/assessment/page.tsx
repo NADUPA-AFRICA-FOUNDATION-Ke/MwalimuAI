@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -12,320 +12,65 @@ import { toast } from 'sonner'
 import { CheckCircle, ArrowRight, AlertCircle, ChevronRight, BookOpen, Award, Brain, Target } from 'lucide-react'
 import Link from 'next/link'
 import { useProfile } from '@/context/profile-context'
+import { usePrograms } from '@/context/content-context'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 
 // ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
+import { NEEDS_QUESTIONS, NEEDS_SECTIONS, NEEDS_RULES, NEEDS_FALLBACK, type Question } from '@/lib/needs-assessment-data'
 
-type QuestionType = 'scale' | 'radio' | 'multiple' | 'knowledge'
-
-type BaseQuestion = {
-  id: string
-  question: string
-  subtext?: string
-  sectionIndex: number
-}
-
-type ScaleQuestion = BaseQuestion & { type: 'scale'; min?: number; max?: number; minLabel: string; maxLabel: string }
-type RadioQuestion = BaseQuestion & { type: 'radio'; options: string[] }
-type MultipleQuestion = BaseQuestion & { type: 'multiple'; options: string[]; maxSelect?: number }
-type KnowledgeQuestion = BaseQuestion & {
-  type: 'knowledge'
-  options: string[]
-  correctIndex: number
-  explanation: string
-}
-
-type Question = ScaleQuestion | RadioQuestion | MultipleQuestion | KnowledgeQuestion
-
-// ---------------------------------------------------------------------------
-// Section metadata
-// ---------------------------------------------------------------------------
-
-const sections = [
-  { index: 0, title: 'Your Teaching Context', description: 'Help us understand who you are as a teacher so we can tailor your experience.' },
-  { index: 1, title: 'CBC Knowledge Check', description: 'A quick diagnostic to see where your CBC understanding is strong and where there are gaps. All answers are for learning — there is no penalty.' },
-  { index: 2, title: 'Assessment Practice', description: 'Tell us about your current Classroom-Based Assessment (CBA) practices and challenges.' },
-  { index: 3, title: 'Teaching Practice', description: 'Reflect honestly on how you currently plan and deliver lessons.' },
-  { index: 4, title: 'Goals and Support', description: 'Your answers here shape the learning path and tools we recommend to you.' },
-]
-
-// ---------------------------------------------------------------------------
-// Question bank
-// ---------------------------------------------------------------------------
-
-const questions: Question[] = [
-  // ---- Section 1: Teaching Context ----------------------------------------
-  {
-    id: 'teaching_level',
-    sectionIndex: 0,
-    type: 'radio',
-    question: 'Which level(s) do you currently teach?',
-    options: [
-      'Pre-Primary (PP1 and PP2)',
-      'Lower Primary (Grades 1–3)',
-      'Upper Primary (Grades 4–6)',
-      'Junior Secondary (Grades 7–9)',
-      'Multiple levels',
-    ],
-  },
-  {
-    id: 'cbc_experience',
-    sectionIndex: 0,
-    type: 'radio',
-    question: 'How many years have you been teaching under the CBC framework?',
-    options: [
-      'Less than 1 year',
-      '1–2 years',
-      '3–4 years',
-      '5 or more years',
-    ],
-  },
-  {
-    id: 'school_context',
-    sectionIndex: 0,
-    type: 'radio',
-    question: 'Which best describes your school environment?',
-    options: [
-      'Public school — urban',
-      'Public school — peri-urban or rural',
-      'ASAL region (Arid and Semi-Arid Lands)',
-      'Private or faith-based school',
-    ],
-  },
-
-  // ---- Section 2: CBC Knowledge Check -------------------------------------
-  {
-    id: 'cbc_structure',
-    sectionIndex: 1,
-    type: 'knowledge',
-    question: 'The current CBC pathway (as of 2023) includes which five levels?',
-    options: [
-      'Pre-Primary, Primary, Secondary',
-      'PP, Lower Primary, Upper Primary, Senior Secondary',
-      'PP, Lower Primary, Upper Primary, Junior Secondary, Senior Secondary',
-      'Pre-Primary, Junior School, Senior School',
-    ],
-    correctIndex: 2,
-    explanation:
-      'The CBC pathway has 5 levels: Pre-Primary (2 years), Lower Primary (Grades 1–3), Upper Primary (Grades 4–6), Junior Secondary (Grades 7–9, introduced 2023), and Senior Secondary (Grades 10–12).',
-  },
-  {
-    id: 'core_competencies',
-    sectionIndex: 1,
-    type: 'knowledge',
-    question: 'Which of the following is NOT one of CBC\'s seven core competencies?',
-    options: [
-      'Communication and Collaboration',
-      'Numeracy and Literacy',
-      'Digital Literacy',
-      'Self-Efficacy',
-    ],
-    correctIndex: 1,
-    explanation:
-      'Numeracy and Literacy are integrated across learning areas but are not listed as one of the 7 core competencies. The 7 are: Communication and Collaboration, Critical Thinking and Problem Solving, Creativity and Imagination, Citizenship, Digital Literacy, Learning to Learn, and Self-Efficacy.',
-  },
-  {
-    id: 'cba_meaning',
-    sectionIndex: 1,
-    type: 'knowledge',
-    question: 'In the CBC context, CBA stands for:',
-    options: [
-      'Curriculum-Based Assessment',
-      'Classroom-Based Assessment',
-      'Competency-Based Assessment',
-      'Continuous Basic Assessment',
-    ],
-    correctIndex: 1,
-    explanation:
-      'CBA stands for Classroom-Based Assessment — the ongoing formative assessment conducted by teachers in their own classrooms, as distinguished from external KNEC examinations.',
-  },
-  {
-    id: 'performance_scale',
-    sectionIndex: 1,
-    type: 'knowledge',
-    question: 'The CBC learner performance scale uses which categories?',
-    options: [
-      'Grade A to E (as in 8-4-4)',
-      'Pass / Fail only',
-      'Exceeds Expectation (EE), Meets Expectation (ME), Approaches Expectation (AE), Below Expectation (BE)',
-      'Advanced, Proficient, Basic, Below Basic',
-    ],
-    correctIndex: 2,
-    explanation:
-      'CBC uses 4 performance levels: EE (Exceeds Expectation), ME (Meets Expectation), AE (Approaches Expectation), and BE (Below Expectation). These replace percentage marks and focus on competency achievement, not ranking.',
-  },
-
-  // ---- Section 3: Assessment Practice -------------------------------------
-  {
-    id: 'cba_confidence',
-    sectionIndex: 2,
-    type: 'scale',
-    question:
-      'How confident are you in conducting and recording Classroom-Based Assessment (CBA) using rubrics, anecdotal records, and portfolios?',
-    subtext: '1 = not at all confident   5 = very confident',
-    minLabel: 'Not at all confident',
-    maxLabel: 'Very confident',
-  },
-  {
-    id: 'assessment_tools',
-    sectionIndex: 2,
-    type: 'multiple',
-    question: 'Which CBC assessment tools do you currently use regularly? (Select all that apply)',
-    options: [
-      'Observation notes and anecdotal records',
-      'Rubrics aligned to EE / ME / AE / BE levels',
-      'Checklists or rating scales',
-      'Portfolio of learner work samples',
-      'Peer assessment activities',
-      'Self-assessment by learners',
-      'I have not yet implemented CBC assessment tools',
-    ],
-  },
-  {
-    id: 'assessment_challenge',
-    sectionIndex: 2,
-    type: 'radio',
-    question: 'What is your greatest challenge with CBC assessment?',
-    options: [
-      'Not enough time to assess all learners meaningfully',
-      'Unsure what to look for when assessing competencies',
-      'Record-keeping and reporting workload is overwhelming',
-      'I lack ready-made rubrics and templates',
-      'Difficulty calibrating what EE / ME / AE / BE looks like in practice',
-    ],
-  },
-
-  // ---- Section 4: Teaching Practice ---------------------------------------
-  {
-    id: 'lesson_planning',
-    sectionIndex: 3,
-    type: 'scale',
-    question:
-      'How confident are you designing CBC lesson plans using backwards design — starting from the Specific Learning Outcome (SLO) and planning activities to achieve it?',
-    subtext: '1 = not at all confident   5 = very confident',
-    minLabel: 'Not at all confident',
-    maxLabel: 'Very confident',
-  },
-  {
-    id: 'differentiation',
-    sectionIndex: 3,
-    type: 'radio',
-    question: 'In a lesson with mixed-ability learners, how do you typically differentiate?',
-    options: [
-      'I use the same activities for all learners',
-      'I adjust task complexity for different learners',
-      'I group learners and give different tasks to each group',
-      'I use differentiated worksheets and materials prepared in advance',
-      'I am still developing my differentiation skills',
-    ],
-  },
-  {
-    id: 'learner_activity_time',
-    sectionIndex: 3,
-    type: 'radio',
-    question:
-      'In a typical lesson, approximately how much time do learners spend actively doing — not listening to or watching you teach?',
-    options: [
-      'Less than 20% of lesson time',
-      '20–40% of lesson time',
-      '40–60% of lesson time',
-      '60–80% of lesson time',
-      'More than 80% of lesson time',
-    ],
-  },
-
-  // ---- Section 5: Goals and Support ---------------------------------------
-  {
-    id: 'cbc_challenges',
-    sectionIndex: 4,
-    type: 'multiple',
-    question: 'Which CBC implementation challenges are most pressing for you right now? (Select all that apply)',
-    options: [
-      'Understanding the curriculum design documents and SLOs',
-      'Managing large class sizes in a learner-centred approach',
-      'Limited teaching and learning materials',
-      'Parents who do not understand or support CBC',
-      'Record-keeping and reporting workload',
-      'Junior Secondary curriculum (new from 2023)',
-      'Lack of in-service training and coaching support',
-      'Integrating technology into CBC teaching',
-    ],
-  },
-  {
-    id: 'development_goals',
-    sectionIndex: 4,
-    type: 'multiple',
-    question: 'What would you most like to improve through this professional development? (Select up to 3)',
-    maxSelect: 3,
-    options: [
-      'Deepening my CBC philosophy and structural knowledge',
-      'Designing effective learner-centred activities',
-      'Conducting and recording CBA accurately',
-      'Differentiating instruction for diverse learners',
-      'CBC lesson planning using backwards design',
-      'Communicating CBC to parents effectively',
-      'Junior Secondary subject and curriculum knowledge',
-      'Integrating technology in CBC teaching',
-    ],
-  },
-]
+type MultipleQuestion = Extract<Question, { type: 'multiple' }>
+type KnowledgeQuestion = Extract<Question, { type: 'knowledge' }>
+type ScaleQuestion = Extract<Question, { type: 'scale' }>
+type RadioQuestion = Extract<Question, { type: 'radio' }>
 
 // ---------------------------------------------------------------------------
 // Program recommendations map
 // ---------------------------------------------------------------------------
 
-function computeRecommendations(responses: Record<string, unknown>): string[] {
-  const goals = (responses['development_goals'] as string[]) || []
-  const challenges = (responses['cbc_challenges'] as string[]) || []
+/** Turns answers into up to two recommended learning paths: rules in order, then the fallback fills any gap. */
+function computeRecommendations(
+  responses: Record<string, unknown>,
+  rules: { programId: string; when: { questionId: string; answers: string[] }[] }[],
+  fallback: string[],
+): string[] {
+  const hit = (w: { questionId: string; answers: string[] }) => {
+    const r = responses[w.questionId]
+    const picked = Array.isArray(r) ? (r as string[]) : typeof r === 'string' ? [r] : []
+    return w.answers.some(a => picked.includes(a))
+  }
+  const matched: string[] = []
+  for (const rule of rules) if (!matched.includes(rule.programId) && rule.when.some(hit)) matched.push(rule.programId)
+  const out = matched.slice(0, 2)
+  for (const f of fallback) if (out.length < 2 && !out.includes(f)) out.push(f)
+  return out
+}
 
-  const recs: string[] = []
+type Section = { index: number; title: string; description: string }
+type Bank = {
+  sections: Section[]
+  questions: Question[]
+  rules: { programId: string; when: { questionId: string; answers: string[] }[] }[]
+  fallback: string[]
+}
 
-  if (
-    goals.includes('Conducting and recording CBA accurately') ||
-    challenges.includes('Record-keeping and reporting workload') ||
-    challenges.includes('Lack of in-service training and coaching support')
-  ) {
-    recs.push('Formative Assessment Strategies')
-  }
-  if (
-    goals.includes('CBC lesson planning using backwards design') ||
-    goals.includes('Deepening my CBC philosophy and structural knowledge')
-  ) {
-    recs.push('CBC Lesson Planning Mastery')
-  }
-  if (
-    goals.includes('Differentiating instruction for diverse learners') ||
-    challenges.includes('Managing large class sizes in a learner-centred approach')
-  ) {
-    recs.push('Inclusive Teaching Practices')
-  }
-  if (
-    goals.includes('Junior Secondary subject and curriculum knowledge') ||
-    challenges.includes('Junior Secondary curriculum (new from 2023)')
-  ) {
-    recs.push('Junior Secondary CBC')
-  }
-  if (
-    goals.includes('Integrating technology in CBC teaching') ||
-    challenges.includes('Integrating technology into CBC teaching')
-  ) {
-    recs.push('Digital Integration in CBC')
-  }
-  if (
-    goals.includes('Designing effective learner-centred activities') ||
-    goals.includes('Deepening my CBC philosophy and structural knowledge')
-  ) {
-    recs.push('CBC Fundamentals')
-  }
+const BUILT_IN: Bank = { sections: NEEDS_SECTIONS, questions: NEEDS_QUESTIONS, rules: NEEDS_RULES, fallback: NEEDS_FALLBACK }
 
-  // Deduplicate and return top 2
-  const unique = Array.from(new Set(recs))
-  if (unique.length === 0) return ['CBC Fundamentals', 'Competency-Based Assessment']
-  if (unique.length === 1) return [unique[0], 'Competency-Based Assessment']
-  return unique.slice(0, 2)
+/** The edited copy staff published in the CMS, in the shape this page renders. */
+function bankFromCms(d: NonNullable<typeof api.content.needsAssessment._returnType>): Bank {
+  return {
+    sections: d.sections.map((s, index) => ({ index, title: s.title, description: s.description })),
+    questions: d.questions.map((q): Question => {
+      const base = { id: q.id, question: q.question, subtext: q.subtext || undefined, sectionIndex: q.section }
+      if (q.type === 'scale') return { ...base, type: 'scale', minLabel: q.minLabel, maxLabel: q.maxLabel }
+      if (q.type === 'multiple') return { ...base, type: 'multiple', options: q.options, maxSelect: q.maxSelect || undefined }
+      if (q.type === 'knowledge') return { ...base, type: 'knowledge', options: q.options, correctIndex: q.correctIndex, explanation: q.explanation }
+      return { ...base, type: 'radio', options: q.options }
+    }),
+    rules: d.rules,
+    fallback: d.fallbackProgramIds,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -343,7 +88,8 @@ function knowledgeLabel(score: number): string {
 // ---------------------------------------------------------------------------
 
 function restoreFromResponses(
-  savedResponses: Record<string, unknown>
+  savedResponses: Record<string, unknown>,
+  questions: Question[],
 ): { correct: Record<string, boolean>; revealed: Record<string, boolean> } {
   const correct: Record<string, boolean> = {}
   const revealed: Record<string, boolean> = {}
@@ -360,6 +106,11 @@ export default function AssessmentPage() {
   const { user } = useProfile()
   const cloudAssessment = useQuery(api.assessments.mine, user ? {} : 'skip')
   const saveCloudAssessment = useMutation(api.assessments.save)
+  // Staff can edit the assessment in the admin console; until a published copy exists the built-in one is used.
+  const cms = useQuery(api.content.needsAssessment, {})
+  const bank = useMemo<Bank>(() => (cms ? bankFromCms(cms) : BUILT_IN), [cms])
+  const { sections, questions } = bank
+  const { getProgramById } = usePrograms()
   const [currentStep, setCurrentStep] = useState(0)
   const [responses, setResponses] = useState<Record<string, unknown>>({})
   // For knowledge questions: track which have been answered and whether correct
@@ -375,7 +126,7 @@ export default function AssessmentPage() {
       if (saved) {
         const parsed = JSON.parse(saved) as { completedAt?: string; responses?: Record<string, unknown> }
         if (parsed.completedAt && parsed.responses) {
-          const { correct, revealed } = restoreFromResponses(parsed.responses)
+          const { correct, revealed } = restoreFromResponses(parsed.responses, questions)
           setResponses(parsed.responses)
           setKnowledgeCorrect(correct)
           setKnowledgeRevealed(revealed)
@@ -397,13 +148,21 @@ export default function AssessmentPage() {
             responses:   savedResponses,
           }))
         } catch {}
-        const { correct, revealed } = restoreFromResponses(savedResponses)
+        const { correct, revealed } = restoreFromResponses(savedResponses, questions)
         setResponses(savedResponses)
         setKnowledgeCorrect(correct)
         setKnowledgeRevealed(revealed)
         setCompleted(true)
       }
-  }, [user, cloudAssessment])
+  }, [user, cloudAssessment, questions])
+
+  if (cms === undefined) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center" role="status" aria-label="Loading">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent motion-reduce:animate-none" />
+      </div>
+    )
+  }
 
   const totalQuestions = questions.length
   const currentQuestion = questions[currentStep]
@@ -502,7 +261,7 @@ export default function AssessmentPage() {
   // ---------------------------------------------------------------------------
 
   if (completed) {
-    const recs = computeRecommendations(responses)
+    const recs = computeRecommendations(responses, bank.rules, bank.fallback)
     const score = knowledgeScore
     const label = knowledgeLabel(score)
 
@@ -555,16 +314,16 @@ export default function AssessmentPage() {
               <h3 className="font-semibold">Recommended Starting Points</h3>
             </div>
             {recs.map((rec, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-lg border p-4">
+              <Link key={i} href={getProgramById(rec) ? `/dashboard/learning/${rec}` : '/dashboard/learning'} className="flex min-h-14 items-center gap-3 rounded-lg border p-4 hover:bg-muted/50">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <BookOpen className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{rec}</p>
+                  <p className="font-medium text-sm">{getProgramById(rec)?.title ?? rec}</p>
                   <p className="text-xs text-muted-foreground">Recommended based on your goals and challenges</p>
                 </div>
                 <Award className="w-4 h-4 text-muted-foreground ml-auto" />
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -738,7 +497,7 @@ export default function AssessmentPage() {
       <div>
         <h1 className="text-3xl font-bold mb-2">Needs Assessment</h1>
         <p className="text-muted-foreground">
-          15 questions across 5 sections to personalise your Mwalimu AI experience. There are no wrong answers — this is for your benefit.
+          {questions.length} questions across {sections.length} sections to personalise your Mwalimu AI experience. There are no wrong answers — this is for your benefit.
         </p>
       </div>
 

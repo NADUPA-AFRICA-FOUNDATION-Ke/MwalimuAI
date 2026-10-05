@@ -7,8 +7,10 @@ import { assembleProgram } from "../lib/contentRead";
 import { CBC_LEVELS, COUNTIES, SUBJECTS } from "../lib/taxonomy";
 import { PROGRAMS } from "../../lib/learning-paths-data";
 import { fail } from "../lib/errors";
+import { insertItem, publishDraft, readinessProblem } from "../lib/contentWrite";
+import { NEEDS_FALLBACK, NEEDS_QUESTIONS, NEEDS_RULES, NEEDS_SECTIONS } from "../../lib/needs-assessment-data";
 
-const kindV = v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"));
+const kindV = v.union(v.literal("program"), v.literal("module"), v.literal("lesson"), v.literal("quiz"), v.literal("assessment"));
 const KEY = /^[a-z0-9][a-z0-9-]{0,59}$/;
 
 const label = (i: Doc<"cmsItems">) => `${i.kind}:${i.programKey}/${i.key}`;
@@ -83,6 +85,8 @@ export const itemsForProgram = staffQuery({
           archived: i.archivedAt !== undefined,
           draft: summarize(draft),
           published: summarize(published),
+          // Why the working copy (draft, else live) cannot be submitted or published yet.
+          problem: i.archivedAt !== undefined ? null : readinessProblem(i.kind, (draft ?? published)?.data),
           cbcLevels: i.cbcLevels,
           subjects: i.subjects,
           counties: i.counties,
@@ -193,19 +197,20 @@ export const createItem = staffMutation({
     if (!KEY.test(key)) throw fail("INVALID_CONTENT", "Key must be lowercase letters, numbers and dashes");
     let programKey = key,
       parent: Doc<"cmsItems"> | null = null;
-    if (args.kind === "program") {
-      if (args.parentId) throw fail("INVALID_CONTENT", "A program has no parent");
+    if (args.kind === "program" || args.kind === "assessment") {
+      const rootKind = args.kind;
+      if (args.parentId) throw fail("INVALID_CONTENT", `A ${rootKind} has no parent`);
       if (
         await ctx.db
           .query("cmsItems")
-          .withIndex("by_program_and_key", (q) => q.eq("programKey", key).eq("kind", "program").eq("key", key))
+          .withIndex("by_program_and_key", (q) => q.eq("programKey", key).eq("kind", rootKind).eq("key", key))
           .first()
       )
-        throw fail("ALREADY_EXISTS", "A program with that key already exists");
+        throw fail("ALREADY_EXISTS", `A ${rootKind} with that key already exists`);
     } else {
       if (!args.parentId) throw fail("INVALID_CONTENT", "Choose a parent");
       parent = await item(ctx, args.parentId);
-      const expected: Record<string, ContentKind> = { module: "program", lesson: "module", quiz: "program" };
+      const expected: Partial<Record<ContentKind, ContentKind>> = { module: "program", lesson: "module", quiz: "program" };
       if (parent.kind !== expected[args.kind])
         throw fail("INVALID_CONTENT", `A ${args.kind} belongs under a ${expected[args.kind]}`);
       if (parent.archivedAt !== undefined) throw fail("INVALID_CONTENT", "The parent is archived");
@@ -331,7 +336,8 @@ export const submitForReview = staffMutation({
     const i = await item(ctx, args.itemId);
     const draft = i.draftVersionId ? await ctx.db.get(i.draftVersionId) : null;
     if (!draft || draft.status !== "draft") throw fail("INVALID_STATE", "There is no draft to submit");
-    assertPublishable(i.kind, validateContent(i.kind, draft.data, true));
+    const problem = readinessProblem(i.kind, draft.data);
+    if (problem) throw fail("INVALID_CONTENT", problem);
     await ctx.db.patch(draft._id, {
       status: "in_review",
       submittedBy: staff._id,
@@ -395,37 +401,14 @@ export const publish = staffMutation({
   args: { itemId: v.id("cmsItems"), reason: v.string() },
   handler: async (ctx, args, _staff, log) => {
     const i = await item(ctx, args.itemId);
-    const draft = i.draftVersionId ? await ctx.db.get(i.draftVersionId) : null;
-    if (!draft || draft.status !== "approved") throw fail("NOT_APPROVED", "Only approved content can be published");
-    if (i.archivedAt !== undefined) throw fail("INVALID_STATE", "Unarchive this item first");
-    if (i.parentId) {
-      const parent = await item(ctx, i.parentId);
-      if (!parent.publishedVersionId || parent.archivedAt !== undefined)
-        throw fail("PARENT_NOT_LIVE", "Publish the parent first");
-    }
-    const data = validateContent(i.kind, draft.data, true);
-    assertPublishable(i.kind, data);
-    const before = i.publishedVersionId ? await ctx.db.get(i.publishedVersionId) : null;
-    if (before) await ctx.db.patch(before._id, { status: "superseded" });
-    const now = Date.now();
-    await ctx.db.patch(draft._id, { status: "published", publishedAt: now });
-    await ctx.db.patch(i._id, {
-      publishedVersionId: draft._id,
-      draftVersionId: undefined,
-      title: titleOf(data),
-      orderIndex: data.orderIndex,
-      cbcLevels: data.tags.cbcLevels,
-      subjects: data.tags.subjects,
-      counties: data.tags.counties,
-      updatedAt: now,
-    });
+    const { before, after } = await publishDraft(ctx, i);
     await log({
       action: "content.publish",
       targetType: "content",
       targetId: i._id,
       targetLabel: label(i),
-      before: before ? { version: before.version } : null,
-      after: { version: draft.version },
+      before,
+      after,
     });
     return null;
   },
@@ -577,5 +560,72 @@ export const importStaticCurriculum = staffMutation({
       after: { itemsCreated: created, programsSkipped: skipped },
     });
     return { created, skipped };
+  },
+});
+
+/** The needs assessment item(s), for the admin list. */
+export const assessments = staffQuery({
+  permission: "content.read",
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db
+      .query("cmsItems")
+      .withIndex("by_kind_and_program", (q) => q.eq("kind", "assessment"))
+      .take(20);
+    return items.map((i) => ({
+      _id: i._id,
+      key: i.key,
+      title: i.title,
+      published: i.publishedVersionId !== undefined,
+      hasDraft: i.draftVersionId !== undefined,
+      archived: i.archivedAt !== undefined,
+      updatedAt: i.updatedAt,
+    }));
+  },
+});
+
+export const NEEDS_KEY = "needs-assessment";
+
+/** Copies the built-in needs assessment into the CMS (as a draft to edit, or live as-is) so it can be managed. */
+export const importNeedsAssessment = staffMutation({
+  permission: "content.edit",
+  args: { reason: v.optional(v.string()) },
+  handler: async (ctx, _args, { staff }, log) => {
+    const exists = await ctx.db
+      .query("cmsItems")
+      .withIndex("by_program_and_key", (q) => q.eq("programKey", NEEDS_KEY).eq("kind", "assessment").eq("key", NEEDS_KEY))
+      .first();
+    if (exists) throw fail("ALREADY_EXISTS", "The needs assessment is already in the CMS");
+    const data = {
+      title: "Needs assessment",
+      intro: "A few questions about your classroom so we can recommend where to start.",
+      sections: NEEDS_SECTIONS.map((s) => ({ title: s.title, description: s.description })),
+      questions: NEEDS_QUESTIONS.map((q) => ({
+        id: q.id,
+        section: q.sectionIndex,
+        type: q.type,
+        question: q.question,
+        subtext: q.subtext ?? "",
+        options: q.type === "scale" ? [] : q.options,
+        correctIndex: q.type === "knowledge" ? q.correctIndex : 0,
+        explanation: q.type === "knowledge" ? q.explanation : "",
+        minLabel: q.type === "scale" ? q.minLabel : "",
+        maxLabel: q.type === "scale" ? q.maxLabel : "",
+        maxSelect: q.type === "multiple" ? (q.maxSelect ?? 0) : 0,
+      })),
+      rules: NEEDS_RULES,
+      fallbackProgramIds: NEEDS_FALLBACK,
+      orderIndex: 0,
+      tags: { cbcLevels: [], subjects: [], counties: [] },
+    };
+    const id = await insertItem(ctx, staff._id, { kind: "assessment", key: NEEDS_KEY, parent: null, data });
+    await log({
+      action: "content.create",
+      targetType: "content",
+      targetId: id,
+      targetLabel: `assessment:${NEEDS_KEY}`,
+      after: { questions: data.questions.length, importedBuiltIn: true },
+    });
+    return id;
   },
 });

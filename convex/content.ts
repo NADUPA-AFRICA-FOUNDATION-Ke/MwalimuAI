@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { assembleProgram, type ProgramShape } from "./lib/contentRead";
+import type { AssessmentData } from "./lib/contentValidation";
 
 /**
  * Learner catalogue. `managedKeys` lists every program the CMS controls, so the app
@@ -24,5 +25,19 @@ export const publishedPrograms = query({
       (item.archivedAt !== undefined ? archivedPrograms : programs).push(assembled);
     }
     return { programs, archivedPrograms, managedKeys: items.map((i) => i.key) };
+  },
+});
+
+/** The published needs assessment, or null so the learner app uses its built-in copy. */
+export const needsAssessment = query({
+  args: {},
+  handler: async (ctx) => {
+    const item = await ctx.db
+      .query("cmsItems")
+      .withIndex("by_program_and_key", (q) => q.eq("programKey", "needs-assessment").eq("kind", "assessment").eq("key", "needs-assessment"))
+      .first();
+    if (!item || !item.publishedVersionId || item.archivedAt !== undefined) return null;
+    const version = await ctx.db.get(item.publishedVersionId);
+    return version ? (version.data as AssessmentData) : null;
   },
 });
