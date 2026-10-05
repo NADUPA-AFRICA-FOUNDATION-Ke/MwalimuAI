@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ModuleForm, LessonForm, ProgramForm, QuizForm, type Data } from '@/components/admin/content/forms'
 import { AssessmentForm } from '@/components/admin/content/assessment-form'
+import { LessonAssist, QuizAssist } from '@/components/admin/content/ai-assist'
 import { TagPicker } from '@/components/admin/content/tag-picker'
 import {
   Empty,
@@ -72,6 +73,8 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
   const mine = detail.history.find((h) => h._id === draft?._id)?.submittedBy === email
   const programKey = item.programKey
   const problem = items?.find((i) => i._id === itemId)?.problem ?? null
+  const pathTitle = items?.find((i) => i.kind === 'program')?.title ?? ''
+  const moduleTitle = items?.find((i) => i._id === item.parentId)?.title ?? ''
 
   const doSave = async () => {
     const r = await run(() => save({ itemId, data, baseVersionId: draftId }), 'Draft saved')
@@ -159,7 +162,9 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
         <fieldset disabled={!canEdit} className="space-y-6 rounded-lg border bg-background p-4 disabled:opacity-90">
           {item.kind === 'program' && <ProgramForm data={data} set={set} />}
           {item.kind === 'module' && <ModuleForm data={data} set={set} />}
+          {item.kind === 'lesson' && canEdit && <LessonAssist data={data} set={set} path={pathTitle} module={moduleTitle} disabled={!canEdit} />}
           {item.kind === 'lesson' && <LessonForm data={data} set={set} />}
+          {item.kind === 'quiz' && canEdit && <QuizAssist data={data} set={set} path={pathTitle} programKey={programKey} disabled={!canEdit} />}
           {item.kind === 'quiz' && <QuizForm data={data} set={set} />}
           {item.kind === 'assessment' && <AssessmentForm data={data} set={set} />}
           {!embedded && item.kind !== 'assessment' && (

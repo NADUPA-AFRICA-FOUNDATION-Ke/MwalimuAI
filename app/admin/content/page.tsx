@@ -8,6 +8,7 @@ import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { AiPathWizard } from '@/components/admin/content/ai-path-wizard'
 import {
   Empty,
   Field,
@@ -36,6 +37,7 @@ export default function ContentPage() {
   const [form, setForm] = useState({ title: '', track: 'core', description: '', modules: 3, lessons: 3, quizzes: true })
   const [importOpen, setImportOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
 
   const createProgram = async () => {
     const r = await run(
@@ -59,6 +61,7 @@ export default function ContentPage() {
         title="Content"
         description="Draft → review → published. Nothing reaches learners until a second person approves it. Content is archived, never deleted."
       />
+      {can('content.edit') && aiOpen && <AiPathWizard onClose={() => setAiOpen(false)} />}
       {can('content.edit') && (
         <section className="mb-8 rounded-lg border bg-background p-4" aria-labelledby="new-path-h">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -68,7 +71,12 @@ export default function ContentPage() {
                 Sets up the whole outline in one step: modules, starter lessons and the pre and post assessments. You then fill in each lesson.
               </p>
             </div>
-            {!creating && <Button onClick={() => setCreating(true)}>New learning path</Button>}
+            {!creating && (
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => setAiOpen(true)}>Create with AI</Button>
+                <Button variant="outline" onClick={() => setCreating(true)}>Start from a blank outline</Button>
+              </div>
+            )}
           </div>
           {creating && (
             <div className="mt-4 space-y-4">

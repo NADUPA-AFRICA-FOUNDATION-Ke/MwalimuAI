@@ -332,3 +332,91 @@ export const publishProgram = staffMutation({
     return { published, skipped };
   },
 });
+
+/** Audit trail for AI assistance: who used which AI task, and on what. (The AI itself runs in the Next.js route.) */
+export const logAiUse = staffMutation({
+  permission: "content.edit",
+  args: { task: v.string(), subject: v.optional(v.string()) },
+  handler: async (_ctx, args, _staff, log) => {
+    await log({
+      action: "content.ai_assist",
+      targetType: "content",
+      targetId: args.task.slice(0, 40),
+      targetLabel: args.subject?.slice(0, 120),
+      after: { task: args.task.slice(0, 40) },
+    });
+    return null;
+  },
+});
+
+/**
+ * Creates a path from an (AI-drafted, human-edited) outline: real module and lesson titles with placeholder
+ * bodies the author or the AI assistant then fills in. Returns the item ids so the caller can write each lesson.
+ */
+export const createProgramFromOutline = staffMutation({
+  permission: "content.edit",
+  args: { outline: v.any(), includeQuizzes: v.boolean() },
+  handler: async (ctx, args, { staff }, log) => {
+    const o = args.outline as {
+      title?: string; tagline?: string; description?: string; track?: string; hours?: number;
+      assignment?: Record<string, unknown>; certificate?: Record<string, unknown>;
+      modules?: { title?: string; description?: string; lessons?: { title?: string; duration?: string; objective?: string }[] }[];
+    };
+    const title = (o.title ?? "").trim();
+    const modules = Array.isArray(o.modules) ? o.modules : [];
+    if (title.length < 3) throw fail("INVALID_CONTENT", "The outline needs a title");
+    if (modules.length < 1 || modules.length > 12) throw fail("INVALID_CONTENT", "Use 1–12 modules");
+    if (modules.some((m) => !Array.isArray(m.lessons) || m.lessons.length < 1 || m.lessons.length > 10))
+      throw fail("INVALID_CONTENT", "Each module needs 1–10 lessons");
+    const siblings = await ctx.db.query("cmsItems").withIndex("by_kind_and_program", (q) => q.eq("kind", "program")).take(300);
+    const key = await uniqueProgramKey(ctx, slugify(title));
+    const base = starter.program(title, TRACKS.includes(o.track ?? "") ? o.track! : "core", (o.description ?? "").trim().slice(0, 3000), siblings.length);
+    const programId = await insertItem(ctx, staff._id, {
+      kind: "program",
+      key,
+      parent: null,
+      data: {
+        ...base,
+        tagline: (o.tagline ?? "").slice(0, 300),
+        hours: typeof o.hours === "number" && o.hours > 0 && o.hours <= 500 ? o.hours : 4,
+        assignment: { ...base.assignment, ...(o.assignment ?? {}) },
+        certificate: { ...base.certificate, ...(o.certificate ?? {}) },
+      },
+    });
+    const program = await mustGet(ctx, programId);
+    let preId: Id<"cmsItems"> | null = null, postId: Id<"cmsItems"> | null = null;
+    if (args.includeQuizzes) {
+      preId = await insertItem(ctx, staff._id, { kind: "quiz", key: "pre", parent: program, data: starter.quiz("pre", 0) });
+      postId = await insertItem(ctx, staff._id, { kind: "quiz", key: "post", parent: program, data: starter.quiz("post", 1) });
+    }
+    const lessons: { itemId: Id<"cmsItems">; module: string; title: string; objective: string; orderIndex: number }[] = [];
+    for (const [mi, m] of modules.entries()) {
+      const moduleId = await insertItem(ctx, staff._id, {
+        kind: "module",
+        key: `m${mi + 1}`,
+        parent: program,
+        data: { ...starter.module((m.title ?? `Module ${mi + 1}`).trim().slice(0, 200) || `Module ${mi + 1}`, mi), description: (m.description ?? "").slice(0, 2000) },
+      });
+      const parent = await mustGet(ctx, moduleId);
+      for (const [li, l] of (m.lessons ?? []).entries()) {
+        const lt = (l.title ?? `Lesson ${mi + 1}.${li + 1}`).trim().slice(0, 200) || `Lesson ${mi + 1}.${li + 1}`;
+        const base = starter.lesson(lt, li);
+        const itemId = await insertItem(ctx, staff._id, {
+          kind: "lesson",
+          key: `l${li + 1}`,
+          parent,
+          data: { ...base, duration: (l.duration ?? "10 min").slice(0, 40) || "10 min" },
+        });
+        lessons.push({ itemId, module: parent.title, title: lt, objective: (l.objective ?? "").slice(0, 500), orderIndex: li });
+      }
+    }
+    await log({
+      action: "content.create_program",
+      targetType: "content",
+      targetId: programId,
+      targetLabel: `program:${key}`,
+      after: { title, modules: modules.length, lessons: lessons.length, fromOutline: true },
+    });
+    return { programKey: key, programId, preId, postId, lessons };
+  },
+});
