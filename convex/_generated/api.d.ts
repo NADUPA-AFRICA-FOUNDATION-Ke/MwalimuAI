@@ -75,6 +75,7 @@ import type * as notifications from "../notifications.js";
 import type * as preferences from "../preferences.js";
 import type * as profiles from "../profiles.js";
 import type * as progress from "../progress.js";
+import type * as retention from "../retention.js";
 import type * as schools from "../schools.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tickets from "../tickets.js";
@@ -154,6 +155,7 @@ declare const fullApi: ApiFromModules<{
   preferences: typeof preferences;
   profiles: typeof profiles;
   progress: typeof progress;
+  retention: typeof retention;
   schools: typeof schools;
   subscriptions: typeof subscriptions;
   tickets: typeof tickets;

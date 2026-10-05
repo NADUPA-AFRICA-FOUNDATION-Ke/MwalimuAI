@@ -59,3 +59,24 @@ describe("audit log witness", () => {
     expect((await checkpoints(t2)).some((c) => c.status === "broken" && /missing or was changed/.test(c.note ?? ""))).toBe(true);
   });
 });
+
+describe("retention", () => {
+  it("clears old operational rows and leaves learner content and the audit log alone", async () => {
+    const t = newTest();
+    const learner = await makeLearner(t);
+    const admin = await makeStaff(t, "super_admin");
+    await admin.as.mutation(api.admin.users.updateProfile, { profileId: learner.profileId, school: "S", reason: REASON });
+    const old = Date.now() - 400 * 86_400_000;
+    await t.run(async (ctx) => {
+      await ctx.db.insert("clientErrors", { fingerprint: "old", source: "browser", message: "old error", count: 1, firstSeen: old, lastSeen: old });
+      await ctx.db.insert("clientErrors", { fingerprint: "new", source: "browser", message: "new error", count: 1, firstSeen: Date.now(), lastSeen: Date.now() });
+      await ctx.db.insert("journalEntries", { userId: learner.profileId, clientId: "j", entryDate: "2025-01-01", title: "t", content: "keep me", mood: 3, createdAt: old, updatedAt: old });
+    });
+    await t.mutation(internal.retention.sweep, {});
+    const left = await t.run(async (ctx) => ({ errors: (await ctx.db.query("clientErrors").collect()).map((e) => e.fingerprint), journal: (await ctx.db.query("journalEntries").collect()).length, audit: (await ctx.db.query("auditLog").collect()).length }));
+    expect(left.errors).toEqual(["new"]);
+    expect(left.journal).toBe(1);
+    expect(left.audit).toBeGreaterThan(0);
+    await expect(t.mutation(internal.retention.purgeMigrationRecords, { confirm: "yes" })).rejects.toThrow(/confirmation phrase/);
+  });
+});
