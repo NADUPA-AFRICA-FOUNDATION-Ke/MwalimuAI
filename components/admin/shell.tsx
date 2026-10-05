@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   LayoutDashboard,
   MessagesSquare,
+  School,
   LogOut,
   Menu,
   ScrollText,
@@ -28,6 +29,7 @@ import { ROLE_LABELS, useStaff } from './common'
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, perm: null },
   { href: '/admin/users', label: 'Users', icon: Users, perm: 'users.read' },
+  { href: '/admin/schools', label: 'Schools', icon: School, perm: 'schools.manage' },
   { href: '/admin/community', label: 'Community', icon: MessagesSquare, perm: 'community.moderate' },
   { href: '/admin/announcements', label: 'Announcements', icon: Megaphone, perm: 'announcements.send' },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3, perm: 'analytics.read' },

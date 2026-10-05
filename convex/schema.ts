@@ -708,6 +708,30 @@ export default defineSchema({
     at: v.number(),
   }).index("by_at", ["at"]),
 
+  // Schools: a head teacher (on the School plan, or set up by staff) sees how the teachers who joined are progressing.
+  // Teachers join with a code and can leave at any time, which ends the head's view of them at once.
+  schools: defineTable({
+    name: v.string(),
+    county: v.optional(v.string()),
+    code: v.string(),
+    headId: v.id("profiles"),
+    createdAt: v.number(),
+    archivedAt: v.optional(v.number()),
+  })
+    .index("by_code", ["code"])
+    .index("by_head", ["headId"]),
+
+  schoolMembers: defineTable({
+    schoolId: v.id("schools"),
+    profileId: v.id("profiles"),
+    role: v.union(v.literal("head"), v.literal("teacher")),
+    status: v.union(v.literal("active"), v.literal("left"), v.literal("removed")),
+    joinedAt: v.number(),
+    leftAt: v.optional(v.number()),
+  })
+    .index("by_school_and_status", ["schoolId", "status"])
+    .index("by_profile", ["profileId", "status"]),
+
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;
   // feature-specific backfills can promote records into typed tables later.
