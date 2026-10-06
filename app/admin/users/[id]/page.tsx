@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { fmtTime, Loading, PageHeader, ReasonDialog, StatusPill, useRun, useStaff } from '@/components/admin/common'
 import { ActivityTab } from '@/components/admin/user/activity-tab'
 import { HistoryTab } from '@/components/admin/user/history-tab'
+import { IntegrityTab } from '@/components/admin/user/integrity-tab'
 import { LearningTab } from '@/components/admin/user/learning-tab'
 import { ProfileTab } from '@/components/admin/user/profile-tab'
 import { SecurityTab } from '@/components/admin/user/security-tab'
@@ -70,6 +71,7 @@ export default function UserDetailPage() {
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="learning">Learning</TabsTrigger>
+          <TabsTrigger value="integrity">Assessments</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
@@ -84,6 +86,9 @@ export default function UserDetailPage() {
         </TabsContent>
         <TabsContent value="learning">
           <LearningTab data={data} />
+        </TabsContent>
+        <TabsContent value="integrity">
+          <IntegrityTab profileId={profileId} />
         </TabsContent>
         <TabsContent value="security">
           <SecurityTab profileId={profileId} email={profile.email} />

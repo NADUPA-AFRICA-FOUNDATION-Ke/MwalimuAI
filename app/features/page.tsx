@@ -6,35 +6,45 @@ import { MarketingFooter } from '@/components/marketing-footer'
 import Link from 'next/link'
 import {
   BookOpen, Zap, Users, Award, MessageSquare, TrendingUp,
-  Brain, FileText, Target, Clock, Shield, Smartphone,
+  Brain, FileText, Globe, Building2, Shield, Smartphone,
   Check, ArrowRight,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useFadeIn } from '@/hooks/use-scroll-animations'
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 
-const features = [
-  { icon: BookOpen,      title: 'Structured Learning Modules', desc: 'Work through lessons, activities, and quizzes in a clear sequence.' },
-  { icon: Zap,           title: 'AI Coach Support',            desc: 'Ask questions about planning, assessment, classroom management, or teaching strategies.' },
-  { icon: Users,         title: 'Community Forum',             desc: 'Post questions, reply to other teachers, and share classroom resources.' },
-  { icon: Award,         title: 'Achievement Badges',          desc: 'See milestone badges and certificates connected to completed learning work.' },
-  { icon: MessageSquare, title: 'Needs Assessment',            desc: 'Answer a short assessment to identify a starting point for your learning.' },
-  { icon: TrendingUp,    title: 'Progress Tracking',           desc: 'Review completed lessons, assessment results, and learning activity from your dashboard.' },
-  { icon: Brain,         title: 'CBC-Specific Content',         desc: 'Read modules and resources focused on CBC teaching topics.' },
-  { icon: FileText,      title: 'Downloadable Resources',      desc: 'Open practical resources, guides, and templates from the resources area.' },
-  { icon: Target,        title: 'Competency Mapping',          desc: 'Use competency and level information included in selected learning content.' },
-  { icon: Clock,         title: 'Flexible Learning',           desc: 'Return to lessons and tools when your schedule allows.' },
-  { icon: Shield,        title: 'Offline Access',              desc: 'Use supported saved content when a connection is unavailable; AI Coach responses still need internet.' },
-  { icon: Smartphone,    title: 'Mobile Friendly',             desc: 'Use the responsive web app on a phone, tablet, or computer.' },
-]
+/**
+ * Each entry describes something the product does today; the sentence in `where` says where to find it so a visitor
+ * can check. Counts come from the live content (convex/siteFacts.ts), not from copy written here.
+ */
+function buildFeatures(f: { paths: number; lessons: number } | undefined) {
+  return [
+    { icon: BookOpen, title: 'Structured learning paths', desc: `Lessons, quizzes, an assignment and a final assessment in a set order.${f && f.paths > 0 ? ` ${f.paths} paths with ${f.lessons} lessons are published today.` : ''}`, where: 'Dashboard → Learn' },
+    { icon: Zap, title: 'AI Coach', desc: 'Ask about lesson planning, assessment and classroom situations. Answers can be wrong, so check them against your own judgement and school guidance.', where: 'Dashboard → AI Coach' },
+    { icon: Brain, title: 'AI teaching tools', desc: 'Lesson Plan Generator, Report Card Comments, Differentiation Advisor, Parent Communication Helper, AI Lesson Rehearsal, Assignment Feedback, Action Research Guide and Policy Explainer.', where: 'Dashboard → Tools' },
+    { icon: MessageSquare, title: 'Needs assessment', desc: 'A short questionnaire that recommends which learning path to start with.', where: 'Dashboard → Assessment' },
+    { icon: Award, title: 'Certificates anyone can verify', desc: 'Finish a path and earn a certificate with a serial number. Anyone can check it on the public verification page.', where: '/verify' },
+    { icon: TrendingUp, title: 'Progress, streaks and badges', desc: 'See completed lessons and assessment results, keep a learning streak, and collect milestone badges.', where: 'Dashboard → Progress' },
+    { icon: Users, title: 'Community forum', desc: 'Post questions, reply to other teachers and share classroom ideas. Staff moderate reported posts.', where: 'Dashboard → Community' },
+    { icon: Globe, title: 'English and Kiswahili', desc: 'Switch language in the app. Lessons appear in Kiswahili where a translation has been published, otherwise in English.', where: 'Settings → Language' },
+    { icon: Smartphone, title: 'Offline lessons', desc: 'Save a learning path to your device and read its lessons without a connection. The AI Coach and tools always need internet.', where: 'On a learning path → Save for offline' },
+    { icon: Building2, title: 'School dashboard', desc: 'On the School plan, a head teacher shares a code and sees teachers’ lessons finished, certificates and last activity. Journals, AI conversations and messages stay private.', where: 'Dashboard → School' },
+    { icon: FileText, title: 'Resource library', desc: 'Links to official curriculum, assessment and Ministry of Education sources, so you can read the originals.', where: 'Dashboard → Resources' },
+    { icon: Shield, title: 'Your data, your control', desc: 'Download everything we hold about you, or delete your account, from Settings.', where: 'Dashboard → Settings' },
+  ]
+}
 
 const highlights = [
-  { label: 'Interactive modules',   icon: BookOpen      },
-  { label: 'AI coaching',           icon: Zap            },
-  { label: 'Community discussions', icon: Users          },
-  { label: 'Progress tracking',     icon: TrendingUp    },
+  { label: 'Learning paths with certificates', icon: BookOpen },
+  { label: 'AI Coach and tools', icon: Zap },
+  { label: 'Teacher community', icon: Users },
+  { label: 'Progress tracking', icon: TrendingUp },
 ]
 
 export default function FeaturesPage() {
+  const facts = useQuery(api.siteFacts.facts, {})
+  const features = buildFeatures(facts)
   const { ref: heroRef, visible: heroVisible } = useFadeIn<HTMLDivElement>(0.1)
   const { ref: gridRef, visible: gridVisible } = useFadeIn<HTMLElement>(0.04)
 
@@ -54,7 +64,7 @@ export default function FeaturesPage() {
             <span className="text-accent">CBC teachers</span>
           </h1>
           <p className="text-base md:text-lg text-white/80 leading-relaxed max-w-xl mx-auto mb-8">
-            Mwalimu AI brings together learning modules, AI coaching, teacher tools, community discussions, and progress tracking.
+            Learning paths, an AI Coach and teaching tools, a teacher community, and verifiable certificates, in one web app.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button asChild size="lg" className="text-sm px-6 py-3 rounded-xl font-bold bg-card text-primary hover:bg-card/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border-0">
@@ -88,7 +98,7 @@ export default function FeaturesPage() {
               Tools built for the way you teach
             </h2>
             <p className="text-muted-foreground text-base max-w-lg mx-auto">
-              Explore the platform areas available to you.
+              Each feature below says where to find it, so you can check it for yourself.
             </p>
           </div>
 
@@ -104,6 +114,7 @@ export default function FeaturesPage() {
                 </div>
                 <h3 className="font-bold text-base text-foreground mb-2 tracking-tight">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+                <p className="mt-3 text-xs font-medium text-primary">Where: {feature.where}</p>
               </div>
             ))}
           </div>

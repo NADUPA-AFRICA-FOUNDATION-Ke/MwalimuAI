@@ -1,3 +1,4 @@
+import { queueEmail } from "./lib/emailQueue";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentProfile } from "./lib/auth";
@@ -55,12 +56,14 @@ export const issueMine = mutation({
       if (existing.userId !== profile._id) throw fail("SERIAL_IN_USE", "Certificate serial is already registered");
       return existing._id;
     }
-    return await ctx.db.insert("certificates", {
+    const id = await ctx.db.insert("certificates", {
       serial, userId: profile._id, programId: requireNonEmpty(args.programId, "programId", 100),
       programTitle: requireNonEmpty(programTitle, "programTitle", 300),
       teacherName: requireNonEmpty(args.teacherName ?? profile.name ?? "Teacher", "teacherName", 300),
       earnedAt: Date.parse(progress.certificateEarnedAt) || Date.now(),
     });
+    await queueEmail(ctx, { profileId: profile._id, kind: "certificate", dedupeKey: `cert:${serial}`, data: { programTitle, serial, programId: args.programId } });
+    return id;
   },
 });
 
@@ -87,10 +90,12 @@ export const upsertMine = mutation({
       await ctx.db.patch(existing._id, { teacherName });
       return existing._id;
     }
-    return await ctx.db.insert("certificates", {
+    const id = await ctx.db.insert("certificates", {
       serial, userId: profile._id, programId: args.programId, programTitle, teacherName,
       earnedAt: Date.parse(progress.certificateEarnedAt ?? "") || Date.now(),
     });
+    await queueEmail(ctx, { profileId: profile._id, kind: "certificate", dedupeKey: `cert:${serial}`, data: { programTitle, serial, programId: args.programId } });
+    return id;
   },
 });
 

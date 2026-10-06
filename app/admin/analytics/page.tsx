@@ -52,13 +52,13 @@ export default function AnalyticsPage() {
             <table className="w-full min-w-[44rem] text-left text-sm">
               <thead className="border-b text-xs text-muted-foreground">
                 <tr>
-                  <th className="p-3 font-medium">Program</th>
-                  <th className="p-3 font-medium">Started</th>
-                  <th className="p-3 font-medium">Completed</th>
-                  <th className="p-3 font-medium">Completion</th>
-                  <th className="p-3 font-medium">Avg progress</th>
-                  <th className="p-3 font-medium">Pre → post test</th>
-                  <th className="p-3 font-medium">Avg days to finish</th>
+                  <th scope="col" className="p-3 font-medium">Program</th>
+                  <th scope="col" className="p-3 font-medium">Started</th>
+                  <th scope="col" className="p-3 font-medium">Completed</th>
+                  <th scope="col" className="p-3 font-medium">Completion</th>
+                  <th scope="col" className="p-3 font-medium">Avg progress</th>
+                  <th scope="col" className="p-3 font-medium">Pre → post test</th>
+                  <th scope="col" className="p-3 font-medium">Avg days to finish</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
             <div className="mt-2 max-h-72 overflow-auto">
               <table className="w-full text-left text-xs">
                 <thead className="sticky top-0 bg-background text-muted-foreground">
-                  <tr><th className="p-1.5">Date</th><th className="p-1.5">Active</th><th className="p-1.5">Did a lesson</th><th className="p-1.5">Used a tool</th><th className="p-1.5">Assessments</th></tr>
+                  <tr><th scope="col" className="p-1.5">Date</th><th scope="col" className="p-1.5">Active</th><th scope="col" className="p-1.5">Did a lesson</th><th scope="col" className="p-1.5">Used a tool</th><th scope="col" className="p-1.5">Assessments</th></tr>
                 </thead>
                 <tbody className="divide-y">
                   {[...trend].reverse().map((d) => (

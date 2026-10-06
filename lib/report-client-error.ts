@@ -1,0 +1,14 @@
+/** Browser-side: send an error to the server for grouping. Fire and forget; never throws. */
+let sent = 0
+export function reportClientError(error: unknown, extra?: { route?: string }) {
+  try {
+    if (typeof window === 'undefined' || sent >= 10) return // a broken page can fire in a loop
+    sent++
+    const err = error instanceof Error ? error : new Error(typeof error === 'string' ? error : 'Unknown error')
+    const body = JSON.stringify({ message: err.message || err.name, stack: err.stack, route: extra?.route ?? window.location.pathname })
+    if (navigator.sendBeacon && navigator.sendBeacon('/api/log-error', new Blob([body], { type: 'application/json' }))) return
+    void fetch('/api/log-error', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {})
+  } catch {
+    /* ignore */
+  }
+}

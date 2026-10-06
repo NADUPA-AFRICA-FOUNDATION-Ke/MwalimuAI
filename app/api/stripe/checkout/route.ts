@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { PAID_PLANS, amountInSenti, type PaidPlanId } from '@/lib/plans'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuthUser } from '@/lib/require-auth'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
@@ -13,18 +14,9 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
-const PLANS: Record<string, { name: string; amount: number; interval: 'month' | 'year' }> = {
-  professional: {
-    name: 'Mwalimu AI Professional',
-    amount: 50000, // KES 500 × 100 (senti)
-    interval: 'month',
-  },
-  school: {
-    name: 'Mwalimu AI School',
-    amount: 300000, // KES 3,000 × 100 (senti)
-    interval: 'month',
-  },
-}
+const PLANS: Record<string, { name: string; amount: number; interval: 'month' | 'year' }> = Object.fromEntries(
+  (Object.keys(PAID_PLANS) as PaidPlanId[]).map((id) => [id, { name: PAID_PLANS[id].checkoutName, amount: amountInSenti(id), interval: PAID_PLANS[id].interval }]),
+)
 
 export async function POST(req: NextRequest) {
   const { userId, error: authError } = await requireAuthUser(req)

@@ -5,9 +5,10 @@ import { ConvexHttpClient } from 'convex/browser'
 import type { ZodType } from 'zod'
 import { api } from '@/convex/_generated/api'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { reportServerError } from '@/lib/report-error'
 import {
   IMPROVE_ACTIONS, SYSTEM, improvePrompt, improveSchema, lessonPrompt, lessonSchema, outlinePrompt, outlineSchema,
-  parseJsonLoose, postPrompt, postSchema, quizPrompt, quizSchema, recommendPrompt, recommendSchema, reviewPrompt, reviewSchema,
+  parseJsonLoose, postPrompt, postSchema, translatePrompt, TRANSLATE_SCHEMAS, type TranslateKind, quizPrompt, quizSchema, recommendPrompt, recommendSchema, reviewPrompt, reviewSchema,
   type ImproveAction,
 } from '@/lib/admin-ai'
 
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
   const task = text(body.task, 40)
   const LIMITS: Record<string, [number, string]> = {
     path_outline: [20, 'content.edit'], lesson: [80, 'content.edit'], quiz: [40, 'content.edit'],
-    improve: [100, 'content.edit'], post: [30, 'content.edit'], review: [80, 'content.edit'], recommend: [20, 'analytics.read'],
+    improve: [100, 'content.edit'], post: [30, 'content.edit'], translate: [400, 'content.edit'], review: [80, 'content.edit'], recommend: [20, 'analytics.read'],
   }
   const rule = LIMITS[task]
   if (!rule) return json({ error: 'Unknown task.' }, 400)
@@ -119,6 +120,11 @@ export async function POST(req: Request) {
         5000,
         0.3,
       )
+    } else if (task === 'translate') {
+      const kind = text(body.kind, 20) as TranslateKind
+      if (!(kind in TRANSLATE_SCHEMAS)) return json({ error: 'Unknown kind.' }, 400)
+      if (!body.source || typeof body.source !== 'object') return json({ error: 'There is nothing to translate.' }, 400)
+      data = await generate(TRANSLATE_SCHEMAS[kind] as ZodType<unknown>, translatePrompt(kind, body.source), 8000, 0.2)
     } else if (task === 'post') {
       data = await generate(postSchema, postPrompt({ topic: text(body.topic, 300), audience: text(body.audience, 100), notes: text(body.notes, 1500), existing: text(body.existing, 8000) }), 6000)
     } else if (task === 'improve') {
@@ -138,6 +144,7 @@ export async function POST(req: Request) {
     return json({ ok: true, data })
   } catch (e) {
     console.error('[admin-ai]', task, e instanceof Error ? e.message : e)
+    void reportServerError('api', e, `/api/admin/ai:${task}`)
     return json({ error: 'The AI assistant could not finish that. Please try again.', code: 'ai_failed' }, 502)
   }
 }

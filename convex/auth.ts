@@ -32,6 +32,7 @@ const resetEmail = Email({
   id: "password-reset",
   maxAge: 60 * 30,
   async sendVerificationRequest({ identifier, url }) {
+    if (process.env.EMAILS_DISABLED === "true") throw new Error("Password reset by email is switched off. Please contact support: they can issue a temporary password.");
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
     const from = process.env.AUTH_EMAIL_FROM ?? "Mwalimu AI <onboarding@resend.dev>";
@@ -51,6 +52,8 @@ const resetEmail = Email({
 });
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+  // A sign-in lasts at most 30 days, and ends after 14 days without use.
+  session: { totalDurationMs: 30 * 86_400_000, inactiveDurationMs: 14 * 86_400_000 },
   providers: [
     Password({ reset: resetEmail }),
     googleProvider,

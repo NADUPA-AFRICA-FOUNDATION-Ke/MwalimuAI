@@ -9,6 +9,7 @@ import { useProfile } from '@/context/profile-context'
 import { usePrograms } from '@/context/content-context'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { AssessmentGuard, GuardedTextarea } from '@/components/assessment-guard'
 import { BackButton } from '@/components/back-button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -18,7 +19,7 @@ import {
 
 export default function AssignmentPage() {
   const params  = useParams<{ programId: string }>()
-  const { lang, profile, syncReady } = useProfile()
+  const { lang, profile, syncReady, user } = useProfile()
   const { getProgramById } = usePrograms()
   const program = getProgramById(params.programId)
   const assignment = program?.assignment
@@ -151,15 +152,17 @@ export default function AssignmentPage() {
                 </div>
               </div>
 
+              <AssessmentGuard watermark={`${profile?.name || 'Learner'} · ${(user?.id ?? '').slice(-6)}`} title="Your assignment is written here, under assessment rules" attempt={{ programId: program.id, kind: 'assignment' }}>
               <div className="glass rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Your Submission</h2>
                   <span className="text-xs text-muted-foreground">{wordCount} words</span>
                 </div>
-                <Textarea
+                <GuardedTextarea
                   placeholder="Write your assignment here. Aim for 300–500 words, specific to your classroom context..."
                   value={submission}
-                  onChange={e => setSubmission(e.target.value)}
+                  onValueChange={setSubmission}
+                  aria-label="Your assignment"
                   className="rounded-xl resize-none min-h-[200px] text-sm"
                   rows={10}
                 />
@@ -178,6 +181,7 @@ export default function AssignmentPage() {
                   <p className="text-xs text-muted-foreground mt-1.5 text-center">Write at least 50 words to submit</p>
                 )}
               </div>
+              </AssessmentGuard>
             </div>
 
             {/* AI feedback */}

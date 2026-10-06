@@ -1,7 +1,7 @@
 // Mwalimu AI — Service Worker
 // Strategy: cache-first for immutable assets, network-first for pages.
 // Increment CACHE_VERSION whenever a breaking schema change needs a clean slate.
-const CACHE_VERSION = '4'
+const CACHE_VERSION = '5'
 const STATIC_CACHE  = `mwalimu-static-v${CACHE_VERSION}`
 const PAGES_CACHE   = `mwalimu-pages-v${CACHE_VERSION}`
 const ALL_CACHES    = [STATIC_CACHE, PAGES_CACHE]
@@ -9,7 +9,7 @@ const ALL_CACHES    = [STATIC_CACHE, PAGES_CACHE]
 // ── Install: take control immediately ──────────────────────────────────────
 // Precache the offline page so a cold start with no connection still shows something useful.
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(PAGES_CACHE).then(cache => cache.add('/offline')).catch(() => {}).then(() => self.skipWaiting()))
+  event.waitUntil(caches.open(PAGES_CACHE).then(cache => cache.addAll(['/offline', '/offline/lessons'])).catch(() => {}).then(() => self.skipWaiting()))
 })
 
 // ── Activate: delete caches from old versions ──────────────────────────────
@@ -118,6 +118,11 @@ async function networkFirst(request, cacheName) {
 
     // For navigation, try to return the cached dashboard shell as fallback
     if (request.mode === 'navigate') {
+      // Opening the downloaded-lessons reader needs nothing but the device's own copy.
+      if (new URL(request.url).pathname.startsWith('/offline/lessons')) {
+        const reader = await caches.match('/offline/lessons')
+        if (reader) return reader
+      }
       const shell = await caches.match('/dashboard')
       if (shell) return shell
       const offline = await caches.match('/offline')

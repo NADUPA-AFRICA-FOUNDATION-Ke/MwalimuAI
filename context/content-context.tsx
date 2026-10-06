@@ -5,6 +5,7 @@ import { useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { PROGRAMS, TRACKS, type Program } from '@/lib/learning-paths-data'
 import { setProgramCatalog } from '@/lib/learning-progress'
+import { useProfile } from '@/context/profile-context'
 
 interface ContentValue {
   /** Programs shown in the catalogue (published, not archived). */
@@ -49,7 +50,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 }
 
 function RemoteContent({ children }: { children: ReactNode }) {
-  const remote = useQuery(api.content.publishedPrograms, {})
+  // Kiswahili copies are used where staff have written them; everything else stays English.
+  const { lang } = useProfile()
+  const remote = useQuery(api.content.publishedPrograms, { lang })
 
   const value = useMemo<ContentValue>(() => {
     if (!remote) return staticValue

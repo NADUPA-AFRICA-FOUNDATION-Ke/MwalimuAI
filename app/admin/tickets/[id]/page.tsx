@@ -26,7 +26,7 @@ export default function TicketDetailPage() {
   const [reopen, setReopen] = useState(false)
 
   if (data === undefined) return <Loading />
-  const { ticket, learner, messages } = data
+  const { ticket, learner, visitor, messages } = data
   const canReply = can('tickets.reply')
 
   async function send(resolve: boolean) {
@@ -60,6 +60,11 @@ export default function TicketDetailPage() {
           </>
         }
       />
+      {visitor && (
+        <p className="mb-4 rounded-md border bg-muted/40 p-3 text-sm">
+          From a visitor without an account: <b>{visitor.name}</b> ({visitor.email}). The address is as they typed it and is <b>not verified</b>. Replies appear on their private conversation page; no email is sent. If they sign in with Google using this address, or add the conversation to their account, it moves to their inbox.
+        </p>
+      )}
       {learner && (
         <p className="mb-4 text-sm">
           From{' '}

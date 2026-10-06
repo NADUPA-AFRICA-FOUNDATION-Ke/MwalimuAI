@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../../convex/_generated/api";
 import { makeLearner, makeStaff, newTest } from "./helpers";
 import { PROGRAMS } from "../../lib/learning-paths-data";
+import { STATIC_PROGRAMS } from "../../convex/lib/staticCurriculum";
 
 const REASON = "Reviewed against KICD design, ready to go";
 const rejects = (p: Promise<unknown>, code: string) => expect(p).rejects.toThrow(new RegExp(code));
@@ -258,16 +259,16 @@ describe("learner progress against CMS content", () => {
     const program = PROGRAMS[0];
     const keys = program.modules.flatMap((m) => m.lessons.map((l) => `${m.id}/${l.id}`));
     const reflections = Object.fromEntries(keys.slice(0, 6).map((k) => [k, "I will try this in class."]));
-    const post = { score: 0, total: 0, date: "d", answers: program.postAssessment.map((q) => q.correct) };
+    const answers = STATIC_PROGRAMS[0].postAssessment.map((q) => q.correct);
+    await learner.as.mutation(api.learningProgress.save, { programId: program.id, progress: { completedLessons: keys, reflections } });
+    // Assessments are marked on the server; a client-sent score is ignored.
+    await learner.as.mutation(api.learningProgress.save, { programId: program.id, progress: { completedLessons: keys, reflections, postAssessment: { score: 99, total: 99, date: "d", answers: [] } } });
+    expect((await learner.as.query(api.learningProgress.mine, {}))[0].postAssessment).toBeUndefined();
+    const marked = await learner.as.mutation(api.learningProgress.submitAssessment, { programId: program.id, kind: "post", answers });
+    expect(marked).toMatchObject({ score: answers.length, total: answers.length, passed: true });
     await learner.as.mutation(api.learningProgress.save, {
       programId: program.id,
-      progress: {
-        completedLessons: keys,
-        reflections,
-        postAssessment: post,
-        certificateSerial: "MW-ABCDE-FGHJK",
-        certificateEarnedAt: "1/1/2026",
-      },
+      progress: { completedLessons: keys, reflections, certificateSerial: "MW-ABCDE-FGHJK", certificateEarnedAt: "1/1/2026" },
     });
     const [row] = await learner.as.query(api.learningProgress.mine, {});
     expect(row.certificateSerial).toBe("MW-ABCDE-FGHJK"); // genuinely eligible: server recomputed the score from answers

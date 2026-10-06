@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { ItemEditor } from '@/components/admin/content/item-editor'
 import { Loading, PageHeader, Pill, ReasonDialog, useRun, useStaff } from '@/components/admin/common'
 import { InsightsPanel } from '@/components/admin/content/insights-panel'
+import { BulkTranslate } from '@/components/admin/content/bulk-translate'
 
 type Item = NonNullable<ReturnType<typeof useItems>>[number]
 const useItems = (programKey: string) => useQuery(api.admin.content.itemsForProgram, { programKey })
@@ -112,6 +113,7 @@ function Builder() {
         >
           {item.problem && !item.archived && <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" aria-label={`Needs work: ${item.problem}`} />}
           <span className="min-w-0 flex-1 truncate">{item.kind === 'quiz' ? (item.key === 'pre' ? 'Pre-assessment' : 'Post-assessment') : item.title}</span>
+          {item.sw && item.sw !== 'none' && <Pill tone={item.sw === 'complete' ? 'green' : 'amber'}>{item.sw === 'complete' ? 'SW' : 'SW partial'}</Pill>}
           <Pill tone={st.tone}>{st.label}</Pill>
         </button>
         {edit && siblings && index !== undefined && siblings.length > 1 && (
@@ -177,6 +179,7 @@ function Builder() {
         />
       ) : (
       <>
+      {edit && <BulkTranslate items={items} />}
       <ReleasePanel
         programKey={programKey}
         counts={counts}

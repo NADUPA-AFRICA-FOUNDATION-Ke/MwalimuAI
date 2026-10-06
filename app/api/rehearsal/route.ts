@@ -1,6 +1,7 @@
 import { streamText, convertToModelMessages } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { requireAuthUser } from '@/lib/require-auth'
+import { consumeAi } from '@/lib/ai-guard'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 const groq = createOpenAI({
@@ -71,6 +72,8 @@ export async function POST(req: Request) {
 
   const limit = rateLimit(`rehearsal:${userId}`, 60, 60 * 60 * 1000)
   if (!limit.ok) return rateLimitResponse(limit)
+  const capped = await consumeAi(req, 'rehearsal')
+  if (capped) return capped
 
   let parsed: { messages?: unknown; lessonPlan?: string; grade?: string; lang?: string }
   try { parsed = await req.json() } catch {

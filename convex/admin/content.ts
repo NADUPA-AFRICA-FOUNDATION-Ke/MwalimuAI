@@ -5,7 +5,7 @@ import { staffMutation, staffQuery } from "../lib/staff";
 import { assertPublishable, normalizeTags, titleOf, validateContent, type ContentKind } from "../lib/contentValidation";
 import { assembleProgram } from "../lib/contentRead";
 import { CBC_LEVELS, COUNTIES, SUBJECTS } from "../lib/taxonomy";
-import { PROGRAMS } from "../../lib/learning-paths-data";
+import { STATIC_PROGRAMS as PROGRAMS } from "../lib/staticCurriculum";
 import { fail } from "../lib/errors";
 import { insertItem, insertPublishedItem, publishDraft, readinessProblem } from "../lib/contentWrite";
 import { FAQS } from "../../lib/faq-data";
@@ -24,6 +24,21 @@ async function item(ctx: { db: MutationCtx["db"] }, id: Id<"cmsItems">) {
   const doc = await ctx.db.get(id);
   if (!doc) throw fail("NOT_FOUND", "Content item not found");
   return doc;
+}
+
+/** "none" no translation, "partial" some fields still blank, "complete", or null when this kind is not translated. */
+function swStatus(kind: Doc<"cmsItems">["kind"], data: unknown): "none" | "partial" | "complete" | null {
+  if (!data || typeof data !== "object") return null;
+  const d = data as Record<string, any>;
+  const filled = (...vals: unknown[]) => vals.map((x) => (Array.isArray(x) ? x.length > 0 && x.every((y) => typeof y !== "string" || y.trim()) : typeof x === "string" && x.trim().length > 0));
+  let flags: boolean[];
+  if (kind === "lesson") flags = d.sw ? filled(d.sw.title, d.sw.reading) : [];
+  else if (kind === "module") flags = d.sw ? filled(d.sw.title) : [];
+  else if (kind === "program") flags = d.sw ? filled(d.sw.title, d.sw.description) : [];
+  else if (kind === "quiz") flags = d.sw ? [Array.isArray(d.sw.questions) && d.sw.questions.length >= (d.questions?.length ?? 0) && d.sw.questions.every((q: any) => q.question?.trim() && q.options?.every((o: string) => o?.trim()))] : [];
+  else return null;
+  if (!d.sw || flags.length === 0) return "none";
+  return flags.every(Boolean) ? "complete" : "partial";
 }
 
 const summarize = (v: Doc<"cmsVersions"> | null) =>
@@ -92,6 +107,8 @@ export const itemsForProgram = staffQuery({
           published: summarize(published),
           // Why the working copy (draft, else live) cannot be submitted or published yet.
           problem: i.archivedAt !== undefined ? null : readinessProblem(i.kind, (draft ?? published)?.data),
+          // Whether a Kiswahili copy exists (filled in) on the working copy. Only some kinds have one.
+          sw: swStatus(i.kind, (draft ?? published)?.data),
           cbcLevels: i.cbcLevels,
           subjects: i.subjects,
           counties: i.counties,
@@ -175,8 +192,8 @@ export const pendingReviews = staffQuery({
 /** Renders the program as a learner would see it. mode=draft overlays unpublished drafts on the published tree. */
 export const preview = staffQuery({
   permission: "content.read",
-  args: { programKey: v.string(), mode: v.union(v.literal("draft"), v.literal("published")) },
-  handler: async (ctx, { programKey, mode }) => {
+  args: { programKey: v.string(), mode: v.union(v.literal("draft"), v.literal("published")), lang: v.optional(v.union(v.literal("en"), v.literal("sw"))) },
+  handler: async (ctx, { programKey, mode, lang }) => {
     const p = await ctx.db
       .query("cmsItems")
       .withIndex("by_program_and_key", (q) =>
@@ -184,7 +201,7 @@ export const preview = staffQuery({
       )
       .first();
     if (!p) throw fail("NOT_FOUND", "Program not found");
-    return await assembleProgram(ctx, p, mode, true);
+    return await assembleProgram(ctx, p, mode, true, lang ?? "en");
   },
 });
 
@@ -738,5 +755,43 @@ export const importLegacyModules = staffMutation({
     if (created === 0 && skipped > 0) throw fail("ALREADY_EXISTS", "The library modules are already managed here");
     await log({ action: "content.import_legacy_modules", targetType: "content", targetId: "legacy-modules", after: { created, skipped } });
     return { created, skipped };
+  },
+});
+
+/**
+ * Makes an older version the new working draft ("go back to this"). Nothing goes live until it is submitted,
+ * reviewed and published like any other edit, so a rollback gets the same second pair of eyes.
+ */
+export const restoreVersion = staffMutation({
+  permission: "content.edit",
+  requireReason: true,
+  args: { versionId: v.id("cmsVersions"), reason: v.string() },
+  handler: async (ctx, args, { staff }, log) => {
+    const ver = await ctx.db.get(args.versionId);
+    if (!ver) throw fail("NOT_FOUND", "Version not found");
+    const i = await item(ctx, ver.itemId);
+    if (i.archivedAt !== undefined) throw fail("INVALID_STATE", "Unarchive this item before restoring a version");
+    const draft = i.draftVersionId ? await ctx.db.get(i.draftVersionId) : null;
+    if (draft && (draft.status === "in_review" || draft.status === "approved"))
+      throw fail("INVALID_STATE", draft.status === "in_review" ? "This item is awaiting review. Withdraw it first." : "This item is approved. Publish it or discard the draft first.");
+    if (i.publishedVersionId === ver._id && !draft) throw fail("NO_CHANGES", "That version is already the live one");
+    const data = validateContent(i.kind, ver.data, true);
+    const now = Date.now();
+    if (draft) {
+      await ctx.db.patch(draft._id, { data, status: "draft", authorId: staff._id, reviewComment: undefined, reviewedBy: undefined, submittedBy: undefined });
+    } else {
+      const latest = await ctx.db.query("cmsVersions").withIndex("by_item", (q) => q.eq("itemId", i._id)).order("desc").first();
+      const id = await ctx.db.insert("cmsVersions", { itemId: i._id, version: (latest?.version ?? 0) + 1, status: "draft", data, authorId: staff._id, createdAt: now });
+      await ctx.db.patch(i._id, { draftVersionId: id, updatedAt: now });
+    }
+    await log({
+      action: "content.restore_version",
+      targetType: "content",
+      targetId: i._id,
+      targetLabel: label(i),
+      before: draft?.data ?? null,
+      after: { restoredFromVersion: ver.version },
+    });
+    return null;
   },
 });

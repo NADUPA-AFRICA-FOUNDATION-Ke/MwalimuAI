@@ -6,6 +6,8 @@ export type Cell = string | number | boolean | null | undefined
 export interface Sheet {
   name: string
   rows: Cell[][] // first row is the header
+  widths?: number[] // column widths in characters; overrides the automatic width
+  wrap?: boolean // wrap long text inside cells (reading text, instructions) instead of running on one line
 }
 
 const enc = new TextEncoder()
@@ -41,7 +43,7 @@ function colName(i: number): string {
   return s
 }
 
-function sheetXml(rows: Cell[][]): string {
+function sheetXml({ rows, widths: fixed, wrap }: Sheet): string {
   const width = Math.max(1, ...rows.map((r) => r.length))
   const widths = Array.from({ length: width }, (_, c) => {
     let w = 8
@@ -49,7 +51,7 @@ function sheetXml(rows: Cell[][]): string {
       const v = row[c]
       if (v !== null && v !== undefined) w = Math.max(w, String(v).length + 2)
     }
-    return Math.min(w, 60)
+    return fixed?.[c] ?? Math.min(w, 60)
   })
   const cols = widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')
   const body = rows
@@ -58,7 +60,9 @@ function sheetXml(rows: Cell[][]): string {
         .map((v, c) => {
           if (v === null || v === undefined || v === '') return ''
           const ref = `${colName(c)}${r + 1}`
-          const style = r === 0 ? ' s="1"' : ''
+          // Rows whose first cell starts with # are notes to the editor: shown grey and italic, ignored on upload.
+          const note = r > 0 && typeof row[0] === 'string' && row[0].startsWith('#')
+          const style = r === 0 ? ' s="1"' : note ? ' s="3"' : wrap ? ' s="2"' : ''
           if (typeof v === 'number' && Number.isFinite(v)) return `<c r="${ref}"${style}><v>${v}</v></c>`
           if (typeof v === 'boolean') return `<c r="${ref}"${style} t="inlineStr"><is><t>${v ? 'Yes' : 'No'}</t></is></c>`
           return `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${xmlEscape(String(v))}</t></is></c>`
@@ -78,13 +82,15 @@ function sheetXml(rows: Cell[][]): string {
 const STYLES =
   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
   '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-  '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
+  '<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><i/><sz val="11"/><color rgb="FF6B7280"/><name val="Calibri"/></font></fonts>' +
   '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
   '<fill><patternFill patternType="solid"><fgColor rgb="FFE5F2EC"/></patternFill></fill></fills>' +
   '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
   '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-  '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
-  '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>' +
+  '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+  '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+  '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+  '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>' +
   '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
   '</styleSheet>'
 
@@ -183,7 +189,7 @@ export function buildXlsx(sheets: Sheet[]): Uint8Array {
       ),
     },
     { name: 'xl/styles.xml', data: text(STYLES) },
-    ...sheets.map((s, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, data: text(sheetXml(s.rows)) })),
+    ...sheets.map((s, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, data: text(sheetXml(s)) })),
   ]
   return zip(entries)
 }

@@ -12,6 +12,7 @@ import { ModuleForm, LessonForm, ProgramForm, QuizForm, type Data } from '@/comp
 import { AssessmentForm } from '@/components/admin/content/assessment-form'
 import { LessonAssist, QuizAssist } from '@/components/admin/content/ai-assist'
 import { FaqForm, PostForm, ResourcesForm } from '@/components/admin/content/page-forms'
+import { SwEditor } from '@/components/admin/content/sw-editor'
 import { TagPicker } from '@/components/admin/content/tag-picker'
 import {
   Empty,
@@ -49,15 +50,18 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
   const discard = useMutation(api.admin.content.discardDraft)
   const archive = useMutation(api.admin.content.archive)
   const unarchive = useMutation(api.admin.content.unarchive)
+  const restore = useMutation(api.admin.content.restoreVersion)
   const { run, busy } = useRun()
 
   const source: Data | undefined = (detail?.draft?.data ?? detail?.published?.data) as Data | undefined
   const [data, setData] = useState<Data | null>(null)
   const [dirty, setDirty] = useState(false)
-  const [dialog, setDialog] = useState<null | 'approve' | 'reject' | 'publish' | 'discard' | 'archive' | 'unarchive'>(
+  const [dialog, setDialog] = useState<null | 'approve' | 'reject' | 'publish' | 'discard' | 'archive' | 'unarchive' | 'restore'>(
     null,
   )
   const draftId = detail?.draft?._id
+  const [restoreId, setRestoreId] = useState<Id<'cmsVersions'> | null>(null)
+  const [lang, setLang] = useState<'en' | 'sw'>('en')
   const items = useQuery(api.admin.content.itemsForProgram, detail ? { programKey: detail.item.programKey } : 'skip')
 
   // Reset the form when the server copy changes (and there is nothing unsaved).
@@ -120,6 +124,13 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
                 {status.replace('_', ' ')}
               </Pill>
             )}
+            {item.kind === 'lesson' && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/admin/content/${programKey}/preview?mode=draft&device=phone&item=${encodeURIComponent(`${items?.find((i) => i._id === item.parentId)?.key ?? ''}/${item.key}`)}`} target="_blank">
+                  Preview on a phone
+                </Link>
+              </Button>
+            )}
             {!embedded && !ROOT_DOCS.includes(item.kind) && (
               <Button asChild variant="outline" size="sm">
                 <Link href={`/admin/content/${programKey}/preview?mode=draft`}>
@@ -164,6 +175,18 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
       )}
 
       <div className="space-y-6">
+        {['lesson', 'module', 'quiz', 'program'].includes(item.kind) && (
+          <div role="tablist" aria-label="Language" className="flex gap-2">
+            {([['en', 'English'], ['sw', 'Kiswahili']] as const).map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={lang === id} onClick={() => setLang(id)} className={`min-h-10 rounded-full border px-4 text-sm ${lang === id ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}>{label}</button>
+            ))}
+          </div>
+        )}
+        {lang === 'sw' && ['lesson', 'module', 'quiz', 'program'].includes(item.kind) ? (
+          <fieldset disabled={!canEdit} className="space-y-6 rounded-lg border bg-background p-4 disabled:opacity-90">
+            <SwEditor kind={item.kind as 'lesson' | 'module' | 'quiz' | 'program'} data={data} set={set} canEdit={canEdit} />
+          </fieldset>
+        ) : (
         <fieldset disabled={!canEdit} className="space-y-6 rounded-lg border bg-background p-4 disabled:opacity-90">
           {item.kind === 'program' && <ProgramForm data={data} set={set} />}
           {item.kind === 'module' && <ModuleForm data={data} set={set} />}
@@ -188,6 +211,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
           )}
           {!ROOT_DOCS.includes(item.kind) && <TagPicker tags={data.tags} tax={tax} onChange={(tags) => set({ tags })} />}
         </fieldset>
+        )}
 
         <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2 border-t bg-background/95 p-3 backdrop-blur md:static md:mx-0 md:rounded-lg md:border">
           {canEdit && (
@@ -260,10 +284,15 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
                   <Pill tone={h.status === 'published' ? 'green' : 'gray'}>{h.status.replace('_', ' ')}</Pill>
                   {h.reviewComment ? <span className="ml-2 text-muted-foreground">“{h.reviewComment}”</span> : null}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   {h.author ? `by ${h.author} · ` : ''}
                   {h.reviewedBy ? `reviewed by ${h.reviewedBy} · ` : ''}
                   {fmtTime(h.publishedAt ?? h.createdAt)}
+                  {canEdit && h._id !== detail.published?._id && h._id !== draft?._id && (
+                    <Button type="button" size="sm" variant="outline" className="h-7" onClick={() => { setRestoreId(h._id); setDialog('restore') }}>
+                      Go back to this
+                    </Button>
+                  )}
                 </span>
               </li>
             ))}
@@ -283,12 +312,15 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
             discard: 'Discard the draft',
             archive: 'Archive this item',
             unarchive: 'Unarchive this item',
+            restore: 'Go back to this version',
           }[dialog ?? 'approve']
         }
         description={
           dialog === 'publish'
             ? 'This goes live for all learners immediately.'
-            : dialog === 'archive'
+            : dialog === 'restore'
+              ? 'It becomes a new draft. Nothing changes for learners until it is submitted, reviewed and published.'
+              : dialog === 'archive'
               ? 'It disappears for new learners. Nothing is deleted, and learners who started it keep access.'
               : dialog === 'reject'
                 ? 'Say what needs to change, so the author can fix it.'
@@ -303,6 +335,7 @@ export function ItemEditor({ itemId, embedded = false, onGone }: { itemId: Id<'c
             discard: () => discard({ itemId, reason }),
             archive: () => archive({ itemId, reason }),
             unarchive: () => unarchive({ itemId, reason }),
+            restore: () => restore({ versionId: restoreId!, reason }),
           }[dialog!]
           const r = await run(fn, 'Done')
           if (r !== undefined) setDirty(false)

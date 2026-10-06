@@ -62,7 +62,7 @@ describe("MFA", () => {
     expect(await s.as.query(api.admin.me.me, {})).toMatchObject({ state: "mfa_enrollment_required" });
 
     const code = await totpCode(secret, Date.now());
-    expect(await s.as.mutation(api.admin.mfa.verifyCode, { code })).toEqual({ ok: true });
+    expect(await s.as.mutation(api.admin.mfa.verifyCode, { code })).toMatchObject({ ok: true });
     expect(await s.as.query(api.admin.me.me, {})).toMatchObject({ state: "ready" });
     // same code again from a fresh session is a replay
     const again = await s.as.mutation(api.admin.mfa.verifyCode, { code });

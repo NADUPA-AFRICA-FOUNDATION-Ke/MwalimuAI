@@ -124,9 +124,9 @@ export default function IncidentPage() {
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/40 text-left text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="p-3">User</th>
-                  <th className="p-3">Outcome</th>
-                  <th className="hidden p-3 sm:table-cell">Dates restored</th>
+                  <th scope="col" className="p-3">User</th>
+                  <th scope="col" className="p-3">Outcome</th>
+                  <th scope="col" className="hidden p-3 sm:table-cell">Dates restored</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

@@ -41,6 +41,29 @@ function saveActivity(entries: ActivityEntry[]) {
   localStorage.setItem(ACTIVITY_KEY, JSON.stringify(entries))
 }
 
+// Activity not yet confirmed by the server (offline, or the tab closed first). Sent when the connection returns.
+const PENDING_ACTIVITY_KEY = 'mwalimu_activity_pending'
+function readPendingActivity(): ActivityEntry[] {
+  try { return JSON.parse(localStorage.getItem(PENDING_ACTIVITY_KEY) ?? '[]') as ActivityEntry[] } catch { return [] }
+}
+function writePendingActivity(rows: ActivityEntry[]) {
+  try { localStorage.setItem(PENDING_ACTIVITY_KEY, JSON.stringify(rows.slice(-60))) } catch {}
+}
+function sendActivity(entry: ActivityEntry, track: boolean) {
+  const client = getConvexClient()
+  if (!client) return
+  if (track && !readPendingActivity().some(e => e.date === entry.date && e.type === entry.type)) writePendingActivity([...readPendingActivity(), entry])
+  void client.mutation(recordCloudActivity, entry)
+    .then(() => writePendingActivity(readPendingActivity().filter(e => !(e.date === entry.date && e.type === entry.type))))
+    .catch(err => console.error('[mwalimu] activity sync failed (will retry):', err))
+}
+
+/** Sends activity that never reached the server. Days older than the server allows are dropped by the server. */
+export function flushPendingActivity() {
+  if (typeof window === 'undefined') return
+  for (const e of readPendingActivity()) sendActivity(e, false)
+}
+
 export function recordActivity(type: ActivityType, userId?: string) {
   if (typeof window === 'undefined') return
   const entries = loadActivity()
@@ -50,11 +73,7 @@ export function recordActivity(type: ActivityType, userId?: string) {
     saveActivity(entries)
   }
   // Convex derives the owner from auth; userId remains for call-site compatibility.
-  if (userId) {
-    const client = getConvexClient()
-    void client?.mutation(recordCloudActivity, { date: d, type })
-      .catch(err => console.error('[mwalimu] activity sync failed:', err))
-  }
+  if (userId) sendActivity({ date: d, type }, true)
 }
 
 /**

@@ -220,11 +220,8 @@ export function PostForm({ data, set }: FormProps) {
         <Field label="Author role"><Input value={data.authorRole ?? ''} onChange={(e) => set({ authorRole: e.target.value })} /></Field>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="Date shown" hint="e.g. October 5, 2026">
-          <div className="flex gap-2">
-            <Input value={data.date ?? ''} onChange={(e) => set({ date: e.target.value })} />
-            <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => set({ date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) })}>Today</Button>
-          </div>
+        <Field label="Date shown" hint="Set automatically to the day the post is published. It cannot be typed in.">
+          <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">Shown as the publish date</p>
         </Field>
         <Field label="Reading time">
           <div className="flex gap-2">

@@ -9,13 +9,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { MarketingHeader } from '@/components/marketing-header'
 import { MarketingFooter } from '@/components/marketing-footer'
 import Link from 'next/link'
-import { MessageSquare, Mail, FileText, HelpCircle, CheckCircle } from 'lucide-react'
+import { MessageSquare, Mail, FileText, HelpCircle } from 'lucide-react'
+import { PublicSupportForm } from '@/components/public-support-form'
+import { SUPPORT_EMAIL } from '@/lib/site'
 
 const supportOptions = [
   {
     icon: FileText,
     title: 'Documentation',
-    description: 'Browse our comprehensive guides and tutorials',
+    description: 'Step-by-step guides to the main features',
     action: 'View Docs',
     href: '/docs',
   },
@@ -36,39 +38,6 @@ const supportOptions = [
 ]
 
 export default function SupportPage() {
-  const [submitted, setSubmitted] = useState(false)
-  const [isSending, setIsSending] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [startedAt] = useState(() => Date.now())
-  const [website, setWebsite] = useState('')
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    category: 'technical',
-    subject: '',
-    message: '',
-  })
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError(null)
-    setIsSending(true)
-    try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, website, startedAt, subject: `[${formData.category}] ${formData.subject}` }),
-      })
-      const result = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(result.error ?? 'Ticket could not be submitted.')
-      setSubmitted(true)
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Ticket could not be submitted. Please try again.')
-    } finally {
-      setIsSending(false)
-    }
-  }
-
   return (
     <div className="min-h-screen">
       <MarketingHeader />
@@ -107,103 +76,9 @@ export default function SupportPage() {
       <section className="max-w-7xl mx-auto px-4 md:px-8 pb-20">
         <div className="grid md:grid-cols-2 gap-12">
           <Card className="p-8">
-            <h2 className="text-2xl font-bold mb-2">Submit a Support Ticket</h2>
-            <p className="text-sm text-muted-foreground mb-6">Signed in? <Link href="/dashboard/support" className="underline text-primary">Raise a ticket from your dashboard</Link> to see replies in the app.</p>
-
-            {submitted ? (
-              <div className="text-center py-12">
-                <CheckCircle className="w-16 h-16 text-green-700 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Ticket Submitted!</h3>
-                <p className="text-muted-foreground mb-6">
-                  We&apos;ve received your request. We&apos;ll follow up using the email address you provided.
-                </p>
-                <Button onClick={() => setSubmitted(false)} variant="outline">
-                  Submit Another Ticket
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="absolute -left-[10000px] h-px w-px overflow-hidden" aria-hidden="true">
-                  <label htmlFor="support-website">Leave this field empty</label>
-                  <Input id="support-website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      minLength={2}
-                      maxLength={100}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                      maxLength={160}
-                      className="mt-2"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <select
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="mt-2 min-h-11 w-full px-3 py-2 rounded-md border bg-background"
-                  >
-                    <option value="technical">Technical Issue</option>
-                    <option value="billing">Billing & Subscription</option>
-                    <option value="content">Content Question</option>
-                    <option value="feedback">Feedback & Suggestions</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    required
-                    minLength={3}
-                    maxLength={160}
-                    className="mt-2"
-                    placeholder="Brief description of your issue"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    required
-                    minLength={10}
-                    maxLength={5000}
-                    className="mt-2 min-h-[150px]"
-                    placeholder="Please describe your issue in detail..."
-                  />
-                </div>
-
-                {formError && <p role="alert" aria-live="assertive" className="text-sm text-red-700">{formError}</p>}
-                <Button type="submit" disabled={isSending} className="w-full">
-                  {isSending ? 'Submitting…' : 'Submit Ticket'}
-                </Button>
-              </form>
-            )}
+            <h2 className="text-2xl font-bold mb-2">Send us a message</h2>
+            <p className="text-sm text-muted-foreground mb-6">Signed in? <Link href="/dashboard/support" className="underline text-primary">Raise a ticket from your dashboard</Link> and see replies there. Otherwise use this form: your reply appears on a private page, not in your email.</p>
+            <PublicSupportForm defaultCategory="technical" subjectPlaceholder="Brief description of your issue" />
           </Card>
 
           <div className="space-y-8">
@@ -220,8 +95,12 @@ export default function SupportPage() {
                   <Mail className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Email Support</h3>
-                  <p className="text-muted-foreground">support@mwalimu.ai</p>
+                  <h3 className="font-semibold mb-1">{SUPPORT_EMAIL ? 'Email Support' : 'How we reply'}</h3>
+                  {SUPPORT_EMAIL ? (
+                    <a className="text-primary underline underline-offset-4" href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+                  ) : (
+                    <p className="text-muted-foreground">Use the form above. Messages go straight to our support team, and we reply to the email address you give.</p>
+                  )}
                 </div>
               </div>
             </div>
