@@ -228,3 +228,18 @@ export async function insertPublishedItem(
   await ctx.db.patch(itemId, { publishedVersionId: versionId });
   return itemId;
 }
+
+/** Replaces an item's working copy with new data, starting a new draft version when only a live version exists. Does not audit. */
+export async function writeDraftData(ctx: Pick<MutationCtx, "db">, staffId: Id<"staff">, i: Doc<"cmsItems">, data: ItemData[ContentKind]) {
+  const draft = i.draftVersionId ? await ctx.db.get(i.draftVersionId) : null;
+  const now = Date.now();
+  if (draft) {
+    await ctx.db.patch(draft._id, { data, status: "draft", authorId: staffId, reviewComment: undefined, reviewedBy: undefined, submittedBy: undefined });
+    if (i.publishedVersionId === undefined) await ctx.db.patch(i._id, { title: titleOf(data), orderIndex: data.orderIndex, updatedAt: now });
+    return draft._id;
+  }
+  const latest = await ctx.db.query("cmsVersions").withIndex("by_item", (q) => q.eq("itemId", i._id)).order("desc").first();
+  const versionId = await ctx.db.insert("cmsVersions", { itemId: i._id, version: (latest?.version ?? 0) + 1, status: "draft", data, authorId: staffId, createdAt: now });
+  await ctx.db.patch(i._id, { draftVersionId: versionId, updatedAt: now });
+  return versionId;
+}
