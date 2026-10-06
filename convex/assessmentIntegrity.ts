@@ -11,7 +11,7 @@ const EVENT_TYPES = new Set([
 
 /** Opens a sitting. The learner is told the assessment is monitored before this is called. */
 export const startAttempt = mutation({
-  args: { programId: v.string(), kind: v.union(v.literal("pre"), v.literal("post")), assistive: v.boolean() },
+  args: { programId: v.string(), kind: v.union(v.literal("pre"), v.literal("post"), v.literal("needs"), v.literal("assignment")), assistive: v.boolean() },
   returns: v.id("assessmentAttempts"),
   handler: async (ctx, args) => {
     const profile = await requireCurrentProfile(ctx);

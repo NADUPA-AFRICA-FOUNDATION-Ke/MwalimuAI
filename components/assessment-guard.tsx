@@ -49,7 +49,7 @@ export function AssessmentGuard({
   title = 'This assessment is monitored',
 }: {
   /** When set, a server-side attempt is opened and events are recorded against it. */
-  attempt?: { programId: string; kind: 'pre' | 'post'; onStarted?: (id: Id<'assessmentAttempts'>) => void }
+  attempt?: { programId: string; kind: 'pre' | 'post' | 'needs' | 'assignment'; onStarted?: (id: Id<'assessmentAttempts'>) => void }
   watermark: string
   children: ReactNode
   title?: string
@@ -63,6 +63,7 @@ export function AssessmentGuard({
   // The watermark appears only once someone tries to capture or inspect the page.
   const [marked, setMarked] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
   const attemptId = useRef<Id<'assessmentAttempts'> | null>(null)
   const queue = useRef<GuardEvent[]>([])
   const lastByType = useRef<Record<string, number>>({})
@@ -213,6 +214,9 @@ export function AssessmentGuard({
       setAssistive(withAssistive)
       setStarted(true)
       try { await document.documentElement.requestFullscreen?.() } catch { /* not available on every device */ }
+    } catch {
+      // Without a recorded sitting the assessment does not start, so nothing goes unmonitored.
+      setStartError('The assessment could not start. Check your connection and try again.')
     } finally {
       setStarting(false)
     }
@@ -244,6 +248,7 @@ export function AssessmentGuard({
               <Button disabled={starting} onClick={() => begin(false)}>Start assessment</Button>
               <Button variant="outline" disabled={starting} onClick={() => begin(true)}>Start with assistive input</Button>
             </div>
+            {startError && <p role="alert" className="mt-3 text-sm text-destructive">{startError}</p>}
           </div>
         </div>
       </div>

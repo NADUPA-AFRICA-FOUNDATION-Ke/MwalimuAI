@@ -29,7 +29,7 @@ export function IntegrityTab({ profileId }: { profileId: Id<'profiles'> }) {
           return (
             <li key={a._id} className="rounded-lg border bg-background p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium">{a.programId} · {a.kind === 'pre' ? 'pre' : 'post'}-assessment</span>
+                <span className="font-medium">{a.programId} · {({ pre: 'pre-assessment', post: 'final assessment', needs: 'needs assessment', assignment: 'assignment' } as Record<string, string>)[a.kind] ?? a.kind}</span>
                 <span className="flex flex-wrap gap-1">
                   {a.assistive && <Pill tone="blue">Assistive input</Pill>}
                   {serious.length > 0 ? <Pill tone="red">Needs a look</Pill> : <Pill tone="green">No serious flags</Pill>}
