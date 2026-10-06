@@ -16,6 +16,7 @@ import {
   setLearningProgressUser,
   syncCertificatesToRegistry,
 } from '@/lib/learning-progress'
+import { reportClientError } from '@/lib/report-client-error'
 
 export interface TeacherProfile {
   name: string
@@ -139,6 +140,10 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
   const provisionedFor = useRef<string | null>(null)
   // This device's claim on the account. `confirmed` flips once we have seen the server hold our id.
   const claim = useRef<{ deviceId: string; confirmed: boolean } | null>(null)
+  // Diagnostics: a session that ends without the user (or the one-device rule) asking for it is reported once,
+  // with what was left in storage, so unexpected sign-outs can be traced from the error log.
+  const wasAuthenticated = useRef(false)
+  const intentionalSignOut = useRef(false)
 
   // Link an existing/migrated profile once it has been resolved. New users
   // create their profile explicitly from the onboarding form; never create a
@@ -222,6 +227,19 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
     } catch {}
   }, [isAuthenticated, profileDoc])
 
+  useEffect(() => {
+    if (isLoading) return
+    if (isAuthenticated) { wasAuthenticated.current = true; return }
+    if (!wasAuthenticated.current || intentionalSignOut.current) return
+    wasAuthenticated.current = false
+    let detail = 'storage unreadable'
+    try {
+      const keys = Object.keys(localStorage)
+      detail = `refresh token ${keys.some(k => k.startsWith('__convexAuthRefreshToken')) ? 'still stored' : 'gone'}, jwt ${keys.some(k => k.startsWith('__convexAuthJWT')) ? 'still stored' : 'gone'}`
+    } catch {}
+    reportClientError(new Error(`Signed out without the user asking (${detail})`))
+  }, [isLoading, isAuthenticated])
+
   // One active device per account. A device only counts as taken over after it has seen its own claim land:
   // until then, an old activeSessionId in the profile is stale data from an earlier session (or this device's
   // own previous sign-in), and treating it as "someone else signed in" would sign the user out right after login.
@@ -242,6 +260,7 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
     }
     if (claim.current.confirmed && profileDoc.activeSessionId) {
       try { sessionStorage.setItem(FORCED_LOGOUT_FLAG, '1') } catch {}
+      intentionalSignOut.current = true
       void convexSignOut()
     }
   }, [user, profileDoc, upsertProfile, convexSignOut])
@@ -286,6 +305,7 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
   }, [lang, setLang])
 
   const signOut = useCallback(async () => {
+    intentionalSignOut.current = true
     if (user) {
       try { localStorage.setItem(USER_ID_KEY, user.id) } catch {}
       try { await upsertProfile({ activeSessionId: '' }) } catch {}
