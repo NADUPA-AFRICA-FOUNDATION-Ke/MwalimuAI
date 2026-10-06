@@ -60,6 +60,8 @@ export function AssessmentGuard({
   const [started, setStarted] = useState(false)
   const [assistive, setAssistive] = useState(false)
   const [hidden, setHidden] = useState<string | null>(null)
+  // The watermark appears only once someone tries to capture or inspect the page.
+  const [marked, setMarked] = useState(false)
   const [starting, setStarting] = useState(false)
   const attemptId = useRef<Id<'assessmentAttempts'> | null>(null)
   const queue = useRef<GuardEvent[]>([])
@@ -117,6 +119,7 @@ export function AssessmentGuard({
       e.preventDefault()
       e.stopPropagation()
       record(type, e.key)
+      if (type === 'screenshot_key' || type === 'devtools_open' || type === 'print') setMarked(true)
       if (type === 'screenshot_key' || type === 'devtools_open') {
         setHidden(type === 'screenshot_key' ? 'A screenshot key was pressed.' : 'Developer tools are not allowed during an assessment.')
         // Overwrite whatever a screenshot tool may have put on the clipboard.
@@ -127,12 +130,13 @@ export function AssessmentGuard({
       if (e.key === 'PrintScreen') {
         void navigator.clipboard?.writeText?.('').catch(() => {})
         setHidden('A screenshot key was pressed.')
+        setMarked(true)
         record('screenshot_key', 'PrintScreen')
       }
     }
     const onBlur = () => { setHidden('The assessment is hidden while this window is not in front.'); record('window_blur') }
     const onVisibility = () => { if (document.hidden) { setHidden('The assessment is hidden while you are on another tab or app.'); record('tab_hidden') } }
-    const onBeforePrint = () => record('print')
+    const onBeforePrint = () => { record('print'); setMarked(true) }
     const onFullscreen = () => { if (!document.fullscreenElement) record('fullscreen_exit') }
 
     document.addEventListener('copy', onCopy, true)
@@ -149,21 +153,14 @@ export function AssessmentGuard({
     window.addEventListener('blur', onBlur)
     window.addEventListener('beforeprint', onBeforePrint)
 
-    // Developer tools: docked panels shrink the page; an inspected object's getter fires only when tools are open.
-    const probe = /./
-    let devtoolsSeen = false
-    probe.toString = () => { devtoolsSeen = true; return '' }
+    // Developer tools: a docked panel makes the page much smaller than the window. Side panels, toolbars and zoom can
+    // do that too, so this is only recorded, never shown. Opening tools with their shortcut keys is blocked and shown.
+    let wasDocked = false
     const check = setInterval(() => {
       const docked = window.outerWidth - window.innerWidth > DEVTOOLS_GAP || window.outerHeight - window.innerHeight > DEVTOOLS_GAP
-      devtoolsSeen = false
-      console.debug('%c', probe as unknown as string)
-      // Window-size gaps also come from side panels, toolbars and zoom, so they are only recorded. An object being
-      // inspected is a much stronger sign, and hides the questions.
-      if (devtoolsSeen) {
-        setHidden('Developer tools are not allowed during an assessment. Close them to continue.')
-        record('devtools_open', 'inspector')
-      } else if (docked) record('devtools_open', 'window-size')
-    }, 1500)
+      if (docked && !wasDocked) record('devtools_open', 'window-size')
+      wasDocked = docked
+    }, 2000)
 
     // Printing shows a blank page, and nothing can be selected outside answer boxes.
     const style = document.createElement('style')
@@ -236,7 +233,7 @@ export function AssessmentGuard({
             <h1 className="text-lg font-bold">{title}</h1>
             <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
               <li>Copying, pasting, printing and screenshots are blocked, and the questions hide whenever you leave this window or tab.</li>
-              <li>Developer tools are not allowed. The page carries a faint watermark with your account.</li>
+              <li>Developer tools are not allowed. Trying to capture or inspect the page adds a watermark with your account.</li>
               <li>Leaving the window, screenshot keys and copy or paste attempts are recorded for our staff.</li>
               <li>Work in one tab only. Opening the assessment in another tab hides this one.</li>
             </ul>
@@ -257,7 +254,7 @@ export function AssessmentGuard({
     <GuardContext.Provider value={{ assistive, record }}>
       <div data-guarded className="relative" onCopy={(e) => e.preventDefault()}>
         {children}
-        <Watermark text={watermark} />
+        {marked && <Watermark text={watermark} />}
         {hidden && (
           <div role="alertdialog" aria-modal="true" aria-labelledby="guard-hidden-h" className="fixed inset-0 z-[100] flex items-center justify-center bg-black p-6 text-center text-white">
             <div className="max-w-md">
