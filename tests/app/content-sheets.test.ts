@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { buildXlsx } from "@/lib/admin/xlsx";
 import { readXlsx, type ReadSheet } from "@/lib/admin/xlsx-read";
 import { buildExample, buildTemplate, parseWorkbook, TEMPLATES, type ImportItem, type TemplateKind } from "@/lib/admin/content-sheets";
-import { PROGRAMS } from "@/lib/learning-paths-data";
+import { STATIC_PROGRAMS as PROGRAMS } from "@/convex/lib/staticCurriculum";
 import { FAQS } from "@/lib/faq-data";
 import { NEEDS_FALLBACK, NEEDS_QUESTIONS, NEEDS_RULES, NEEDS_SECTIONS } from "@/lib/needs-assessment-data";
 

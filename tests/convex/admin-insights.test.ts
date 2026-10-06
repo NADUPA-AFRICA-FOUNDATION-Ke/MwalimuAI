@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { api } from "../../convex/_generated/api";
 import { makeLearner, makeStaff, newTest } from "./helpers";
-import { PROGRAMS } from "../../lib/learning-paths-data";
+import { STATIC_PROGRAMS as PROGRAMS } from "../../convex/lib/staticCurriculum";
 
 const program = PROGRAMS.find((p) => p.id === "cbc-foundations")!;
 
@@ -19,9 +19,9 @@ describe("author insights", () => {
           completedLessons: n < 5 ? ["m1/l1", "m1/l2"] : ["m1/l1"],
           reflections: {},
           cohortJoined: false,
-          preAssessment: { score: 0, total: wrongAnswers.length, date: "2026-10-01", answers: wrongAnswers },
         },
       });
+      await learner.as.mutation(api.learningProgress.submitAssessment, { programId: "cbc-foundations", kind: "pre", answers: wrongAnswers });
     }
 
     const i = await author.as.query(api.admin.insights.forProgram, { programKey: "cbc-foundations" });

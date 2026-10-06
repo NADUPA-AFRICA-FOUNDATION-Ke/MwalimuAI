@@ -4,7 +4,7 @@ import { readCounters } from "../lib/analytics";
 import { assembleProgram } from "../lib/contentRead";
 import { NEEDS_QUESTIONS } from "../../lib/needs-assessment-data";
 import type { AssessmentData } from "../lib/contentValidation";
-import { PROGRAMS } from "../../lib/learning-paths-data";
+import { STATIC_PROGRAMS as PROGRAMS } from "../lib/staticCurriculum";
 
 /** Below this many learners a percentage is noise, so nothing is flagged. */
 const MIN_SAMPLE = 20;

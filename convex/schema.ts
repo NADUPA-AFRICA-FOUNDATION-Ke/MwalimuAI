@@ -74,7 +74,12 @@ export default defineSchema({
     }),
     notificationPreferences: v.optional(notificationPreferences),
     sidebarCollapsed: v.boolean(),
-    activeSessionId: v.optional(v.string()),
+    activeSessionId: v.optional(v.string()), // legacy device id from the old browser-only rule; no longer read
+    // One account, one session (device + browser), one tab. Enforced on the server for sessions: requests from any
+    // other sign-in session are refused. The tab rule is enforced by the app (all tabs of a browser share a session).
+    activeAuthSession: v.optional(v.string()),
+    activeTabId: v.optional(v.string()),
+    sessionLog: v.optional(v.array(v.object({ at: v.number(), agent: v.string(), replaced: v.boolean() }))),
     phone: v.optional(v.string()),
     phoneNormalized: v.optional(v.string()),
     // Absent means "active" so existing rows need no backfill to keep working.
@@ -639,6 +644,23 @@ export default defineSchema({
     .index("by_status", ["status", "lastMessageAt"])
     .index("by_token_hash", ["tokenHash"])
     .index("by_visitor_email", ["visitor.email", "createdAt"]),
+
+  // One sitting of a pre/post assessment: when it started and ended, the score, whether the learner switched on
+  // assistive input, and the integrity events seen while it was open (copy/paste attempts, leaving the window,
+  // screenshots keys, developer tools). Staff review these; nothing here blocks a learner on its own.
+  assessmentAttempts: defineTable({
+    profileId: v.id("profiles"),
+    programId: v.string(),
+    kind: v.union(v.literal("pre"), v.literal("post")),
+    startedAt: v.number(),
+    submittedAt: v.optional(v.number()),
+    score: v.optional(v.number()),
+    total: v.optional(v.number()),
+    assistive: v.boolean(),
+    events: v.array(v.object({ type: v.string(), at: v.number(), detail: v.optional(v.string()) })),
+  })
+    .index("by_profile_and_program", ["profileId", "programId", "startedAt"])
+    .index("by_started", ["startedAt"]),
 
   ticketMessages: defineTable({
     ticketId: v.id("tickets"),

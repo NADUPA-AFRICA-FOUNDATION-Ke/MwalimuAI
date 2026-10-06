@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { getProgress, saveAssessment, earnCertificate, isProgramComplete, clearAssessment } from '@/lib/learning-progress'
+import { getProgress, saveAssessment, earnCertificate, isProgramComplete } from '@/lib/learning-progress'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import type { Id } from '@/convex/_generated/dataModel'
+import { AssessmentGuard } from '@/components/assessment-guard'
+import { errorMessage } from '@/lib/support'
 import { useProfile } from '@/context/profile-context'
 import { usePrograms } from '@/context/content-context'
 import { Button } from '@/components/ui/button'
@@ -15,7 +20,12 @@ export default function AssessmentPage() {
   const params = useParams<{ programId: string }>()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { syncReady, profile } = useProfile()
+  const { syncReady, profile, user } = useProfile()
+  const submitOnServer = useMutation(api.learningProgress.submitAssessment)
+  const [attemptId, setAttemptId] = useState<Id<'assessmentAttempts'> | null>(null)
+  const [review, setReview] = useState<{ correct: number; chosen: number; explanation: string }[] | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const type = (searchParams.get('type') ?? 'pre') as 'pre' | 'post'
 
   const { getProgramById } = usePrograms()
@@ -40,19 +50,27 @@ export default function AssessmentPage() {
   if (!program) return <div className="p-8 text-muted-foreground">Program not found.</div>
   if (questions.length === 0) return <div className="p-8 text-muted-foreground">No assessment available.</div>
 
-  const handleSubmit = () => {
-    const s = questions.reduce((sum, q, i) => sum + (answers[i] === q.correct ? 1 : 0), 0)
-    setScore(s)
-    setSubmitted(true)
-    saveAssessment(program.id, type === 'pre' ? 'preAssessment' : 'postAssessment', s, questions.length, answers as number[])
-    if (type === 'post') {
-      const p = getProgress(program.id)
-      const prog = { ...p, postAssessment: { score: s, total: questions.length, date: new Date().toLocaleDateString(), answers: answers as number[] } }
-      const eligible = isProgramComplete(program, prog)
-      setCertificateEarned(eligible)
-      if (eligible) {
-        earnCertificate(program.id, profile?.name ?? 'Teacher', program.title)
+  // Marked on the server: the browser has no answer key.
+  const handleSubmit = async () => {
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const r = await submitOnServer({ programId: program.id, kind: type, answers: answers as number[], ...(attemptId ? { attemptId } : {}) })
+      setScore(r.score)
+      setReview(r.review)
+      setSubmitted(true)
+      saveAssessment(program.id, type === 'pre' ? 'preAssessment' : 'postAssessment', r.score, r.total, answers as number[])
+      if (type === 'post') {
+        const p = getProgress(program.id)
+        const prog = { ...p, postAssessment: { score: r.score, total: r.total, date: new Date().toLocaleDateString(), answers: answers as number[] } }
+        const eligible = isProgramComplete(program, prog)
+        setCertificateEarned(eligible)
+        if (eligible) earnCertificate(program.id, profile?.name ?? 'Teacher', program.title)
       }
+    } catch (e) {
+      setSubmitError(errorMessage(e, 'Your answers could not be submitted. Check your connection and try again.'))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -61,17 +79,13 @@ export default function AssessmentPage() {
 
   const handleRetake = async () => {
     setRetaking(true)
-    // Await the cloud clear before resetting the UI: clearAssessment's write
-    // is the one exception to this file's usual fire-and-forget cloud syncs,
-    // specifically so a concurrent loadProgressFromCloud (e.g. from a
-    // just-completed sign-in) can't read the old attempt back before the
-    // clear lands and silently resurrect it into the retake screen.
-    await clearAssessment(program.id, 'postAssessment')
     setExisting(null)
     setAnswers(Array(questions.length).fill(null))
     setCurrent(0)
     setSubmitted(false)
     setScore(0)
+    setReview(null)
+    setAttemptId(null)
     setCertificateEarned(false)
     setRetaking(false)
   }
@@ -130,24 +144,31 @@ export default function AssessmentPage() {
               <p className="text-muted-foreground text-sm mt-2">You need 85% or higher to pass. Review the material and try again.</p>
             )}
           </div>
-          <div className="space-y-4">
-            {questions.map((q, i) => {
-              const correct = answers[i] === q.correct
-              return (
-                <div key={q.id} className={`rounded-xl p-4 border ${correct ? 'border-primary/20 bg-primary/5' : 'border-destructive/20 bg-destructive/5'}`}>
-                  <div className="flex items-start gap-2 mb-2">
-                    {correct ? <CheckCircle2 className="w-4.5 h-4.5 text-primary shrink-0 mt-0.5" /> : <XCircle className="w-4.5 h-4.5 text-destructive shrink-0 mt-0.5" />}
-                    <p className="text-sm font-medium">{q.question}</p>
+          {review ? (
+            <div className="space-y-4">
+              {questions.map((q, i) => {
+                const r = review[i]
+                const correct = r.chosen === r.correct
+                return (
+                  <div key={q.id} className={`rounded-xl p-4 border ${correct ? 'border-primary/20 bg-primary/5' : 'border-destructive/20 bg-destructive/5'}`}>
+                    <div className="flex items-start gap-2 mb-2">
+                      {correct ? <CheckCircle2 className="w-4.5 h-4.5 text-primary shrink-0 mt-0.5" /> : <XCircle className="w-4.5 h-4.5 text-destructive shrink-0 mt-0.5" />}
+                      <p className="text-sm font-medium">{q.question}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-6">
+                      {!correct && <span className="text-destructive">You chose: {q.options[r.chosen]}<br /></span>}
+                      <span className={correct ? 'text-primary' : ''}>Correct: {q.options[r.correct]}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground ml-6 mt-1">{r.explanation}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground ml-6">
-                    {!correct && <span className="text-destructive">You chose: {q.options[answers[i]!]}<br /></span>}
-                    <span className={correct ? 'text-primary' : ''}>Correct: {q.options[q.correct]}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground ml-6 mt-1">{q.explanation}</p>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center">
+              The correct answers are shown once you pass, so the assessment stays fair. Review the lessons, then try again. You can take it up to three times a day.
+            </p>
+          )}
           <div className="flex gap-2 mt-6">
             <Button asChild variant="outline" className="flex-1 w-full rounded-xl"><Link href={`/dashboard/learning/${program.id}`}>Back to Program</Link></Button>
             {type === 'post' && certificateEarned && (
@@ -162,10 +183,12 @@ export default function AssessmentPage() {
   /* Questions */
   const answeredCount = answers.filter(a => a !== null).length
 
+  const watermark = `${profile?.name || 'Learner'} · ${(user?.id ?? '').slice(-6)}`
   return (
     <div className="max-w-2xl">
       <div className="mb-6"><BackButton fallbackHref={`/dashboard/learning/${program.id}`} label="Back to Program" /></div>
 
+      <AssessmentGuard watermark={watermark} attempt={{ programId: program.id, kind: type, onStarted: setAttemptId }} title={`${type === 'pre' ? 'Pre' : 'Post'}-assessment: ${program.shortTitle}`}>
       <div className="glass rounded-2xl p-7">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1.5">
@@ -224,7 +247,7 @@ export default function AssessmentPage() {
             <Button
               size="sm"
               onClick={handleSubmit}
-              disabled={answeredCount < questions.length}
+              disabled={answeredCount < questions.length || submitting}
               className="rounded-xl gap-1.5 font-semibold"
             >
               Submit Assessment <ClipboardList className="w-4 h-4" />
@@ -237,7 +260,9 @@ export default function AssessmentPage() {
             {questions.length - answeredCount} question(s) unanswered — go back to review
           </p>
         )}
+        {submitError && <p role="alert" className="text-sm text-destructive text-center mt-3">{submitError}</p>}
       </div>
+      </AssessmentGuard>
     </div>
   )
 }

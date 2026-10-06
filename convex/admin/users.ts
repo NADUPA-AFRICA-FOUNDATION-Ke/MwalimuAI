@@ -316,3 +316,14 @@ export const issueTemporaryPassword = action({
     return { password, email };
   },
 });
+
+/** Recent sign-ins that claimed the account, newest first: frequent switching between devices suggests a shared account. */
+export const sessionHistory = staffQuery({
+  permission: "users.read",
+  args: { profileId: v.id("profiles") },
+  handler: async (ctx, { profileId }) => {
+    const p = await ctx.db.get(profileId);
+    const log = [...(p?.sessionLog ?? [])].reverse();
+    return { log, switchesLast30Days: log.filter((e) => e.at > Date.now() - 30 * 86_400_000).length };
+  },
+});

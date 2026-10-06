@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { assertProfileActive, getCurrentProfile, requireIdentity } from "./lib/auth";
+import { assertProfileActive, getCurrentProfile, requireIdentity, sessionIdOf } from "./lib/auth";
 import { buildSearchText } from "./lib/profileSearch";
 
 const profileFields = {
@@ -19,7 +19,13 @@ const profileFields = {
 
 export const me = query({
   args: {},
-  handler: async (ctx) => (await getCurrentProfile(ctx)).profile,
+  handler: async (ctx) => {
+    const { identity, profile } = await getCurrentProfile(ctx);
+    if (!profile) return null;
+    // Whether THIS session holds the account, and which tab of it does. The app signs out or locks itself from this.
+    const session = { isActive: !profile.activeAuthSession || profile.activeAuthSession === sessionIdOf(identity), claimed: Boolean(profile.activeAuthSession), activeTabId: profile.activeTabId ?? null };
+    return { ...profile, session };
+  },
 });
 
 export const findMigratedByEmail = internalQuery({

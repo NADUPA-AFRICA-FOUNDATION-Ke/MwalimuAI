@@ -53,6 +53,7 @@ export default function SettingsPage() {
   const billing = useQuery(api.subscriptions.mine, {})
   const changePassword = useAction(api.passwords.changeMine)
   const siteFacts = useQuery(api.siteFacts.facts, {})
+  const sessionInfo = useQuery(api.sessions.mine, {})
 
   const [formData, setFormData] = useState({
     name:      '',
@@ -310,6 +311,17 @@ export default function SettingsPage() {
       </Card>
 
       {siteFacts?.emailEnabled !== false && <EmailPreferences />}
+
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold">Where you&apos;re signed in</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Your account works on one device, one browser and one tab at a time. Signing in anywhere else asks you to confirm, then signs this one out.
+          {sessionInfo?.since ? ` Signed in here since ${new Date(sessionInfo.since).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}.` : ''}
+        </p>
+        {sessionInfo && sessionInfo.switchesLast30Days > 3 && (
+          <p className="mt-2 text-sm text-amber-700">Your account was opened on {sessionInfo.switchesLast30Days} different sign-ins in the last 30 days. If some were not you, change your password below.</p>
+        )}
+      </Card>
 
       {/* Plan: where a paid plan is shown and cancelled (cancelling used to be reachable only from the delete-account dialog). */}
       <Card className="p-6">

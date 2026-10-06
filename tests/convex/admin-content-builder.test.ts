@@ -263,8 +263,9 @@ describe("Kiswahili content", () => {
     // Untranslated items fall back to English, so nothing is ever blank.
     expect(sws.modules[1].title).toBe(en.modules[1].title);
     expect(sws.modules[0].lessons[1].reading).toBe(en.modules[0].lessons[1].reading);
-    // The translated quiz keeps the same correct answer position.
-    expect(sws.postAssessment[0]).toMatchObject({ question: "Lipi ni sahihi?", correct: en.postAssessment[0].correct });
+    // The translated quiz is served in Kiswahili, and never with its answer key.
+    expect(sws.postAssessment[0]).toEqual({ id: en.postAssessment[0].id, question: "Lipi ni sahihi?", options: expect.any(Array) });
+    expect("correct" in en.postAssessment[0] || "explanation" in en.postAssessment[0]).toBe(false);
     expect(sws.preAssessment[0].question).toBe(en.preAssessment[0].question);
   });
 });

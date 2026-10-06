@@ -1,6 +1,6 @@
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
-import { PROGRAMS } from "../../lib/learning-paths-data";
+import { STATIC_PROGRAMS as PROGRAMS } from "./staticCurriculum";
 import { assembleProgram, type ProgramShape } from "./contentRead";
 
 /**

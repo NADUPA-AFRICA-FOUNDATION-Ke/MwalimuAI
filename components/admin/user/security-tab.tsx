@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAction } from 'convex/react'
+import { useAction, useQuery } from 'convex/react'
 import { KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/convex/_generated/api'
@@ -14,6 +14,7 @@ export function SecurityTab({ profileId }: { profileId: Id<'profiles'>; email?: 
   const issue = useAction(api.admin.users.issueTemporaryPassword)
   const [dialog, setDialog] = useState(false)
   const [issued, setIssued] = useState<{ password: string; email: string } | null>(null)
+  const history = useQuery(api.admin.users.sessionHistory, { profileId })
 
   return (
     <div className="max-w-xl space-y-4 rounded-lg border bg-background p-4 text-sm">
@@ -40,6 +41,24 @@ export function SecurityTab({ profileId }: { profileId: Id<'profiles'>; email?: 
           </div>
         </div>
       )}
+      <div className="border-t pt-4">
+        <h3 className="font-semibold">Sign-ins (one device, one browser, one tab at a time)</h3>
+        {history === undefined ? null : history.log.length === 0 ? (
+          <p className="mt-1 text-muted-foreground">No sign-ins recorded since the rule started.</p>
+        ) : (
+          <>
+            <p className="mt-1 text-muted-foreground">
+              {history.switchesLast30Days} sign-in{history.switchesLast30Days === 1 ? '' : 's'} in the last 30 days.
+              {history.switchesLast30Days >= 8 && <b className="text-amber-700"> Frequent switching: the account may be shared.</b>}
+            </p>
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              {history.log.slice(0, 10).map((e, i) => (
+                <li key={i}>{new Date(e.at).toLocaleString('en-KE')} · {e.agent || 'unknown browser'}{e.replaced ? ' · signed the previous device out' : ''}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
       <ReasonDialog
         open={dialog}
         onOpenChange={setDialog}

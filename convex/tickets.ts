@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import { getCurrentProfile } from "./lib/auth";
+import { assertActiveSession, getCurrentProfile } from "./lib/auth";
 import { fail, notFound } from "./lib/errors";
 import { requireNonEmpty } from "./lib/validation";
 import { hashToken, newToken } from "./lib/visitorToken";
@@ -57,8 +57,9 @@ async function newTicketNumber(ctx: MutationCtx) {
 }
 
 async function mineOrThrow(ctx: QueryCtx) {
-  const { profile } = await getCurrentProfile(ctx);
+  const { identity, profile } = await getCurrentProfile(ctx);
   if (!profile) throw fail("PROFILE_NOT_PROVISIONED", "Finish setting up your profile first");
+  assertActiveSession(identity, profile);
   return profile;
 }
 
