@@ -57,10 +57,11 @@ const ProfileContext = createContext<ProfileContextType>({
   lang: 'en', setLang: () => {}, toggleLang: () => {},
 })
 
+const newTabId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2))
+
 const PROFILE_KEY = 'mwalimu_profile'
 const LANG_KEY = 'mwalimu_lang'
 const USER_ID_KEY = 'mwalimu_user_id'
-const DEVICE_KEY = 'mwalimu_device_id'
 export const FORCED_LOGOUT_FLAG = 'mwalimu_signedout_other_device'
 
 const ALL_USER_KEYS = [
@@ -77,20 +78,6 @@ const SESSION_KEYS = [
   'mwalimu_sidebar_collapsed',
 ]
 
-function getDeviceId() {
-  try {
-    let id = localStorage.getItem(DEVICE_KEY)
-    if (!id) {
-      id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
-        ? crypto.randomUUID()
-        : Math.random().toString(36).slice(2) + Date.now().toString(36)
-      localStorage.setItem(DEVICE_KEY, id)
-    }
-    return id
-  } catch {
-    return 'unknown-device'
-  }
-}
 
 function clearKeys(keys: string[]) {
   if (typeof window === 'undefined') return
@@ -138,8 +125,15 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
   const [provisioning, setProvisioning] = useState(false)
   const [progressReady, setProgressReady] = useState(false)
   const provisionedFor = useRef<string | null>(null)
-  // This device's claim on the account. `confirmed` flips once we have seen the server hold our id.
-  const claim = useRef<{ deviceId: string; confirmed: boolean } | null>(null)
+  // A fresh id for every page load of every tab (sessionStorage is copied when a tab is duplicated, so it is not used).
+  const [tabIdValue] = useState(newTabId)
+  const tabId = useRef(tabIdValue)
+  const claimState = useRef<'idle' | 'claiming' | 'confirm' | 'held'>('idle')
+  const [takeover, setTakeover] = useState<null | 'device' | 'tab'>(null)
+  // Until this session holds the account the server refuses its requests, so the app is not shown yet.
+  const [held, setHeld] = useState(false)
+  const claimSession = useMutation(api.sessions.claim)
+  const releaseSession = useMutation(api.sessions.release)
   // Diagnostics: a session that ends without the user (or the one-device rule) asking for it is reported once,
   // with what was left in storage, so unexpected sign-outs can be traced from the error log.
   const wasAuthenticated = useRef(false)
@@ -240,30 +234,47 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
     reportClientError(new Error(`Signed out without the user asking (${detail})`))
   }, [isLoading, isAuthenticated])
 
-  // One active device per account. A device only counts as taken over after it has seen its own claim land:
-  // until then, an old activeSessionId in the profile is stale data from an earlier session (or this device's
-  // own previous sign-in), and treating it as "someone else signed in" would sign the user out right after login.
+  // One account, one session (device and browser), one tab. The server holds which session and tab own the account
+  // (sessions.claim) and refuses requests from any other session. This tab claims on load; if another device or browser
+  // holds the account, the person confirms before taking over. A replaced session signs out; a second tab locks.
   useEffect(() => {
-    if (!user || !profileDoc) {
-      claim.current = null
-      return
-    }
-    const deviceId = getDeviceId()
-    if (!claim.current || claim.current.deviceId !== deviceId) {
-      claim.current = { deviceId, confirmed: false }
-      void upsertProfile({ activeSessionId: deviceId }).catch(() => { claim.current = null })
-      return
-    }
-    if (profileDoc.activeSessionId === deviceId) {
-      claim.current.confirmed = true
-      return
-    }
-    if (claim.current.confirmed && profileDoc.activeSessionId) {
+    if (!user || !profileDoc) { claimState.current = 'idle'; setHeld(false); return }
+    if (claimState.current !== 'idle') return
+    claimState.current = 'claiming'
+    void claimSession({ tabId: tabId.current, confirm: false, agent: navigator.userAgent })
+      .then((r) => {
+        if (r.status === 'confirm') { claimState.current = 'confirm'; setTakeover('device') }
+        else { claimState.current = 'held'; setHeld(true) }
+      })
+      .catch(() => { claimState.current = 'idle' })
+  }, [user, profileDoc, claimSession])
+
+  useEffect(() => {
+    if (!profileDoc || claimState.current !== 'held') return
+    const session = (profileDoc as { session?: { isActive: boolean; activeTabId: string | null } }).session
+    if (!session) return
+    if (!session.isActive) {
+      // Another device or browser took the account over: this session is already refused by the server.
       try { sessionStorage.setItem(FORCED_LOGOUT_FLAG, '1') } catch {}
       intentionalSignOut.current = true
       void convexSignOut()
+      return
     }
-  }, [user, profileDoc, upsertProfile, convexSignOut])
+    setTakeover(session.activeTabId && session.activeTabId !== tabId.current ? 'tab' : null)
+  }, [profileDoc, convexSignOut])
+
+  const takeOver = useCallback(async () => {
+    claimState.current = 'claiming'
+    try {
+      await claimSession({ tabId: tabId.current, confirm: true, agent: navigator.userAgent })
+      claimState.current = 'held'
+      setHeld(true)
+      setTakeover(null)
+    } catch {
+      claimState.current = 'idle'
+      toast.error('Could not continue here. Please try again.')
+    }
+  }, [claimSession])
 
   const setProfile = useCallback(async (next: TeacherProfile) => {
     setProfileState(next)
@@ -308,12 +319,12 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
     intentionalSignOut.current = true
     if (user) {
       try { localStorage.setItem(USER_ID_KEY, user.id) } catch {}
-      try { await upsertProfile({ activeSessionId: '' }) } catch {}
+      try { await releaseSession({}) } catch {}
     }
     await convexSignOut()
     clearKeys(SESSION_KEYS)
     clearProfile()
-  }, [user, upsertProfile, convexSignOut, clearProfile])
+  }, [user, releaseSession, convexSignOut, clearProfile])
 
   // Profile linking and the active-device claim are background sync work. Do
   // not hold the whole dashboard behind those mutations once the profile
@@ -337,7 +348,35 @@ function ProfileProviderInner({ children }: { children: ReactNode }) {
       syncReady: Boolean(isAuthenticated && profileDoc && progressReady),
       lang, setLang, toggleLang,
     }}>
-      {children}
+      {user && profileDoc && held && (profileDoc as { session?: { isActive: boolean } }).session?.isActive === false ? (
+        <div role="status" className="flex min-h-[100dvh] items-center justify-center p-6 text-center text-sm text-muted-foreground">Your account was opened on another device or browser, so you are being signed out here…</div>
+      ) : user && profileDoc && !held ? (
+        takeover ? null : <div role="status" className="flex min-h-[100dvh] items-center justify-center text-sm text-muted-foreground">Checking your sign-in…</div>
+      ) : children}
+      {takeover && (
+        <div role="alertdialog" aria-modal="true" aria-labelledby="takeover-h" className="fixed inset-0 z-[200] flex items-center justify-center bg-background/95 p-6 backdrop-blur">
+          <div className="max-w-md rounded-2xl border bg-card p-6 text-center shadow-xl">
+            <h2 id="takeover-h" className="text-lg font-semibold">
+              {takeover === 'device' ? 'Your account is open somewhere else' : 'Mwalimu AI is open in another tab'}
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {takeover === 'device'
+                ? 'You can use Mwalimu AI on one device and one browser at a time. Continue here to sign the other one out. If that was not you, continue here and change your password in Settings.'
+                : 'You can use one tab at a time. Use it here and the other tab will pause.'}
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <button type="button" onClick={() => void takeOver()} className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
+                {takeover === 'device' ? 'Continue here' : 'Use it here'}
+              </button>
+              {takeover === 'device' && (
+                <button type="button" onClick={() => void signOut()} className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm">
+                  Sign out
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </ProfileContext.Provider>
   )
 }

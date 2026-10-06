@@ -11,6 +11,12 @@ import { getCurrentProfile } from "./lib/auth";
  * or replaced. Archived programs are returned separately so learners who already
  * started them can keep going.
  */
+/** Quiz questions go to the browser without their answers or explanations: marking happens on the server (learningProgress.submitAssessment). */
+const withoutAnswers = (p: ProgramShape) => {
+  const strip = (qs: ProgramShape["preAssessment"]) => qs.map(({ id, question, options }) => ({ id, question, options }));
+  return { ...p, preAssessment: strip(p.preAssessment), postAssessment: strip(p.postAssessment) };
+};
+
 export const publishedPrograms = query({
   args: { lang: v.optional(v.union(v.literal("en"), v.literal("sw"))) },
   handler: async (ctx, { lang }) => {
@@ -18,14 +24,14 @@ export const publishedPrograms = query({
       .query("cmsItems")
       .withIndex("by_kind_and_program", (q) => q.eq("kind", "program"))
       .take(200);
-    const programs: ProgramShape[] = [],
-      archivedPrograms: ProgramShape[] = [];
+    const programs: ReturnType<typeof withoutAnswers>[] = [],
+      archivedPrograms: ReturnType<typeof withoutAnswers>[] = [];
     for (const item of items) {
       if (!item.publishedVersionId) continue;
       const assembled = await assembleProgram(ctx, item, "published", item.archivedAt !== undefined, lang ?? "en");
       // "Launching soon" placeholders have no lessons yet but still belong in the catalogue.
       if (!assembled || (assembled.lessons === 0 && !assembled.launchingSoon)) continue;
-      (item.archivedAt !== undefined ? archivedPrograms : programs).push(assembled);
+      (item.archivedAt !== undefined ? archivedPrograms : programs).push(withoutAnswers(assembled));
     }
     return { programs, archivedPrograms, managedKeys: items.map((i) => i.key) };
   },

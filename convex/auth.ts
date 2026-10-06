@@ -52,6 +52,8 @@ const resetEmail = Email({
 });
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+  // A sign-in lasts at most 30 days, and ends after 14 days without use.
+  session: { totalDurationMs: 30 * 86_400_000, inactiveDurationMs: 14 * 86_400_000 },
   providers: [
     Password({ reset: resetEmail }),
     googleProvider,

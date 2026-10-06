@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { AssessmentGuard } from '@/components/assessment-guard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -501,6 +502,7 @@ export default function AssessmentPage() {
         </p>
       </div>
 
+      <AssessmentGuard watermark={`${(user?.email ?? 'Learner').split('@')[0]} · ${(user?.id ?? '').slice(-6)}`} title="Needs assessment">
       <Card className="p-8 space-y-6">
         {/* Progress bar */}
         <div className="space-y-2">
@@ -571,6 +573,7 @@ export default function AssessmentPage() {
           )}
         </div>
       </Card>
+      </AssessmentGuard>
     </div>
   )
 }

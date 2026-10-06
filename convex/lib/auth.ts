@@ -63,15 +63,29 @@ export function assertProfileActive(profile: { status?: "active" | "suspended" |
   }
 }
 
+/** The sign-in session behind this request (Convex Auth puts `${userId}|${sessionId}` in the subject). */
+export const sessionIdOf = (identity: { subject: string }) => identity.subject.split("|")[1] ?? "";
+
+/**
+ * One account, one active session. Once a session has claimed the account (sessions.claim), requests from every other
+ * session are refused here, so a replaced device is cut off at once instead of when its page notices.
+ */
+export function assertActiveSession(identity: { subject: string }, profile: { activeAuthSession?: string }) {
+  if (profile.activeAuthSession && profile.activeAuthSession !== sessionIdOf(identity)) {
+    throw new ConvexError({ code: "SESSION_REPLACED", message: "This account was opened on another device or browser, so you were signed out here." });
+  }
+}
+
 export async function requireCurrentProfile(ctx: DatabaseCtx) {
-  const { profile } = await getCurrentProfile(ctx);
+  const { identity, profile } = await getCurrentProfile(ctx);
   if (profile === null) {
     throw new ConvexError({
       code: "PROFILE_NOT_PROVISIONED",
       message: "Create the authenticated user's profile before using this feature",
     });
   }
-  // Suspension is enforced here so every learner function honours it, not just the UI.
+  // Suspension and the one-session rule are enforced here so every learner function honours them, not just the UI.
   assertProfileActive(profile);
+  assertActiveSession(identity, profile);
   return profile;
 }

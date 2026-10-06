@@ -1,6 +1,6 @@
 import type { QueryCtx, MutationCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
-import { PROGRAMS } from "../../lib/learning-paths-data";
+import { STATIC_PROGRAMS as PROGRAMS } from "./staticCurriculum";
 import type { LessonData, ModuleData, ProgramData, QuizData, QuizQuestion } from "./contentValidation";
 
 /**
@@ -115,8 +115,8 @@ export async function assembleProgram(
 export type ProgramDef = {
   activeLessonKeys: Set<string>; // lessons that count towards completion
   knownLessonKeys: Set<string>; // every lesson ever published, so archived completions are preserved
-  preAssessment: { correct: number }[];
-  postAssessment: { correct: number }[];
+  preAssessment: { correct: number; explanation?: string }[];
+  postAssessment: { correct: number; explanation?: string }[];
 };
 
 function staticProgramDef(programId: string): ProgramDef | null {

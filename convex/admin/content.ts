@@ -5,7 +5,7 @@ import { staffMutation, staffQuery } from "../lib/staff";
 import { assertPublishable, normalizeTags, titleOf, validateContent, type ContentKind } from "../lib/contentValidation";
 import { assembleProgram } from "../lib/contentRead";
 import { CBC_LEVELS, COUNTIES, SUBJECTS } from "../lib/taxonomy";
-import { PROGRAMS } from "../../lib/learning-paths-data";
+import { STATIC_PROGRAMS as PROGRAMS } from "../lib/staticCurriculum";
 import { fail } from "../lib/errors";
 import { insertItem, insertPublishedItem, publishDraft, readinessProblem } from "../lib/contentWrite";
 import { FAQS } from "../../lib/faq-data";

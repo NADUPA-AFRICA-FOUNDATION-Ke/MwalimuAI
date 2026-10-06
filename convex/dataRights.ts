@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
-import { getCurrentProfile } from "./lib/auth";
+import { getCurrentProfile , assertActiveSession } from "./lib/auth";
 import { fail } from "./lib/errors";
 import { sha256Hex } from "./lib/audit";
 import { eraseBatch, type EraseState } from "./lib/erase";
@@ -15,7 +15,8 @@ const ACTIVE_BILLING = ["active", "trialing", "past_due"];
 export const exportMine = query({
   args: {},
   handler: async (ctx) => {
-    const { profile } = await getCurrentProfile(ctx);
+    const { identity, profile } = await getCurrentProfile(ctx);
+    if (profile) assertActiveSession(identity, profile);
     if (!profile) throw fail("NOT_FOUND", "No profile to export");
     const id = profile._id;
     const truncated: string[] = [];
@@ -65,7 +66,8 @@ export const logExport = mutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const { profile } = await getCurrentProfile(ctx);
+    const { identity, profile } = await getCurrentProfile(ctx);
+    if (profile) assertActiveSession(identity, profile);
     if (profile) await ctx.db.insert("privacyRequests", { kind: "export", ref: (await sha256Hex(profile._id)).slice(0, 32), at: Date.now() });
     return null;
   },
@@ -79,7 +81,8 @@ export const deleteMine = mutation({
   args: { confirm: v.string() },
   returns: v.null(),
   handler: async (ctx, { confirm }) => {
-    const { profile } = await getCurrentProfile(ctx);
+    const { identity, profile } = await getCurrentProfile(ctx);
+    if (profile) assertActiveSession(identity, profile);
     if (!profile) throw fail("NOT_FOUND", "No account found");
     if (confirm.trim() !== "DELETE") throw fail("CONFIRM_REQUIRED", "Type DELETE to confirm");
     if (profile.email) {
