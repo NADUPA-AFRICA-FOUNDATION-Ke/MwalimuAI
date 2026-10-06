@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const reviews = useQuery(api.admin.content.pendingReviews, can('content.read') ? {} : 'skip')
   const errs = useQuery(api.admin.errors.summary, can('audit.read_all') ? {} : 'skip')
   const tickets = useQuery(api.admin.tickets.counts, can('tickets.read') ? {} : 'skip')
+  const flagged = useQuery(api.admin.assessmentIntegrity.flaggedCount, can('users.read') ? {} : 'skip')
   const incidents = useQuery(api.admin.incidents.list, can('streaks.read') ? {} : 'skip')
   const recent = useQuery(
     api.admin.audit.list,
@@ -46,6 +47,14 @@ export default function AdminDashboard() {
             title="Tickets needing a reply"
             count={tickets?.open}
             body="Requests raised by learners. Replies show up in their app."
+          />
+        )}
+        {can('users.read') && (
+          <Tile
+            href="/admin/integrity"
+            title="Assessment security flags (7 days)"
+            count={flagged}
+            body="Sittings where someone tried to copy, paste, screenshot, print or open developer tools."
           />
         )}
         {can('content.read') && (

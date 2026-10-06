@@ -152,7 +152,7 @@ export default function AssignmentPage() {
                 </div>
               </div>
 
-              <AssessmentGuard watermark={`${profile?.name || 'Learner'} · ${(user?.id ?? '').slice(-6)}`} title="Your assignment is written here, under assessment rules">
+              <AssessmentGuard watermark={`${profile?.name || 'Learner'} · ${(user?.id ?? '').slice(-6)}`} title="Your assignment is written here, under assessment rules" attempt={{ programId: program.id, kind: 'assignment' }}>
               <div className="glass rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Your Submission</h2>

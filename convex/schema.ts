@@ -651,7 +651,7 @@ export default defineSchema({
   assessmentAttempts: defineTable({
     profileId: v.id("profiles"),
     programId: v.string(),
-    kind: v.union(v.literal("pre"), v.literal("post")),
+    kind: v.union(v.literal("pre"), v.literal("post"), v.literal("needs"), v.literal("assignment")),
     startedAt: v.number(),
     submittedAt: v.optional(v.number()),
     score: v.optional(v.number()),

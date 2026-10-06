@@ -502,7 +502,7 @@ export default function AssessmentPage() {
         </p>
       </div>
 
-      <AssessmentGuard watermark={`${(user?.email ?? 'Learner').split('@')[0]} · ${(user?.id ?? '').slice(-6)}`} title="Needs assessment">
+      <AssessmentGuard watermark={`${(user?.email ?? 'Learner').split('@')[0]} · ${(user?.id ?? '').slice(-6)}`} title="Needs assessment" attempt={{ programId: 'needs-assessment', kind: 'needs' }}>
       <Card className="p-8 space-y-6">
         {/* Progress bar */}
         <div className="space-y-2">

@@ -81,3 +81,20 @@ describe("integrity log", () => {
     await expect(learner.as.query(api.admin.assessmentIntegrity.forUser, { profileId: learner.profileId })).rejects.toThrow();
   });
 });
+
+describe("console-wide view", () => {
+  it("lists flagged sittings from every guarded page and counts them for the dashboard", async () => {
+    const t = newTest();
+    const learner = await makeLearner(t);
+    const agent = await makeStaff(t, "support_agent");
+    const needs = await learner.as.mutation(api.assessmentIntegrity.startAttempt, { programId: "needs-assessment", kind: "needs", assistive: false });
+    await learner.as.mutation(api.assessmentIntegrity.logEvents, { attemptId: needs, events: [{ type: "screenshot_key", at: Date.now() }] });
+    await learner.as.mutation(api.assessmentIntegrity.startAttempt, { programId: "cbc-foundations", kind: "assignment", assistive: false });
+    const flagged = await agent.as.query(api.admin.assessmentIntegrity.recent, { flaggedOnly: true });
+    expect(flagged).toHaveLength(1);
+    expect(flagged[0]).toMatchObject({ kind: "needs", serious: ["screenshot_key"] });
+    expect(await agent.as.query(api.admin.assessmentIntegrity.recent, { flaggedOnly: false })).toHaveLength(2);
+    expect(await agent.as.query(api.admin.assessmentIntegrity.flaggedCount, {})).toBe(1);
+    await expect(learner.as.query(api.admin.assessmentIntegrity.recent, { flaggedOnly: true })).rejects.toThrow();
+  });
+});
