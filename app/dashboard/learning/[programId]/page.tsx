@@ -15,6 +15,7 @@ import { ModuleImplementationGuide } from '@/components/module-implementation-gu
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { BackButton } from '@/components/back-button'
+import { OfflineDownload } from '@/components/offline-download'
 import {
   ChevronDown, ChevronUp, CheckCircle2, Circle,
   PlayCircle, ClipboardList, Award, Users,
@@ -142,10 +143,13 @@ This offline copy is for personal study only. Content aligned with KICD CBC fram
     <div className="max-w-5xl">
       <div className="mb-6 flex items-center justify-between gap-4">
         <BackButton fallbackHref="/dashboard/learning" label="Back to Programs" />
-        <Button variant="outline" size="sm" onClick={downloadOffline} disabled={downloading} className="rounded-xl gap-1.5 text-xs shrink-0">
-          <Download className="w-3.5 h-3.5" />
-          {downloading ? 'Preparing…' : 'Save for Offline'}
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <OfflineDownload program={program} />
+          <Button variant="ghost" size="sm" onClick={downloadOffline} disabled={downloading} className="rounded-xl gap-1.5 text-xs shrink-0 min-h-11">
+            <Download className="w-3.5 h-3.5" />
+            {downloading ? 'Preparing…' : 'Download as a file'}
+          </Button>
+        </div>
       </div>
 
       {/* Program header */}

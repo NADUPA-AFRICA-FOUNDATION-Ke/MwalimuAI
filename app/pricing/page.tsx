@@ -19,104 +19,114 @@ import { MarketingFooter } from '@/components/marketing-footer'
 import { useProfile } from '@/context/profile-context'
 import { describePaymentFailure, type PaymentFailure } from '@/lib/payment-errors'
 import { cn } from '@/lib/utils'
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { PAID_PLANS, formatKes } from '@/lib/plans'
 
-const plans = [
-  {
-    id: 'free' as const,
-    name: 'Free',
-    price: 'KES 0',
-    period: 'forever',
-    description: 'Explore the platform without a paid subscription.',
-    icon: BookOpen,
-    features: [
-      'Access to 3 learning modules',
-      'AI Coach (10 messages / day)',
-      'Community forum access',
-      'Basic progress tracking',
-      'Mobile-responsive access',
-    ],
-    cta: 'Get started free',
-    ctaHref: '/auth/sign-up',
-    highlighted: false,
-    stripeId: null,
-  },
-  {
-    id: 'professional' as const,
-    name: 'Professional',
-    price: 'KES 500',
-    period: 'per month',
-    description: 'Additional access for individual educators.',
-    icon: Sparkles,
-    features: [
-      'All learning modules',
-      'Unlimited AI Coach access',
-      'Priority community support',
-      'Downloadable resources',
-      'Certificate of completion',
-      'Advanced progress analytics',
-      'Offline content access',
-    ],
-    cta: 'Start professional',
-    ctaHref: null,
-    highlighted: true,
-    stripeId: 'professional',
-  },
-  {
-    id: 'school' as const,
-    name: 'School',
-    price: 'KES 3,000',
-    period: 'per month',
-    description: 'A plan for schools organizing access for a staff group.',
-    icon: Building2,
-    features: [
-      'Everything in Professional',
-      'Up to 20 teacher accounts',
-      'Admin dashboard',
-      'School-wide analytics',
-      'Custom learning paths',
-      'Dedicated support',
-      'On-site training workshops',
-    ],
-    cta: 'Contact sales',
-    ctaHref: '/contact',
-    highlighted: false,
-    stripeId: null,
-  },
-]
+type Facts = { aiPerDayFree: number; aiPerDayPaid: number; schoolMaxTeachers: number; paths: number } | undefined
 
-const faqs = [
-  {
-    q: 'Can I switch plans at any time?',
-    a: 'Review the plan options and choose the account action shown for the plan you want.',
-  },
-  {
-    q: 'How are paid plans checked out?',
-    a: 'Paid checkout is handled through Stripe. The checkout screen shows the payment and account steps available to you.',
-  },
-  {
-    q: 'Where can I compare plan contents?',
-    a: 'The plan cards on this page list the current features and access levels for each plan.',
-  },
-  {
-    q: 'What happens after I choose a plan?',
-    a: 'Follow the account and checkout instructions shown for the selected plan. Contact support if you need help.',
-  },
-  {
-    q: 'Can a school ask about team access?',
-    a: 'Yes. Use the contact form to describe your school or team and how you want to use the platform.',
-  },
-  {
-    q: 'Does the platform support offline use?',
-    a: 'Some saved content may be available offline. The AI Coach still needs an internet connection for live responses.',
-  },
-]
+/**
+ * Every line here is something the product actually does today. Numbers come from the live system
+ * (convex/siteFacts.ts) and prices from lib/plans.ts, the same definition the checkout charges from.
+ */
+function buildPlans(f: Facts) {
+  const free = f ? `${f.aiPerDayFree}` : 'a daily allowance of'
+  const paid = f ? `${f.aiPerDayPaid}` : 'a higher'
+  return [
+    {
+      id: 'free' as const,
+      name: 'Free',
+      price: formatKes(0),
+      period: 'no payment needed',
+      description: 'Everything you need to learn on the platform, with a daily AI allowance.',
+      icon: BookOpen,
+      features: [
+        'All published learning paths: lessons, quizzes, assignments and assessments',
+        'A certificate you can verify online when you complete a path',
+        f ? `AI Coach and AI tools: ${free} requests a day, resetting at midnight Kenya time` : 'AI Coach and AI tools, with a daily allowance that resets at midnight Kenya time',
+        'Needs assessment with learning-path recommendations',
+        'Community forum',
+        'Progress tracking, streaks and badges',
+        'Lessons you can save to your device and read offline',
+      ],
+      cta: 'Get started free',
+      ctaHref: '/auth/sign-up',
+      highlighted: false,
+      stripeId: null,
+    },
+    {
+      id: 'professional' as const,
+      name: PAID_PLANS.professional.name,
+      price: formatKes(PAID_PLANS.professional.kes),
+      period: `per ${PAID_PLANS.professional.interval}`,
+      description: 'A higher daily AI allowance for individual teachers.',
+      icon: Sparkles,
+      features: [
+        'Everything in Free',
+        f ? `${paid} AI Coach and AI tool requests a day, instead of ${free}` : 'A higher daily limit on AI Coach and AI tool requests',
+        'Cancel from Settings whenever you like',
+      ],
+      cta: 'Start professional',
+      ctaHref: null,
+      highlighted: true,
+      stripeId: 'professional',
+    },
+    {
+      id: 'school' as const,
+      name: PAID_PLANS.school.name,
+      price: formatKes(PAID_PLANS.school.kes),
+      period: `per ${PAID_PLANS.school.interval}`,
+      description: 'For a head teacher who wants to see their staff’s learning progress.',
+      icon: Building2,
+      features: [
+        'Everything in Professional, for the head teacher’s own account',
+        f ? `A school dashboard for up to ${f.schoolMaxTeachers} teachers who join with your school code` : 'A school dashboard for teachers who join with your school code',
+        'See each teacher’s lessons finished, certificates and last activity',
+        'Journals, AI conversations, messages and contact details are never shown to the head teacher',
+        'Teachers keep their own plan: the School plan does not raise their AI allowance',
+      ],
+      cta: 'Ask about the School plan',
+      ctaHref: '/contact',
+      highlighted: false,
+      stripeId: null,
+    },
+  ]
+}
+type Plan = ReturnType<typeof buildPlans>[number]
+
+function buildFaqs(f: Facts) {
+  return [
+    {
+      q: 'What do I get by paying?',
+      a: f
+        ? `Today the Professional plan raises your daily AI allowance from ${f.aiPerDayFree} to ${f.aiPerDayPaid} requests. Learning paths, certificates, the community, progress tracking and offline lessons are the same on every plan. The School plan adds the head-teacher dashboard.`
+        : 'The Professional plan raises your daily AI allowance. Learning paths, certificates, the community, progress tracking and offline lessons are the same on every plan. The School plan adds the head-teacher dashboard.',
+    },
+    {
+      q: 'How do I pay?',
+      a: `By card on Stripe’s secure checkout page, billed every month in Kenya shillings (${formatKes(PAID_PLANS.professional.kes)} Professional, ${formatKes(PAID_PLANS.school.kes)} School). Your card details go to Stripe; we never see or store them. You need to be signed in to subscribe.`,
+    },
+    {
+      q: 'How do I cancel?',
+      a: 'Open Settings → Your plan → Cancel my plan. Cancelling ends the plan straight away and you are not charged again. Your account, progress and certificates stay.',
+    },
+    {
+      q: 'Can my school use the School plan?',
+      a: 'Yes. Use the contact form to tell us about your school and our reply appears on your private conversation page. A head teacher on the School plan creates the school in the app, shares its code, and teachers join with it.',
+    },
+    {
+      q: 'Does it work offline?',
+      a: 'You can save lessons to your device and read them without a connection. The AI Coach and AI tools always need internet.',
+    },
+  ]
+}
 
 function PricingCard({
   plan,
   onCheckout,
   loading,
 }: {
-  plan: typeof plans[number]
+  plan: Plan
   onCheckout: (planId: string) => void
   loading: string | null
 }) {
@@ -213,6 +223,9 @@ function PricingCard({
 }
 
 function PricingContent() {
+  const facts = useQuery(api.siteFacts.facts, {})
+  const plans = buildPlans(facts)
+  const faqs = buildFaqs(facts)
   const searchParams = useSearchParams()
   const { user } = useProfile()
   const [loading, setLoading] = useState<string | null>(null)

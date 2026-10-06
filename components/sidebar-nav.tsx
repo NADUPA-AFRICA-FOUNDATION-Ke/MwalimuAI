@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   BookOpen, Users, Trophy, FileText, Home, Settings,
   Download, Sparkles, Wand2, TrendingUp, BookMarked, PenLine,
-  ChevronLeft, ChevronRight, LifeBuoy,
+  ChevronLeft, ChevronRight, LifeBuoy, School,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
@@ -50,6 +50,7 @@ const NAV_GROUPS = [
     items: [
       { href: '/dashboard/achievements', labelKey: 'nav.achievements' as TranslationKey, icon: Trophy     },
       { href: '/dashboard/progress',     labelKey: 'nav.progress'     as TranslationKey, icon: TrendingUp },
+      { href: '/dashboard/school',       labelKey: 'nav.school'       as TranslationKey, icon: School     },
       { href: '/dashboard/support',      labelKey: 'nav.support'      as TranslationKey, icon: LifeBuoy   },
       { href: '/dashboard/settings',     labelKey: 'nav.settings'     as TranslationKey, icon: Settings   },
     ],

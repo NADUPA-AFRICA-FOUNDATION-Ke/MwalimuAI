@@ -7,8 +7,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Target, Heart, Users, Award, ArrowRight } from 'lucide-react'
 import { useFadeIn } from '@/hooks/use-scroll-animations'
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 
-const team = [
+const inside = [
   {
     name: 'Learning modules',
     role: 'Study at your pace',
@@ -58,14 +60,16 @@ const values = [
   },
 ]
 
-const stats = [
-  { value: 'Learn',   label: 'Structured modules' },
-  { value: 'Ask',     label: 'AI coaching' },
-  { value: 'Share',   label: 'Teacher discussions' },
-  { value: 'Track',   label: 'Progress records' },
-]
-
 export default function AboutPage() {
+  const facts = useQuery(api.siteFacts.facts, {})
+  // Read live from the published content, so these always match what a learner can open.
+  const stats = facts && facts.paths > 0
+    ? [
+        { value: String(facts.paths), label: 'Learning paths published' },
+        { value: String(facts.modules), label: 'Modules' },
+        { value: String(facts.lessons), label: 'Lessons' },
+      ]
+    : []
   const { ref: heroRef, visible: heroVisible } = useFadeIn<HTMLDivElement>(0.1)
   const { ref: storyRef, visible: storyVisible } = useFadeIn<HTMLElement>(0.08)
   const { ref: valuesRef, visible: valuesVisible } = useFadeIn<HTMLElement>(0.08)
@@ -95,7 +99,7 @@ export default function AboutPage() {
       {/* Stats */}
       <section ref={statsRef} className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-5 md:px-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
             {stats.map(({ value, label }) => (
               <div key={label}
                 className={`py-10 px-6 text-center transition-all duration-700 ${statsVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}>
@@ -104,6 +108,7 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
+          {stats.length > 0 && <p className="pb-6 text-center text-xs text-muted-foreground">These counts are read live from the content published on the platform. Open Learn in the dashboard to check them.</p>}
         </div>
       </section>
 
@@ -134,7 +139,7 @@ export default function AboutPage() {
               <div className="relative rounded-3xl overflow-hidden card-elevated" style={{ boxShadow: 'var(--shadow-xl)' }}>
                 <Image
                   src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80"
-                  alt="Kenyan classroom"
+                  alt="A classroom (stock photo)"
                   width={800}
                   height={600}
                   className="w-full h-full object-cover"
@@ -190,7 +195,7 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {team.map((member, i) => (
+            {inside.map((member, i) => (
               <div key={member.name}
                 className={`card-premium rounded-2xl p-7 text-center transition-all duration-700 ${teamVisible ? 'animate-section-visible' : 'animate-section-hidden'}`}
                 style={{ transitionDelay: `${i * 100}ms` }}>

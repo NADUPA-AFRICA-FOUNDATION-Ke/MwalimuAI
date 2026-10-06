@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  * performed by ProfileProvider's Convex auth state on the client.
  *
  * Admin separation: the console lives under /admin but is only reachable on the
- * hosts listed in ADMIN_HOSTS (e.g. "admin.mwalimu.ai"). On those hosts the root
+ * hosts listed in ADMIN_HOSTS (e.g. "admin.your-domain.org"). On those hosts the root
  * path is rewritten into /admin and nothing else is served; on every other host
  * /admin is a plain 404, so learners cannot discover it. localhost is allowed
  * outside production for development. This is obscurity and isolation only: real

@@ -1,0 +1,24 @@
+name: Uptime check
+
+# Every 10 minutes: is the site up, and can it reach its database? A failed run emails the people watching the repo.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Site and database
+        env:
+          SITE_URL: https://mwalimu-ai-nu.vercel.app
+        run: |
+          set -e
+          home=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$SITE_URL/")
+          [ "$home" = "200" ] || { echo "::error::Home page returned $home"; exit 1; }
+          health=$(curl -s --max-time 20 -w "\n%{http_code}" "$SITE_URL/api/health")
+          code=$(echo "$health" | tail -n1); body=$(echo "$health" | head -n1)
+          [ "$code" = "200" ] && echo "$body" | grep -q '"ok":true' || { echo "::error::Health check failed ($code): $body"; exit 1; }
+          echo "Healthy: $body"

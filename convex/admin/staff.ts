@@ -1,5 +1,7 @@
 import { v } from "convex/values";
-import { internalMutation, type MutationCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
+import { internalAction, internalMutation, type MutationCtx } from "../_generated/server";
+import { INVITE_TTL_MS } from "../lib/staff";
 import { staffMutation, staffQuery } from "../lib/staff";
 import { writeAudit } from "../lib/audit";
 
@@ -19,6 +21,7 @@ const safe = (s: {
   role: string;
   status: string;
   mfaEnrolledAt?: number;
+  invitedAt?: number;
   _creationTime: number;
 }) => ({
   _id: s._id,
@@ -28,6 +31,9 @@ const safe = (s: {
   status: s.status,
   mfaEnrolledAt: s.mfaEnrolledAt,
   createdAt: s._creationTime,
+  invitedAt: s.invitedAt,
+  // Invited but never set up two-factor: how long the invitation has left (or that it has lapsed).
+  inviteExpiresAt: s.mfaEnrolledAt === undefined && s.invitedAt !== undefined ? s.invitedAt + INVITE_TTL_MS : undefined,
 });
 
 export const list = staffQuery({
@@ -58,8 +64,10 @@ export const invite = staffMutation({
       role: args.role,
       status: "active",
       createdBy: staff._id,
+      invitedAt: Date.now(),
       updatedAt: Date.now(),
     });
+    await ctx.scheduler.runAfter(0, internal.admin.staff.sendInviteEmail, { staffId: id, invitedBy: staff.name || staff.email });
     await log({
       action: "staff.invite",
       targetType: "staff",
@@ -128,6 +136,8 @@ export const resetMfa = staffMutation({
     const target = await ctx.db.get(args.staffId);
     if (!target) throw notFound("Staff member");
     await ctx.db.patch(target._id, {
+      backupCodes: undefined,
+      invitedAt: Date.now(),
       totpSecretEnc: undefined,
       mfaEnrolledAt: undefined,
       lastTotpStep: undefined,
@@ -172,5 +182,75 @@ export const bootstrapSuperAdmin = internalMutation({
       reason: "Initial Super Admin created from CLI",
     });
     return id;
+  },
+});
+
+/** Starts the 14 days again and emails the invitation once more. */
+export const resendInvite = staffMutation({
+  permission: "staff.manage",
+  requireReason: true,
+  args: { staffId: v.id("staff"), reason: v.string() },
+  handler: async (ctx, args, { staff }, log) => {
+    const target = await ctx.db.get(args.staffId);
+    if (!target) throw notFound("Staff member");
+    if (target.mfaEnrolledAt !== undefined) throw fail("ALREADY_ENROLLED", "They have already set up two-factor");
+    await ctx.db.patch(target._id, { invitedAt: Date.now(), updatedAt: Date.now() });
+    await ctx.scheduler.runAfter(0, internal.admin.staff.sendInviteEmail, { staffId: target._id, invitedBy: staff.name || staff.email });
+    await log({ action: "staff.resend_invite", targetType: "staff", targetId: target._id, targetLabel: target.email });
+    return null;
+  },
+});
+
+export const staffForInvite = internalMutation({
+  args: { staffId: v.id("staff") },
+  handler: async (ctx, { staffId }) => {
+    const s = await ctx.db.get(staffId);
+    return s ? { email: s.email, name: s.name ?? "", role: s.role } : null;
+  },
+});
+
+const ROLE_TEXT: Record<string, string> = {
+  super_admin: "Super Admin",
+  content_manager: "Content Manager",
+  support_agent: "Support Agent",
+  viewer: "Viewer",
+};
+
+/** Tells the person they have been invited. Failure to send never blocks the invitation itself. */
+export const sendInviteEmail = internalAction({
+  args: { staffId: v.id("staff"), invitedBy: v.string() },
+  handler: async (ctx, { staffId, invitedBy }) => {
+    const apiKey = process.env.RESEND_API_KEY;
+    const who = await ctx.runMutation(internal.admin.staff.staffForInvite, { staffId });
+    if (!apiKey || !who) return;
+    const site = (process.env.SITE_URL ?? "").replace(/\/$/, "");
+    const adminUrl = (process.env.ADMIN_ORIGINS ?? "").split(",")[0].trim() || `${site}/admin`;
+    const text = `Hello${who.name ? ` ${who.name}` : ""},\n\n${invitedBy} invited you to the Mwalimu AI staff console as ${ROLE_TEXT[who.role] ?? who.role}.\n\nSign in with this email address (${who.email}) at:\n${adminUrl}\n\nYou will set up two-factor sign-in with an authenticator app the first time, and you will be given backup codes. Keep them somewhere safe.\n\nThis invitation expires in 14 days. If you were not expecting it, you can ignore this email.`;
+    try {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: process.env.AUTH_EMAIL_FROM ?? "Mwalimu AI <onboarding@resend.dev>", to: [who.email], subject: "You have been invited to the Mwalimu AI staff console", text }),
+      });
+    } catch {
+      /* the invitation still stands; staff can resend */
+    }
+  },
+});
+
+/**
+ * Break-glass for when the only Super Admin loses their authenticator and has no backup codes. Run from a trusted
+ * shell with deploy access:  npx convex run admin/staff:emergencyResetMfa '{"email":"you@example.com"}'
+ * They sign in and enrol again (and get new backup codes). Recorded in the audit log.
+ */
+export const emergencyResetMfa = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const target = await ctx.db.query("staff").withIndex("by_email", (q) => q.eq("email", email.trim().toLowerCase())).unique();
+    if (!target) throw new Error("No staff member with that email");
+    await ctx.db.patch(target._id, { totpSecretEnc: undefined, mfaEnrolledAt: undefined, lastTotpStep: undefined, mfaFailedAttempts: undefined, mfaLockedUntil: undefined, backupCodes: undefined, invitedAt: Date.now(), updatedAt: Date.now() });
+    for (const s of await ctx.db.query("staffSessions").withIndex("by_staff", (q) => q.eq("staffId", target._id)).take(500)) await ctx.db.delete(s._id);
+    await writeAudit(ctx, target, { action: "staff.emergency_reset_mfa", targetType: "staff", targetId: target._id, targetLabel: target.email, reason: "Emergency reset from a trusted shell" });
+    return target._id;
   },
 });

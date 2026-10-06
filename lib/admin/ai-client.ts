@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { authedFetch } from '@/lib/authed-fetch'
-import type { improveSchema, lessonSchema, outlineSchema, postSchema, quizSchema, recommendSchema, reviewSchema, ImproveAction } from '@/lib/admin-ai'
+import type { improveSchema, lessonSchema, outlineSchema, postSchema, quizSchema, recommendSchema, reviewSchema, ImproveAction, TranslateKind, TRANSLATE_SCHEMAS } from '@/lib/admin-ai'
 
 export type Outline = z.infer<typeof outlineSchema>
 export type LessonDraft = z.infer<typeof lessonSchema>
@@ -15,6 +15,7 @@ type Tasks = {
   improve: { params: { action: ImproveAction; text: string }; result: z.infer<typeof improveSchema> }
   review: { params: { kind: string; content: string }; result: ReviewResult }
   recommend: { params: { evidence: string }; result: Ideas }
+  translate: { params: { kind: TranslateKind; source: unknown }; result: z.infer<(typeof TRANSLATE_SCHEMAS)[TranslateKind]> }
   post: { params: { topic: string; audience?: string; notes?: string; existing?: string }; result: z.infer<typeof postSchema> }
 }
 

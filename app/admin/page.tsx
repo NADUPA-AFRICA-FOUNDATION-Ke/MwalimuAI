@@ -9,7 +9,9 @@ import { Empty, fmtTime, PageHeader, ROLE_LABELS, useStaff } from '@/components/
 export default function AdminDashboard() {
   const { can, role, name, email } = useStaff()
   const reviews = useQuery(api.admin.content.pendingReviews, can('content.read') ? {} : 'skip')
+  const errs = useQuery(api.admin.errors.summary, can('audit.read_all') ? {} : 'skip')
   const tickets = useQuery(api.admin.tickets.counts, can('tickets.read') ? {} : 'skip')
+  const flagged = useQuery(api.admin.assessmentIntegrity.flaggedCount, can('users.read') ? {} : 'skip')
   const incidents = useQuery(api.admin.incidents.list, can('streaks.read') ? {} : 'skip')
   const recent = useQuery(
     api.admin.audit.list,
@@ -31,12 +33,28 @@ export default function AdminDashboard() {
             body="Search by email, phone or name to restore a streak, edit a profile or suspend an account."
           />
         )}
+        {can('audit.read_all') && (
+          <Tile
+            href="/admin/errors"
+            title="Errors in the last 24 hours"
+            count={errs?.openLast24h}
+            body="Problems users' browsers or the server hit. Check this after each release."
+          />
+        )}
         {can('tickets.read') && (
           <Tile
             href="/admin/tickets"
             title="Tickets needing a reply"
             count={tickets?.open}
             body="Requests raised by learners. Replies show up in their app."
+          />
+        )}
+        {can('users.read') && (
+          <Tile
+            href="/admin/integrity"
+            title="Assessment security flags (7 days)"
+            count={flagged}
+            body="Sittings where someone tried to copy, paste, screenshot, print or open developer tools."
           />
         )}
         {can('content.read') && (

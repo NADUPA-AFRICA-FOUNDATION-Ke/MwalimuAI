@@ -53,7 +53,7 @@ export default function ResourcesPage() {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {resource.type} · {resource.size}
+                    {resource.size ? `${resource.type} · ${resource.size}` : resource.type}
                   </p>
                 </div>
               </div>

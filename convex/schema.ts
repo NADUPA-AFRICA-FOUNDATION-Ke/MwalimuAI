@@ -74,7 +74,12 @@ export default defineSchema({
     }),
     notificationPreferences: v.optional(notificationPreferences),
     sidebarCollapsed: v.boolean(),
-    activeSessionId: v.optional(v.string()),
+    activeSessionId: v.optional(v.string()), // legacy device id from the old browser-only rule; no longer read
+    // One account, one session (device + browser), one tab. Enforced on the server for sessions: requests from any
+    // other sign-in session are refused. The tab rule is enforced by the app (all tabs of a browser share a session).
+    activeAuthSession: v.optional(v.string()),
+    activeTabId: v.optional(v.string()),
+    sessionLog: v.optional(v.array(v.object({ at: v.number(), agent: v.string(), replaced: v.boolean() }))),
     phone: v.optional(v.string()),
     phoneNormalized: v.optional(v.string()),
     // Absent means "active" so existing rows need no backfill to keep working.
@@ -82,6 +87,8 @@ export default defineSchema({
     statusReason: v.optional(v.string()),
     statusChangedAt: v.optional(v.number()),
     searchText: v.optional(v.string()),
+    // Which emails this learner wants. Absent means "yes" for each, so existing learners need no backfill.
+    emailPrefs: v.optional(v.object({ streak: v.optional(v.boolean()), tickets: v.optional(v.boolean()), certificates: v.optional(v.boolean()), weekly: v.optional(v.boolean()) })),
     updatedAt: v.number(),
   })
     .index("by_token_identifier", ["tokenIdentifier"])
@@ -471,6 +478,10 @@ export default defineSchema({
     mfaFailedAttempts: v.optional(v.number()),
     mfaLockedUntil: v.optional(v.number()),
     lastTotpStep: v.optional(v.number()),
+    // Single-use recovery codes (salted hashes), for a lost authenticator. Shown once when created.
+    backupCodes: v.optional(v.array(v.string())),
+    // Set when someone is invited. An invite that is never used (no 2FA set up) stops working after 14 days.
+    invitedAt: v.optional(v.number()),
     updatedAt: v.number(),
   }).index("by_email", ["email"]),
 
@@ -605,7 +616,11 @@ export default defineSchema({
   // Support tickets raised by learners and worked by staff.
   tickets: defineTable({
     number: v.string(), // human reference, e.g. MW-4F7K2Q; staff quote it as ticketRef on streak restores
-    profileId: v.id("profiles"),
+    // Set for a signed-in learner. A visitor who wrote through the public Contact/Support page has none until they
+    // add the conversation to their account; until then `visitor` and `tokenHash` identify them.
+    profileId: v.optional(v.id("profiles")),
+    visitor: v.optional(v.object({ name: v.string(), email: v.string() })),
+    tokenHash: v.optional(v.string()), // SHA-256 of the private link's token (the link itself is never stored)
     subject: v.string(),
     category: v.union(
       v.literal("streak"),
@@ -613,6 +628,8 @@ export default defineSchema({
       v.literal("content"),
       v.literal("payment"),
       v.literal("certificate"),
+      v.literal("technical"),
+      v.literal("feedback"),
       v.literal("other"),
     ),
     status: v.union(v.literal("open"), v.literal("pending_user"), v.literal("resolved")),
@@ -624,7 +641,26 @@ export default defineSchema({
   })
     .index("by_number", ["number"])
     .index("by_profile", ["profileId", "lastMessageAt"])
-    .index("by_status", ["status", "lastMessageAt"]),
+    .index("by_status", ["status", "lastMessageAt"])
+    .index("by_token_hash", ["tokenHash"])
+    .index("by_visitor_email", ["visitor.email", "createdAt"]),
+
+  // One sitting of a pre/post assessment: when it started and ended, the score, whether the learner switched on
+  // assistive input, and the integrity events seen while it was open (copy/paste attempts, leaving the window,
+  // screenshots keys, developer tools). Staff review these; nothing here blocks a learner on its own.
+  assessmentAttempts: defineTable({
+    profileId: v.id("profiles"),
+    programId: v.string(),
+    kind: v.union(v.literal("pre"), v.literal("post"), v.literal("needs"), v.literal("assignment")),
+    startedAt: v.number(),
+    submittedAt: v.optional(v.number()),
+    score: v.optional(v.number()),
+    total: v.optional(v.number()),
+    assistive: v.boolean(),
+    events: v.array(v.object({ type: v.string(), at: v.number(), detail: v.optional(v.string()) })),
+  })
+    .index("by_profile_and_program", ["profileId", "programId", "startedAt"])
+    .index("by_started", ["startedAt"]),
 
   ticketMessages: defineTable({
     ticketId: v.id("tickets"),
@@ -657,6 +693,101 @@ export default defineSchema({
     createdAt: v.number(),
     cancelledAt: v.optional(v.number()),
   }).index("by_start", ["startsAt"]),
+
+  // Grouped application errors from browsers and server routes, so problems are seen before users complain.
+  // One row per distinct error (fingerprint); repeats only bump the counter, so storage stays bounded.
+  clientErrors: defineTable({
+    fingerprint: v.string(),
+    source: v.union(v.literal("browser"), v.literal("server"), v.literal("api")),
+    message: v.string(),
+    stack: v.optional(v.string()),
+    route: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    count: v.number(),
+    firstSeen: v.number(),
+    lastSeen: v.number(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.id("staff")),
+  })
+    .index("by_fingerprint", ["fingerprint"])
+    .index("by_last_seen", ["lastSeen"])
+    .index("by_first_seen", ["firstSeen"]),
+
+  // Outgoing email: a queue (so sending is paced and retryable) that doubles as the record of what was sent.
+  emailLog: defineTable({
+    profileId: v.id("profiles"),
+    kind: v.union(v.literal("ticket_reply"), v.literal("certificate"), v.literal("streak"), v.literal("weekly")),
+    dedupeKey: v.string(),
+    to: v.string(),
+    data: v.any(), // small facts for the template; the email is rendered when it is sent, not stored
+    status: v.union(v.literal("queued"), v.literal("sending"), v.literal("sent"), v.literal("failed"), v.literal("skipped")),
+    claimedAt: v.optional(v.number()),
+    attempts: v.number(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    sentAt: v.optional(v.number()),
+  })
+    .index("by_dedupe", ["dedupeKey"])
+    .index("by_status_and_created_at", ["status", "createdAt"])
+    .index("by_profile_and_created_at", ["profileId", "createdAt"]),
+
+  // One row: the lease that keeps a single sender running at a time.
+  emailRuntime: defineTable({ leaseUntil: v.number() }),
+
+  // Accountability record of privacy requests (Kenya Data Protection Act). Holds no personal data: the learner is
+  // identified only by a one-way hash, so it survives the erasure it records.
+  privacyRequests: defineTable({
+    kind: v.union(v.literal("export"), v.literal("erasure_requested"), v.literal("erasure_completed")),
+    ref: v.string(),
+    at: v.number(),
+  }).index("by_at", ["at"]),
+
+  // Schools: a head teacher (on the School plan, or set up by staff) sees how the teachers who joined are progressing.
+  // Teachers join with a code and can leave at any time, which ends the head's view of them at once.
+  schools: defineTable({
+    name: v.string(),
+    county: v.optional(v.string()),
+    code: v.string(),
+    headId: v.id("profiles"),
+    createdAt: v.number(),
+    archivedAt: v.optional(v.number()),
+  })
+    .index("by_code", ["code"])
+    .index("by_head", ["headId"]),
+
+  schoolMembers: defineTable({
+    schoolId: v.id("schools"),
+    profileId: v.id("profiles"),
+    role: v.union(v.literal("head"), v.literal("teacher")),
+    status: v.union(v.literal("active"), v.literal("left"), v.literal("removed")),
+    joinedAt: v.number(),
+    leftAt: v.optional(v.number()),
+  })
+    .index("by_school_and_status", ["schoolId", "status"])
+    .index("by_profile", ["profileId", "status"]),
+
+  // Daily AI allowance per learner, so one heavy user (or a script) cannot run up the bill.
+  aiUsage: defineTable({
+    profileId: v.id("profiles"),
+    day: v.string(), // YYYY-MM-DD, Kenya time
+    count: v.number(),
+  })
+    .index("by_profile_and_day", ["profileId", "day"])
+    .index("by_day_and_count", ["day", "count"]),
+
+  // Small switches staff can change without a deploy (AI limits, emergency stop).
+  appSettings: defineTable({ key: v.string(), value: v.any(), updatedAt: v.number() }).index("by_key", ["key"]),
+
+  // Daily proof that the audit log has not been rewritten: the chain is re-checked since the last checkpoint and the
+  // newest hash is emailed to Super Admins, so a copy exists outside the database that an attacker cannot edit.
+  auditCheckpoints: defineTable({
+    at: v.number(),
+    headHash: v.string(),
+    headCreatedAt: v.number(),
+    newRows: v.number(),
+    status: v.union(v.literal("ok"), v.literal("broken")),
+    note: v.optional(v.string()),
+  }).index("by_at", ["at"]),
 
   // Temporary lossless landing zone used while replacing Supabase. Keeping
   // the original row and checksum makes the import resumable and auditable;

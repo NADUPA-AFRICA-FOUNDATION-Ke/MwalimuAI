@@ -5,6 +5,7 @@ import { GradientBackground } from '@/components/gradient-background'
 import { SWRegister } from '@/components/sw-register'
 import { AnalyticsConsent } from '@/components/analytics-consent'
 import { CookieConsent } from '@/components/cookie-consent'
+import { ErrorReporter } from '@/components/error-reporter'
 import './globals.css'
 
 // Self-hosted at build time (no runtime request to Google), latin subset, swap so text shows immediately.
@@ -109,6 +110,7 @@ export default function RootLayout({
         </Providers>
         <CookieConsent />
         <SWRegister />
+        <ErrorReporter />
       </body>
     </html>
   )

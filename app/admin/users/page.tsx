@@ -81,12 +81,12 @@ export default function UsersPage() {
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Email</th>
-                  <th className="hidden p-3 md:table-cell">Phone</th>
-                  <th className="hidden p-3 lg:table-cell">School · County</th>
-                  <th className="p-3">Status</th>
-                  <th className="hidden p-3 md:table-cell">Joined</th>
+                  <th scope="col" className="p-3">Name</th>
+                  <th scope="col" className="p-3">Email</th>
+                  <th scope="col" className="hidden p-3 md:table-cell">Phone</th>
+                  <th scope="col" className="hidden p-3 lg:table-cell">School · County</th>
+                  <th scope="col" className="p-3">Status</th>
+                  <th scope="col" className="hidden p-3 md:table-cell">Joined</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

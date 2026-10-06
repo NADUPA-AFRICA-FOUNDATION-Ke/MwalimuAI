@@ -81,11 +81,18 @@ function ContentStudio() {
         title="Content"
         description="Draft → review → published. Nothing reaches learners until a second person approves it. Content is archived, never deleted."
         actions={
-          can('analytics.read') && (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/admin/content/insights">Content insights</Link>
-            </Button>
-          )
+          <>
+            {can('content.edit') && (
+              <Button asChild size="sm">
+                <Link href="/admin/content/import">Upload &amp; templates</Link>
+              </Button>
+            )}
+            {can('analytics.read') && (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/admin/content/insights">Content insights</Link>
+              </Button>
+            )}
+          </>
         }
       />
       {reviews && reviews.length > 0 && (

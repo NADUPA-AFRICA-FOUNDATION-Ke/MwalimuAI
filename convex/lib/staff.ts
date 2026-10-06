@@ -8,6 +8,7 @@ import { MIN_REASON_LENGTH, roleHasPermission, type Permission } from "./permiss
 import { fail, forbidden } from "./errors";
 
 const MFA_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+export const INVITE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
 export type StaffContext = { staff: Doc<"staff">; authSessionId: string; mfaVerified: boolean };
 
@@ -28,6 +29,8 @@ export async function resolveStaff(ctx: QueryCtx | MutationCtx): Promise<StaffCo
     .withIndex("by_email", (q) => q.eq("email", email))
     .unique();
   if (!staff || staff.status !== "active") throw forbidden();
+  // An invitation nobody acted on is not a standing credential: it lapses after 14 days until staff re-invite them.
+  if (staff.mfaEnrolledAt === undefined && staff.invitedAt !== undefined && Date.now() - staff.invitedAt > INVITE_TTL_MS) throw forbidden();
   const session = await ctx.db
     .query("staffSessions")
     .withIndex("by_session", (q) => q.eq("authSessionId", authSessionId))

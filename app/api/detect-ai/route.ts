@@ -1,6 +1,7 @@
 import { generateText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { requireAuthUser } from '@/lib/require-auth'
+import { consumeAi } from '@/lib/ai-guard'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 const groq = createOpenAI({
@@ -61,6 +62,8 @@ export async function POST(req: Request) {
 
   const limit = rateLimit(`detect-ai:${userId}`, 30, 60 * 60 * 1000)
   if (!limit.ok) return rateLimitResponse(limit)
+  const capped = await consumeAi(req, 'detect-ai')
+  if (capped) return capped
 
   let parsed: { text?: unknown }
   try { parsed = await req.json() } catch {

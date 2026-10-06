@@ -92,7 +92,7 @@ function Gate({ children }: { children: ReactNode }) {
       </Centered>
     )
   return (
-    <StaffProvider staff={{ email: me.email, name: me.name, role: me.role, permissions: me.permissions }}>
+    <StaffProvider staff={{ email: me.email, name: me.name, role: me.role, permissions: me.permissions, backupCodesLeft: me.backupCodesLeft }}>
       <Shell>{children}</Shell>
     </StaffProvider>
   )
@@ -123,7 +123,9 @@ function SignIn() {
       setMode('sent') // always say "sent": never reveal whether the address has an account
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      setError(/not enabled|configured/i.test(msg)
+      setError(/switched off/i.test(msg)
+        ? 'Password email is switched off on this platform. Use Continue with Google, or ask a Super Admin to issue you a temporary password.'
+        : /not enabled|configured/i.test(msg)
         ? 'Password reset email is not set up on this deployment yet. Use Google sign-in, or ask a Super Admin for help.'
         : 'We could not send the email. Check the address and try again, or use Google sign-in.')
     } finally { setBusy(false) }
@@ -192,13 +194,12 @@ function CodeForm({
       className="space-y-3"
     >
       <div className="space-y-1.5">
-        <Label htmlFor="code">6-digit code</Label>
+        <Label htmlFor="code">6-digit code or backup code</Label>
         <Input
           id="code"
-          inputMode="numeric"
+          inputMode="text"
           autoComplete="one-time-code"
-          pattern="\d{6}"
-          maxLength={7}
+          maxLength={12}
           required
           autoFocus
           value={code}
@@ -211,12 +212,14 @@ function CodeForm({
           {error}
         </p>
       )}
-      <Button type="submit" className="w-full" disabled={busy || code.replace(/\s/g, '').length !== 6}>
+      <Button type="submit" className="w-full" disabled={busy || code.replace(/\s/g, '').length < 6}>
         {busy && <Spinner className="mr-2 h-4 w-4" />}Verify
       </Button>
     </form>
   )
 }
+
+export const BACKUP_CODES_KEY = 'mwalimu_staff_backup_codes'
 
 function useVerify() {
   const verify = useMutation(api.admin.mfa.verifyCode)
@@ -227,6 +230,10 @@ function useVerify() {
     setError(null)
     try {
       const r = await verify({ code })
+      if (r.ok && 'backupCodes' in r && r.backupCodes) {
+        // Shown once, right after sign-in completes, by the console shell.
+        try { sessionStorage.setItem(BACKUP_CODES_KEY, JSON.stringify(r.backupCodes)) } catch { /* private mode */ }
+      }
       if (!r.ok)
         setError(
           r.locked
@@ -249,7 +256,7 @@ function MfaChallenge() {
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-semibold">Two-factor verification</h1>
-        <p className="text-sm text-muted-foreground">Enter the code from your authenticator app.</p>
+        <p className="text-sm text-muted-foreground">Enter the code from your authenticator app. Lost your phone? Use one of your backup codes instead.</p>
       </div>
       <CodeForm onSubmit={v.submit} busy={v.busy} error={v.error} />
       <Button variant="ghost" size="sm" onClick={() => void signOut()}>

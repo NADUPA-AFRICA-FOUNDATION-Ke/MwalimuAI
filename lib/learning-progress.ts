@@ -1,4 +1,5 @@
 import type { Program } from './learning-paths-data'
+import { CERTIFICATE_PASS_RATIO, MIN_REFLECTIONS_FOR_CERTIFICATE } from '@/convex/lib/certificateRules'
 import { PROGRAMS } from './learning-paths-data'
 
 // Catalogue used by the eligibility helpers below. ContentProvider swaps in CMS content;
@@ -57,6 +58,7 @@ export function setLearningProgressUser(userId: string | null) {
     _pendingSyncs = []
     queued.forEach(fn => fn())
   }
+  if (userId) flushPendingProgress()
 }
 
 // ── localStorage helpers ───────────────────────────────────────────
@@ -70,11 +72,46 @@ function write(data: AllProgress) {
   try { localStorage.setItem(KEY, JSON.stringify(data)) } catch {}
 }
 
+// ── Unsent changes ─────────────────────────────────────────────────
+// A program is "pending" from the moment it is changed until the server confirms it. That list survives closing the
+// tab, so lessons finished on a patchy connection are sent next time, never lost.
+const PENDING_KEY = 'mwalimu_sync_pending'
+function readPending(): string[] {
+  if (typeof window === 'undefined') return []
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) ?? '[]') as string[] } catch { return [] }
+}
+function writePending(ids: string[]) {
+  if (typeof window === 'undefined') return
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify([...new Set(ids)])) } catch {}
+}
+const addPending = (id: string) => writePending([...readPending(), id])
+const removePending = (id: string) => writePending(readPending().filter(x => x !== id))
+
+/** Sends everything still waiting (called when the user signs in and when the connection comes back). */
+export function flushPendingProgress() {
+  const all = read()
+  for (const id of readPending()) {
+    if (all[id]) void cloudSync(id, all[id])
+    else removePending(id)
+  }
+}
+
+/** Server and device both hold lessons the other lacks: keep the union, never drop a finished lesson. */
+function mergeUnsent(local: ProgramProgress | undefined, cloud: ProgramProgress): ProgramProgress {
+  if (!local) return cloud
+  return {
+    ...cloud,
+    completedLessons: [...new Set([...cloud.completedLessons, ...local.completedLessons])],
+    reflections: { ...cloud.reflections, ...local.reflections },
+  }
+}
+
 // ── Supabase background sync ───────────────────────────────────────
 // Returns the write's promise so callers that need to know the cloud write
 // actually landed (e.g. clearAssessment, before letting a retake proceed)
 // can await it; ordinary fire-and-forget callers just ignore the return.
 function cloudSync(programId: string, p: ProgramProgress): Promise<unknown> {
+  addPending(programId)
   if (!_userId) {
     _pendingSyncs.push(() => { void cloudSync(programId, p) })
     return Promise.resolve()
@@ -110,9 +147,11 @@ function cloudSync(programId: string, p: ProgramProgress): Promise<unknown> {
     ...(eligible && p.certificateEarnedAt ? { certificateEarnedAt: p.certificateEarnedAt } : {}),
     ...(eligible && p.certificateSerial ? { certificateSerial: p.certificateSerial } : {}),
   }
-  return client.mutation(saveProgress, { programId, progress }).catch(err => {
-    console.error('[mwalimu] progress sync failed:', err)
-  })
+  return client.mutation(saveProgress, { programId, progress })
+    .then(() => removePending(programId))
+    .catch(err => {
+      console.error('[mwalimu] progress sync failed (will retry):', err)
+    })
 }
 
 // Called on sign-in: pulls cloud data into localStorage cache
@@ -138,8 +177,13 @@ export async function loadProgressFromCloud(userId: string): Promise<void> {
         cohortJoined: row.cohortJoined ?? false,
       }
     }
-    // Cloud wins — merge over local cache
-    write({ ...read(), ...cloud })
+    // The server wins, except for lessons finished here that it has not heard about yet.
+    const local = read()
+    const pending = new Set(readPending())
+    const merged: AllProgress = { ...local }
+    for (const [id, c] of Object.entries(cloud)) merged[id] = pending.has(id) ? mergeUnsent(local[id], c) : c
+    write(merged)
+    flushPendingProgress()
   } catch (err) { console.error('[mwalimu] loadProgressFromCloud error:', err) }
 }
 
@@ -309,8 +353,6 @@ export function getProgramCompletionPct(program: Program, progress: ProgramProgr
 // Certificate eligibility bar: every lesson read, a meaningful number of
 // reflections written, and the post-assessment passed at the program's
 // required standard — not merely attempted.
-const MIN_REFLECTIONS_FOR_CERTIFICATE = 6
-const CERTIFICATE_PASS_RATIO = 0.85
 
 export function isProgramComplete(program: Program, progress: ProgramProgress): boolean {
   const total = program.modules.reduce((s, m) => s + m.lessons.length, 0)

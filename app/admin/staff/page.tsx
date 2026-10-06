@@ -36,7 +36,9 @@ export default function StaffPage() {
   const setRole = useMutation(api.admin.staff.setRole)
   const setStatus = useMutation(api.admin.staff.setStatus)
   const resetMfa = useMutation(api.admin.staff.resetMfa)
+  const resendInvite = useMutation(api.admin.staff.resendInvite)
   const { run } = useRun()
+  const [now] = useState(() => Date.now())
   const [form, setForm] = useState({ email: '', name: '', role: 'support_agent' as Role })
   const [act, setAct] = useState<
     | null
@@ -44,6 +46,7 @@ export default function StaffPage() {
     | { kind: 'role'; id: Id<'staff'>; role: Role; email: string }
     | { kind: 'status'; id: Id<'staff'>; status: 'active' | 'disabled'; email: string }
     | { kind: 'mfa'; id: Id<'staff'>; email: string }
+    | { kind: 'resend'; id: Id<'staff'>; email: string }
   >(null)
 
   return (
@@ -92,7 +95,7 @@ export default function StaffPage() {
                   {s.name || s.email} {s.email === me && <Pill tone="blue">you</Pill>}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {s.email} · {s.mfaEnrolledAt ? `2FA since ${fmtTime(s.mfaEnrolledAt)}` : '2FA not set up yet'}
+                  {s.email} · {s.mfaEnrolledAt ? `2FA since ${fmtTime(s.mfaEnrolledAt)}` : s.inviteExpiresAt && s.inviteExpiresAt < now ? 'Invitation expired: resend it' : s.inviteExpiresAt ? `Invited, not signed in yet. Expires ${fmtTime(s.inviteExpiresAt)}` : '2FA not set up yet'}
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -112,6 +115,11 @@ export default function StaffPage() {
                 </select>
                 {s.email !== me && (
                   <>
+                    {s.mfaEnrolledAt === undefined && s.invitedAt !== undefined && (
+                      <Button size="sm" variant="outline" onClick={() => setAct({ kind: 'resend', id: s._id, email: s.email })}>
+                        Resend invite
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
@@ -153,7 +161,9 @@ export default function StaffPage() {
                 ? `Change ${act.email} to ${ROLE_LABELS[act.role]}`
                 : act.kind === 'status'
                   ? `${act.status === 'disabled' ? 'Disable' : 'Enable'} ${act.email}`
-                  : `Reset two-factor for ${act.email}`
+                  : act.kind === 'resend'
+                    ? `Resend the invitation to ${act.email}`
+                    : `Reset two-factor for ${act.email}`
         }
         description={
           act?.kind === 'mfa'
@@ -171,7 +181,9 @@ export default function StaffPage() {
                 ? () => setRole({ staffId: act.id, role: act.role, reason })
                 : act.kind === 'status'
                   ? () => setStatus({ staffId: act.id, status: act.status, reason })
-                  : () => resetMfa({ staffId: act.id, reason })
+                  : act.kind === 'resend'
+                    ? () => resendInvite({ staffId: act.id, reason })
+                    : () => resetMfa({ staffId: act.id, reason })
           const r = await run(fn, 'Done')
           if (r !== undefined && act.kind === 'invite') setForm({ email: '', name: '', role: 'support_agent' })
           return r !== undefined

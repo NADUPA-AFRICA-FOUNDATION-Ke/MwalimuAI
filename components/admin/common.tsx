@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { cloneElement, createContext, isValidElement, useCallback, useContext, useId, useState, type ReactElement, type ReactNode } from 'react'
 import { ConvexError } from 'convex/values'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-type StaffInfo = { email: string; name?: string; role: string; permissions: string[] }
+type StaffInfo = { email: string; name?: string; role: string; permissions: string[]; backupCodesLeft?: number }
 const StaffContext = createContext<StaffInfo>({ email: '', role: '', permissions: [] })
 export const StaffProvider = ({ staff, children }: { staff: StaffInfo; children: ReactNode }) => (
   <StaffContext.Provider value={staff}>{children}</StaffContext.Provider>
@@ -206,12 +206,30 @@ export const fmtTime = (ts?: number) =>
     ? new Date(ts).toLocaleString('en-KE', { timeZone: 'Africa/Nairobi', dateStyle: 'medium', timeStyle: 'short' })
     : '—'
 
+/**
+ * A labelled form control. The label is tied to the control (so screen readers announce it and clicking the label
+ * focuses the field), and the hint is read out with it. A control wrapped in other markup gets a labelled group.
+ */
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
+  const uid = useId()
+  const labelId = `${uid}-label`
+  const hintId = `${uid}-hint`
+  const direct = isValidElement(children) && (typeof children.type !== 'string' || ['input', 'select', 'textarea'].includes(children.type))
+  const control = direct
+    ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+        id: (children as ReactElement<{ id?: string }>).props.id ?? uid,
+        ...(hint ? { 'aria-describedby': hintId } : {}),
+      })
+    : null
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
-      {children}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <Label id={labelId} htmlFor={control ? ((children as ReactElement<{ id?: string }>).props.id ?? uid) : undefined}>{label}</Label>
+      {control ?? (
+        <div role="group" aria-labelledby={labelId} aria-describedby={hint ? hintId : undefined}>
+          {children}
+        </div>
+      )}
+      {hint && <p id={hintId} className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   )
 }
