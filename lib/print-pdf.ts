@@ -9,6 +9,8 @@
  * clean page breaks, and a guaranteed automatic download.
  */
 
+import { brandDocument, eatDate, siteHost, toSafeText } from './pdf/brand'
+
 export type PDFType = 'lesson-plan' | 'feedback' | 'policy' | 'research' | 'default'
 
 export interface PrintOptions {
@@ -253,7 +255,7 @@ function plain(s: string): string {
 export async function printPDF({ title, subtitle, meta, content, type = 'default' }: PrintOptions): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const cfg  = TYPE_CFG[type]
-  const date = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
+  const date = eatDate()
 
   const BG    = rgb(cfg.bg)
   const DEEP  = rgb(cfg.bgDeep)
@@ -265,6 +267,8 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
   const TITLE_INK: RGB = [17, 30, 41]
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  // Brand fonts with full Unicode (Kiswahili accents, arrows, ≥, ✓); safe lookalikes if they cannot load.
+  await brandDocument(doc)
   let y = 0
 
   // ── low-level helpers ──────────────────────────────────────────
@@ -273,7 +277,9 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
   const setText   = (c: RGB) => doc.setTextColor(c[0], c[1], c[2])
 
   const setRunFont = (run: Partial<Run>, size: number, serif: boolean) => {
-    const family = run.code ? 'courier' : serif ? 'times' : 'helvetica'
+    // One typeface family throughout; inline code keeps its colour but not a font without Unicode coverage.
+    void serif
+    const family = 'times'
     const style  = run.bold && run.italic ? 'bolditalic' : run.bold ? 'bold' : run.italic ? 'italic' : 'normal'
     doc.setFont(family, style)
     doc.setFontSize(size)
@@ -573,14 +579,20 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
         const rows = block.rows
         if (rows.length === 0) break
         const n     = Math.max(...rows.map(r => r.length))
-        const colW  = CW / n
         const padX  = 2.5
         const lineH = 3.9
+        // Column widths follow their content (a short "Score" column stays narrow), each between 12% and 60%.
+        const weight = Array.from({ length: n }, (_, c) => Math.max(...rows.map(r => Math.min(plain(r[c] ?? '').length, 80)), 4))
+        const totalW = weight.reduce((a, b) => a + b, 0)
+        let widths = weight.map(w => Math.min(0.6, Math.max(0.12, w / totalW)))
+        const norm = widths.reduce((a, b) => a + b, 0)
+        widths = widths.map(w => (w / norm) * CW)
+        const colX = widths.map((_, c) => ML + widths.slice(0, c).reduce((a, b) => a + b, 0))
 
         const measureCells = (cells: string[], bold: boolean, size: number): string[][] => {
           doc.setFont('helvetica', bold ? 'bold' : 'normal')
           doc.setFontSize(size)
-          return Array.from({ length: n }, (_, c) => doc.splitTextToSize(plain(cells[c] ?? ''), colW - padX * 2) as string[])
+          return Array.from({ length: n }, (_, c) => doc.splitTextToSize(plain(cells[c] ?? ''), widths[c] - padX * 2) as string[])
         }
         const rowHeight = (cellTexts: string[][]) =>
           Math.max(1, ...cellTexts.map(l => l.length)) * lineH + 3.2
@@ -588,21 +600,24 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
         y += 1.5
         const headLines = measureCells(rows[0], true, 8)
         const headH     = rowHeight(headLines)
+        const drawHead = () => {
+          setFill(BG)
+          doc.rect(ML, y, CW, headH, 'F')
+          doc.setFont('helvetica', 'bold')
+          doc.setFontSize(8)
+          setText(WHITE)
+          headLines.forEach((cell, c) =>
+            cell.forEach((tl, li) => doc.text(tl, colX[c] + padX, y + 4.5 + li * lineH)))
+          y += headH
+        }
         ensureSpace(headH + 9)
-
-        setFill(BG)
-        doc.rect(ML, y, CW, headH, 'F')
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(8)
-        setText(WHITE)
-        headLines.forEach((cell, c) =>
-          cell.forEach((tl, li) => doc.text(tl, ML + c * colW + padX, y + 4.5 + li * lineH)))
-        y += headH
+        drawHead()
 
         rows.slice(1).forEach((row, r) => {
           const bodyLines = measureCells(row, false, 8.5)
           const bodyH     = rowHeight(bodyLines)
-          ensureSpace(bodyH)
+          // A row never splits across pages, and the header is repeated at the top of the next page.
+          if (y + bodyH > BOTTOM) { doc.addPage(); y = TOP_NEXT; drawHead() }
           if (r % 2 === 1) {
             setFill([246, 248, 250])
             doc.rect(ML, y, CW, bodyH, 'F')
@@ -611,7 +626,7 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
           doc.setFontSize(8.5)
           setText(BODY)
           bodyLines.forEach((cell, c) =>
-            cell.forEach((tl, li) => doc.text(tl, ML + c * colW + padX, y + 4.5 + li * lineH)))
+            cell.forEach((tl, li) => doc.text(tl, colX[c] + padX, y + 4.5 + li * lineH)))
           setStroke(MID)
           doc.setLineWidth(0.2)
           doc.line(ML, y + bodyH, ML + CW, y + bodyH)
@@ -625,7 +640,8 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
         const lineH = 3.8
         doc.setFont('courier', 'normal')
         doc.setFontSize(8)
-        const wrapped = block.lines.flatMap(l =>
+        // Courier has no Unicode coverage: code lines are reduced to safe characters.
+        const wrapped = block.lines.map(toSafeText).flatMap(l =>
           l.trim() === '' ? [''] : (doc.splitTextToSize(l, CW - 12) as string[]))
         let idx = 0
         while (idx < wrapped.length) {
@@ -678,6 +694,7 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
   }
 
   // ── Footer band + page numbers on every page ───────────────────
+  const host = siteHost()
   const totalPages = doc.getNumberOfPages()
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
@@ -690,7 +707,7 @@ export async function printPDF({ title, subtitle, meta, content, type = 'default
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(6.4)
     setText(mix(DEEP, WHITE, 0.8))
-    doc.text('KICD / TSC / KEMI Aligned Professional Development  ·  mwalimuai.co.ke', PAGE_W / 2, PAGE_H - FOOT_H / 2 + 1.2, { align: 'center' })
+    doc.text(`CBC professional development  ·  ${host}`, PAGE_W / 2, PAGE_H - FOOT_H / 2 + 1.2, { align: 'center' })
     setText(mix(DEEP, WHITE, 0.7))
     doc.text(`Page ${i} of ${totalPages}`, PAGE_W - MR, PAGE_H - FOOT_H / 2 + 1.2, { align: 'right' })
   }

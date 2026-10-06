@@ -10,6 +10,7 @@
  */
 
 import { makeQR } from './qr'
+import { brandDocument } from './pdf/brand'
 
 export interface CertificateOptions {
   teacherName:  string
@@ -56,6 +57,8 @@ async function loadMark(): Promise<string | null> {
 export async function downloadCertificatePDF(opts: CertificateOptions): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  // Brand fonts with full Unicode, so names such as Wanjirũ or Ng'ang'a print exactly as written.
+  await brandDocument(doc)
 
   const W = 297
   const H = 210
@@ -64,6 +67,13 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   const fill   = (c: RGB) => doc.setFillColor(c[0], c[1], c[2])
   const stroke = (c: RGB) => doc.setDrawColor(c[0], c[1], c[2])
   const text   = (c: RGB) => doc.setTextColor(c[0], c[1], c[2])
+  // Letter-spaced text: jsPDF's width and centring ignore the extra spacing, so measure and centre it ourselves.
+  const spacedWidth = (t: string, space: number) => doc.getTextWidth(t) + space * Math.max(0, t.length - 1)
+  const spacedCentered = (t: string, x: number, yy: number, space: number) => {
+    doc.setCharSpace(space)
+    doc.text(t, x - spacedWidth(t, space) / 2, yy)
+    doc.setCharSpace(0)
+  }
   // jsPDF's opacity (GState) and polygon (lines) APIs aren't in the typings.
   const setOpacity = (o: number) =>
     (doc as unknown as { setGState: (g: unknown) => void; GState: new (o: object) => unknown })
@@ -147,14 +157,12 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   y = 40
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
-  doc.setCharSpace(0.4)
   const badge = 'CERTIFICATE OF COMPLETION'
-  const badgeW = doc.getTextWidth(badge) + 14
+  const badgeW = spacedWidth(badge, 0.4) + 14
   fill(LIGHT)
   doc.roundedRect(CX - badgeW / 2, y - 4.6, badgeW, 7.6, 3.8, 3.8, 'F')
   text(TEAL)
-  doc.text(badge, CX, y, { align: 'center' })
-  doc.setCharSpace(0)
+  spacedCentered(badge, CX, y, 0.4)
 
   // ── Recipient ─────────────────────────────────────────────────
   y = 56
@@ -164,7 +172,7 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   doc.text('This is to certify that', CX, y, { align: 'center' })
 
   y += 13
-  doc.setFont('times', 'bold')
+  doc.setFont('helvetica', 'bold')
   let nameSize = 28
   doc.setFontSize(nameSize)
   while (doc.getTextWidth(opts.teacherName) > 200 && nameSize > 16) {
@@ -208,10 +216,8 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   y += 9
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7)
-  doc.setCharSpace(0.5)
   text(FAINT)
-  doc.text('COMPETENCIES DEMONSTRATED', CX, y, { align: 'center' })
-  doc.setCharSpace(0)
+  spacedCentered('COMPETENCIES DEMONSTRATED', CX, y, 0.5)
 
   y += 6
   doc.setFont('helvetica', 'bold')
@@ -269,7 +275,7 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   doc.setCharSpace(0.4)
   text(FAINT)
   doc.text('CERTIFICATE NO.', 32, footY - 4)
-  doc.text('DURATION', W - 32, footY - 4, { align: 'right' })
+  doc.text('DURATION', W - 32 - spacedWidth('DURATION', 0.4), footY - 4)
   doc.setCharSpace(0)
 
   doc.setFont('courier', 'bold')
@@ -299,16 +305,19 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   }
   fill(TEAL)
   star(CX, sealY - 6.4, 2.2, 0.9)
-  doc.setFont('times', 'bolditalic')
-  doc.setFontSize(10)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
   text(TEAL)
   doc.text('Mwalimu AI', CX, sealY + 0.2, { align: 'center' })
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.6)
-  doc.setCharSpace(0.5)
+  // The label must stay inside the ring: shrink it until it fits the chord at that height.
+  doc.setFont('helvetica', 'normal')
+  const sealLabel = 'VERIFIED SEAL'
+  const chord = 2 * Math.sqrt(sealR * sealR - 5.4 * 5.4) - 3
+  let sealSize = 5
+  doc.setFontSize(sealSize)
+  while (spacedWidth(sealLabel, 0.3) > chord && sealSize > 3.5) { sealSize -= 0.25; doc.setFontSize(sealSize) }
   text(FAINT)
-  doc.text('AUTHORISED SIGNATURE', CX, sealY + 5.4, { align: 'center' })
-  doc.setCharSpace(0)
+  spacedCentered(sealLabel, CX, sealY + 5.4, 0.3)
 
   // ── Verification line ─────────────────────────────────────────
   doc.setFontSize(7)
@@ -372,14 +381,12 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   by = 44
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8.5)
-  doc.setCharSpace(0.4)
   const vbadge = 'AUTHENTICITY & VERIFICATION'
-  const vbW = doc.getTextWidth(vbadge) + 14
+  const vbW = spacedWidth(vbadge, 0.4) + 14
   fill(LIGHT)
   doc.roundedRect(CX - vbW / 2, by - 4.6, vbW, 7.6, 3.8, 3.8, 'F')
   text(TEAL)
-  doc.text(vbadge, CX, by, { align: 'center' })
-  doc.setCharSpace(0)
+  spacedCentered(vbadge, CX, by, 0.4)
 
   // intro
   by = 55
@@ -417,10 +424,8 @@ export async function downloadCertificatePDF(opts: CertificateOptions): Promise<
   let cy = qy + QS + pad + 8
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7)
-  doc.setCharSpace(0.6)
   text(FAINT)
-  doc.text('SCAN TO VERIFY THIS CERTIFICATE', CX, cy, { align: 'center' })
-  doc.setCharSpace(0)
+  spacedCentered('SCAN TO VERIFY THIS CERTIFICATE', CX, cy, 0.6)
   cy += 7
   doc.setFont('courier', 'bold')
   doc.setFontSize(13)
