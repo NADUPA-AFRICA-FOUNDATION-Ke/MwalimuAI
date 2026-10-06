@@ -1,8 +1,8 @@
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { getProgramDef, type ProgramDef } from "./contentRead";
 
-export const MIN_REFLECTIONS_FOR_CERTIFICATE = 6;
-export const CERTIFICATE_PASS_RATIO = 0.85;
+import { CERTIFICATE_PASS_RATIO, MIN_REFLECTIONS_FOR_CERTIFICATE } from "./certificateRules";
+export { CERTIFICATE_PASS_RATIO, MIN_REFLECTIONS_FOR_CERTIFICATE };
 export const SERIAL_PATTERN = /^MW-[A-HJKMNP-Z2-9]{5}-[A-HJKMNP-Z2-9]{5}$/;
 
 type Assessment = { score: number; total: number; date: string; answers: number[] };

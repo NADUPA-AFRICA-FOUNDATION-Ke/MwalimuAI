@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useMutation, useQuery } from 'convex/react'
 import { useRouter } from 'next/navigation'
@@ -18,11 +18,15 @@ export default function SupportPage() {
   const router = useRouter()
   const tickets = useQuery(api.tickets.listMine, {})
   const create = useMutation(api.tickets.create)
+  const attachVerified = useMutation(api.tickets.attachVerified)
   const [category, setCategory] = useState<Category>('streak')
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Conversations started as a visitor with this account's verified email address move into this inbox.
+  useEffect(() => { void attachVerified({}).catch(() => {}) }, [attachVerified])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()

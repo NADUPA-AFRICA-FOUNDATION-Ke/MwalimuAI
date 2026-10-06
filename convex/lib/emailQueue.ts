@@ -39,6 +39,8 @@ export async function verifyUnsubscribeToken(token: string): Promise<string | nu
  * paced, by `emails.drain`.
  */
 export async function queueEmail(ctx: MutationCtx, args: { profileId: Id<"profiles">; kind: EmailKind; dedupeKey: string; data: Record<string, unknown> }) {
+  // Master switch: with EMAILS_DISABLED=true nothing is ever queued, and everything stays inside the app.
+  if (process.env.EMAILS_DISABLED === "true") return false;
   const p = await ctx.db.get(args.profileId);
   if (!p?.email || p.status === "suspended" || p.status === "deactivated") return false;
   if (p.notificationPreferences?.email === false) return false;

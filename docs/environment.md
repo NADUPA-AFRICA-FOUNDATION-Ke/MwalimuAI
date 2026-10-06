@@ -30,6 +30,9 @@ Where each one lives: **Vercel** (the website and API routes), **Convex** (`npx 
 | `ADMIN_AI_MODEL`, `ADMIN_AI_PROVIDER`, `GOOGLE_GENERATIVE_AI_API_KEY` | Admin AI assistant (default Groq `openai/gpt-oss-120b`; `ADMIN_AI_PROVIDER=google` for Gemini) |
 | `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | Payments |
 | `NEXT_PUBLIC_APP_URL` | Public site address for Stripe return links |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | Shown on the Contact, Support, Privacy and Terms pages. Leave unset to show only the contact form (nothing is shown that has not been configured) |
+| `NEXT_PUBLIC_OPERATOR_NAME`, `NEXT_PUBLIC_OPERATOR_ADDRESS`, `NEXT_PUBLIC_ODPC_REGISTRATION` | Optional: who runs the service, shown on the legal pages when set |
+| `EMAILS_DISABLED` (Convex) | `true` keeps everything in the app: no email is ever queued for learners, and password reset by email is switched off (staff issue temporary passwords instead). Production runs with this set |
 
 Old `NEXT_PUBLIC_SUPABASE_*` and `SUPABASE_SERVICE_ROLE_KEY` values are no longer used by the code and can be deleted.
 

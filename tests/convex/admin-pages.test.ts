@@ -29,8 +29,17 @@ describe("resource library, FAQ and blog under management", () => {
 
   it("gates paid downloads on the server: free links open, Pro files stay locked until subscribed", async () => {
     const t = newTest();
-    const manager = await makeStaff(t, "content_manager");
-    await manager.as.mutation(api.admin.content.importBuiltIn, { what: "resources" });
+    const author = await makeStaff(t, "content_manager");
+    const reviewer = await makeStaff(t, "super_admin");
+    const item = (id: string, title: string, url: string, free: boolean) => ({ id, title, description: "", type: "Link", url, size: "", tags: [], free });
+    const rid = await author.as.mutation(api.admin.content.createItem, {
+      kind: "resources",
+      key: "resources",
+      data: { title: "Resource library", orderIndex: 0, items: [item("r1", "Open guide", "https://example.org/guide", true), item("r2", "Subscriber toolkit", "https://example.org/toolkit", false)] },
+    });
+    await author.as.mutation(api.admin.content.submitForReview, { itemId: rid });
+    await reviewer.as.mutation(api.admin.content.review, { itemId: rid, decision: "approve", reason: "Links checked and working" });
+    await reviewer.as.mutation(api.admin.content.publish, { itemId: rid, reason: "Ready for learners" });
     const free = await makeLearner(t);
     const paying = await makeLearner(t);
     await t.run(async (ctx) => {
@@ -38,7 +47,7 @@ describe("resource library, FAQ and blog under management", () => {
     });
 
     const forFree = (await free.as.query(api.content.resources, {}))!;
-    const guide = forFree.find((r) => r.title === "CBC Implementation Guide 2024")!;
+    const guide = forFree.find((r) => r.title === "Open guide")!;
     expect(guide).toMatchObject({ locked: false, url: expect.stringContaining("https://") });
     const pro = forFree.find((r) => !r.free)!;
     expect(pro).toMatchObject({ locked: true, url: null });

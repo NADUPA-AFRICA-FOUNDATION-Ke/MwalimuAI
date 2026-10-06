@@ -123,7 +123,9 @@ function SignIn() {
       setMode('sent') // always say "sent": never reveal whether the address has an account
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      setError(/not enabled|configured/i.test(msg)
+      setError(/switched off/i.test(msg)
+        ? 'Password email is switched off on this platform. Use Continue with Google, or ask a Super Admin to issue you a temporary password.'
+        : /not enabled|configured/i.test(msg)
         ? 'Password reset email is not set up on this deployment yet. Use Google sign-in, or ask a Super Admin for help.'
         : 'We could not send the email. Check the address and try again, or use Google sign-in.')
     } finally { setBusy(false) }

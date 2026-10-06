@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { queueEmail } from "../../convex/lib/emailQueue";
 import { api, internal } from "../../convex/_generated/api";
 import { addActivity, days, makeLearner, makeStaff, newTest } from "./helpers";
 import { unsubscribeToken } from "../../convex/lib/emailQueue";
@@ -15,6 +16,15 @@ afterEach(() => vi.unstubAllGlobals());
 
 const rows = (t: ReturnType<typeof newTest>) => t.run(async (ctx) => ctx.db.query("emailLog").collect());
 
+/** Ticket replies no longer email anyone (support stays in the app). The sender is still exercised through the other email kinds, so these tests queue the same kind of message directly. */
+async function replyAndQueue(t: any, support: any, learner: { profileId: any }, ticketId: any, body: string) {
+  await support.as.mutation(api.admin.tickets.reply, { ticketId, body });
+  await t.run(async (ctx: any) => {
+    const tk = await ctx.db.get(ticketId);
+    await queueEmail(ctx, { profileId: learner.profileId, kind: "ticket_reply", dedupeKey: `ticket:${ticketId}:${Date.now()}`, data: { number: tk.number, subject: tk.subject, excerpt: body, ticketId, resolved: false } });
+  });
+}
+
 describe("email", () => {
   it("emails a learner when staff reply to their ticket, and respects their choice", async () => {
     stubResend();
@@ -26,7 +36,7 @@ describe("email", () => {
 
     for (const l of [learner, quiet]) {
       const { ticketId } = await l.as.mutation(api.tickets.create, { subject: "Lost streak", category: "streak", body: "Please help me" });
-      await support.as.mutation(api.admin.tickets.reply, { ticketId, body: "We restored your days." });
+      await replyAndQueue(t, support, l, ticketId, "We restored your days.");
     }
     expect((await rows(t)).map((r) => r.to)).toEqual([learner.email]); // the opted-out learner got nothing queued
 
@@ -46,7 +56,7 @@ describe("email", () => {
     const learner = await makeLearner(t, { lang: "sw", name: "Otieno" });
     const support = await makeStaff(t, "support_agent");
     const { ticketId } = await learner.as.mutation(api.tickets.create, { subject: "Msaada", category: "other", body: "Tafadhali" });
-    await support.as.mutation(api.admin.tickets.reply, { ticketId, body: "Tumeshughulikia." });
+    await replyAndQueue(t, support, learner, ticketId, "Tumeshughulikia.");
     await t.action(internal.emails.drain, {});
     expect(sent[0].subject).toMatch(/Msaada umejibu/);
     expect(sent[0].text).toContain("Habari Otieno,");
@@ -58,7 +68,7 @@ describe("email", () => {
     const learner = await makeLearner(t);
     const support = await makeStaff(t, "support_agent");
     const { ticketId } = await learner.as.mutation(api.tickets.create, { subject: "x", category: "other", body: "hello there" });
-    await support.as.mutation(api.admin.tickets.reply, { ticketId, body: "Hi there" });
+    await replyAndQueue(t, support, learner, ticketId, "Hi there");
 
     await t.action(internal.emails.drain, {});
     const afterTemporary = (await rows(t))[0];
@@ -122,5 +132,24 @@ describe("email", () => {
     const r = await rows(t);
     expect(r).toHaveLength(1);
     expect(r[0].data).toMatchObject({ activeDays: 3, lessons: 1 });
+  });
+
+  it("sends nothing to anyone when EMAILS_DISABLED is true, and staff replies never email learners", async () => {
+    const t = newTest();
+    const learner = await makeLearner(t);
+    const support = await makeStaff(t, "support_agent");
+    const { ticketId } = await learner.as.mutation(api.tickets.create, { subject: "Help", category: "other", body: "hello there" });
+    await support.as.mutation(api.admin.tickets.reply, { ticketId, body: "Fixed." });
+    expect(await t.run((ctx) => ctx.db.query("emailLog").collect())).toHaveLength(0); // replies live in the app
+    process.env.EMAILS_DISABLED = "true";
+    try {
+      const queued = await t.run((ctx) => queueEmail(ctx, { profileId: learner.profileId, kind: "certificate", dedupeKey: "cert:1", data: { program: "x" } }));
+      expect(queued).toBe(false);
+      expect(await t.run((ctx) => ctx.db.query("emailLog").collect())).toHaveLength(0);
+      expect((await t.query(api.siteFacts.facts, {})).emailEnabled).toBe(false);
+    } finally {
+      delete process.env.EMAILS_DISABLED;
+    }
+    expect((await t.query(api.siteFacts.facts, {})).emailEnabled).toBe(true);
   });
 });

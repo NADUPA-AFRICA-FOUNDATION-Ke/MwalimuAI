@@ -176,11 +176,6 @@ function makeKey(raw: string, taken: Set<string>, prefix: string, where: string,
   return key
 }
 
-const excelDate = (s: string) => {
-  if (!/^\d{5}(\.\d+)?$/.test(s)) return s
-  const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(Number(s)) * 86_400_000)
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-}
 
 // ---------- shared start-here sheet ----------
 
@@ -654,25 +649,25 @@ function parseNeeds(sheets: ReadSheet[], problems: Problem[]): ImportItem[] {
 
 // ---------- blog posts ----------
 
-const POST_HEAD = ['Slug', 'Title', 'Summary', 'Article', 'Author', 'Author role', 'Category', 'Read time', 'Date', 'Image']
+const POST_HEAD = ['Slug', 'Title', 'Summary', 'Article', 'Author', 'Author role', 'Category', 'Read time', 'Image']
 
 function postSheets(items: ImportItem[] | null): Sheet[] {
   const rows: (string | number)[][] = [POST_HEAD]
   for (const p of items ?? []) {
     const d = p.data
-    rows.push([p.key, d.title ?? '', d.excerpt ?? '', d.content ?? '', d.author ?? '', d.authorRole ?? '', d.category ?? '', d.readTime ?? '', d.date ?? '', d.image ?? ''])
+    rows.push([p.key, d.title ?? '', d.excerpt ?? '', d.content ?? '', d.author ?? '', d.authorRole ?? '', d.category ?? '', d.readTime ?? '', d.image ?? ''])
   }
   if (!items?.length)
-    rows.push(['# five-ways-to-assess', 'Five ways to check understanding', 'One or two sentences shown on the blog list.', '## Why it matters\n\nWrite the article here. Use ## for headings and - for bullets.', 'Jane Wanjiru', 'Teacher, Nairobi', 'Assessment', '5 min read', 'October 6, 2026', ''])
+    rows.push(['# five-ways-to-assess', 'Five ways to check understanding', 'One or two sentences shown on the blog list.', '## Why it matters\n\nWrite the article here. Use ## for headings and - for bullets.', 'Author name', 'Role or school', 'Assessment', '5 min read', ''])
   return [
     startHere(items?.length ? 'Blog posts' : 'Blog post template', [
       '• One row per article. Slug is the web address ending (lowercase, dashes). Leave it blank and it is made from the title.',
       '• A slug that already exists is updated. A new slug adds a new post. Posts missing from the sheet are left untouched.',
       '• Summary and Article are required before publishing (the article needs at least 200 characters). Author and Category are required too.',
       '• Image is optional: a site picture path such as /images/blog/example.jpg, or an images.unsplash.com address.',
-      '• Date can be typed as text (October 6, 2026) or as an Excel date.',
+      '• The date shown on a post is the day it is published; it is set automatically.',
     ]),
-    { name: 'Posts', wrap: true, widths: [26, 36, 44, 80, 20, 22, 16, 12, 18, 36], rows },
+    { name: 'Posts', wrap: true, widths: [26, 36, 44, 80, 20, 22, 16, 12, 36], rows },
   ]
 }
 
@@ -708,7 +703,6 @@ function parsePosts(sheets: ReadSheet[], problems: Problem[]): ImportItem[] {
         authorRole: t.col(r.cells, 'author role'),
         category: t.col(r.cells, 'category'),
         readTime: /^\d+$/.test(rt) ? `${rt} min read` : rt,
-        date: excelDate(t.col(r.cells, 'date')),
         image: t.col(r.cells, 'image'),
       },
       label: `Post “${title || key}”`,
@@ -839,7 +833,7 @@ function exampleItems(kind: TemplateKind): ImportItem[] {
       sample('quiz', 'post', { kind: 'post', orderIndex: 1, questions: [{ id: 'q1', question: 'What should you do after a check shows confusion?', options: ['Move on', 'Re-teach differently', 'Give a test', 'Ignore it'], correct: 1, explanation: 'Adjust while learners are still with you.' }] }, prog),
     ]
   }
-  if (kind === 'posts') return [sample('post', 'three-quick-checks', { title: 'Three quick checks for any lesson', excerpt: 'Simple ways to see who is following, in under two minutes.', content: '## Why check at all\n\nA quick check tells you who is following before you move on.\n\n## Three ways\n\n- Thumbs up, sideways or down\n- Colour cards\n- Mini-boards\n\nTry one tomorrow and notice what you learn about your class. The point is not marks; it is knowing what to do next, while learners are still in front of you and the lesson can still change.', author: 'Jane Wanjiru', authorRole: 'Teacher, Nairobi', category: 'Assessment', readTime: '3 min read', date: 'October 6, 2026', image: '' })]
+  if (kind === 'posts') return [sample('post', 'three-quick-checks', { title: 'Three quick checks for any lesson', excerpt: 'Simple ways to see who is following, in under two minutes.', content: '## Why check at all\n\nA quick check tells you who is following before you move on.\n\n## Three ways\n\n- Thumbs up, sideways or down\n- Colour cards\n- Mini-boards\n\nTry one tomorrow and notice what you learn about your class. The point is not marks; it is knowing what to do next, while learners are still in front of you and the lesson can still change.', author: 'Example Author', authorRole: 'Example role', category: 'Assessment', readTime: '3 min read', image: '' })]
   if (kind === 'faq') return [sample('faq', 'faq', { title: 'FAQ', sections: [{ title: 'Getting started', items: [{ q: 'How do I create an account?', a: 'Choose Sign up and use your email address.' }, { q: 'Is it free?', a: 'Yes, the free plan includes the core learning paths.' }] }, { title: 'Certificates', items: [{ q: 'How do I get a certificate?', a: 'Finish every lesson, pass the final assessment and submit the assignment.' }] }] })]
   if (kind === 'resources') return [sample('resources', 'resources', { title: 'Resource library', items: [{ id: 'r1', title: 'Lesson planning template', description: 'A one-page planner for CBC lessons.', type: 'Template', url: 'https://example.org/planner.pdf', size: '120 KB', tags: ['planning'], free: true }, { id: 'r2', title: 'Formative assessment video', description: 'Ten minutes of classroom examples.', type: 'Video', url: 'https://example.org/video', size: '', tags: ['assessment', 'video'], free: true }] })]
   return [sample('assessment', 'needs-assessment', { title: 'Where should you start?', intro: 'A few questions so we can recommend a first learning path.', sections: [{ title: 'Your teaching', description: 'About your classroom today' }], questions: [{ id: 'level', section: 0, type: 'radio', question: 'Which level do you teach?', subtext: '', options: ['Lower primary', 'Upper primary', 'Junior secondary'], correctIndex: 0, explanation: '', minLabel: '', maxLabel: '', maxSelect: 0 }, { id: 'confidence', section: 0, type: 'scale', question: 'How confident are you assessing learners?', subtext: 'Choose a number', options: [], correctIndex: 0, explanation: '', minLabel: 'Not confident', maxLabel: 'Very confident', maxSelect: 0 }], rules: [{ programId: 'checking-understanding', when: [{ questionId: 'level', answers: ['Upper primary'] }] }], fallbackProgramIds: ['checking-understanding'] })]

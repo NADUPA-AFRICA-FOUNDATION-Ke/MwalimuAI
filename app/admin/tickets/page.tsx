@@ -50,7 +50,7 @@ export default function TicketsPage() {
                 <div className="min-w-0">
                   <div className="truncate font-medium">{t.subject}</div>
                   <div className="text-xs text-muted-foreground">
-                    {t.number} · {t.learner.name || t.learner.email} · {t.category} · {fmtTime(t.lastMessageAt)}
+                    {t.number} · {t.learner.name || t.learner.email}{t.learner.visitor ? ' (visitor)' : ''} · {t.category} · {fmtTime(t.lastMessageAt)}
                   </div>
                 </div>
                 <Pill tone={TICKET_STATUS[t.status].tone}>{TICKET_STATUS[t.status].label}</Pill>

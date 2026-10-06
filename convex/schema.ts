@@ -611,7 +611,11 @@ export default defineSchema({
   // Support tickets raised by learners and worked by staff.
   tickets: defineTable({
     number: v.string(), // human reference, e.g. MW-4F7K2Q; staff quote it as ticketRef on streak restores
-    profileId: v.id("profiles"),
+    // Set for a signed-in learner. A visitor who wrote through the public Contact/Support page has none until they
+    // add the conversation to their account; until then `visitor` and `tokenHash` identify them.
+    profileId: v.optional(v.id("profiles")),
+    visitor: v.optional(v.object({ name: v.string(), email: v.string() })),
+    tokenHash: v.optional(v.string()), // SHA-256 of the private link's token (the link itself is never stored)
     subject: v.string(),
     category: v.union(
       v.literal("streak"),
@@ -619,6 +623,8 @@ export default defineSchema({
       v.literal("content"),
       v.literal("payment"),
       v.literal("certificate"),
+      v.literal("technical"),
+      v.literal("feedback"),
       v.literal("other"),
     ),
     status: v.union(v.literal("open"), v.literal("pending_user"), v.literal("resolved")),
@@ -630,7 +636,9 @@ export default defineSchema({
   })
     .index("by_number", ["number"])
     .index("by_profile", ["profileId", "lastMessageAt"])
-    .index("by_status", ["status", "lastMessageAt"]),
+    .index("by_status", ["status", "lastMessageAt"])
+    .index("by_token_hash", ["tokenHash"])
+    .index("by_visitor_email", ["visitor.email", "createdAt"]),
 
   ticketMessages: defineTable({
     ticketId: v.id("tickets"),

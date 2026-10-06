@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { staffMutation, staffQuery } from "../lib/staff";
 import { notify } from "../lib/notices";
-import { queueEmail } from "../lib/emailQueue";
 import { fail, notFound } from "../lib/errors";
 import type { Doc } from "../_generated/dataModel";
 
@@ -19,7 +18,7 @@ export const list = staffQuery({
       : await ctx.db.query("tickets").order("desc").take(100);
     const out = [];
     for (const t of rows) {
-      const p = await ctx.db.get(t.profileId);
+      const p = t.profileId ? await ctx.db.get(t.profileId) : null;
       out.push({
         _id: t._id,
         number: t.number,
@@ -30,7 +29,7 @@ export const list = staffQuery({
         lastMessageBy: t.lastMessageBy,
         createdAt: t.createdAt,
         assignedTo: t.assignedTo ?? null,
-        learner: { _id: t.profileId, name: p?.name ?? "", email: p?.email ?? "" },
+        learner: { _id: t.profileId ?? null, name: p?.name ?? t.visitor?.name ?? "", email: p?.email ?? t.visitor?.email ?? "", visitor: !t.profileId },
       });
     }
     return out.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
@@ -62,7 +61,7 @@ export const get = staffQuery({
   handler: async (ctx, { ticketId }) => {
     const t = await ctx.db.get(ticketId);
     if (!t) throw notFound("Ticket");
-    const learner = await ctx.db.get(t.profileId);
+    const learner = t.profileId ? await ctx.db.get(t.profileId) : null;
     const messages = await ctx.db.query("ticketMessages").withIndex("by_ticket", (q) => q.eq("ticketId", t._id)).take(200);
     const assignee = t.assignedTo ? await ctx.db.get(t.assignedTo) : null;
     return {
@@ -80,6 +79,8 @@ export const get = staffQuery({
       learner: learner
         ? { _id: learner._id, name: learner.name, email: learner.email ?? "", status: learner.status ?? "active" }
         : null,
+      // Someone who wrote from the public Contact/Support page and has no account inbox yet. Their address is as they typed it: it is not verified.
+      visitor: t.visitor ? { name: t.visitor.name, email: t.visitor.email } : null,
       messages: messages.map((m) => ({
         _id: m._id,
         author: m.author,
@@ -92,7 +93,7 @@ export const get = staffQuery({
   },
 });
 
-/** Reply to the learner. They see it in the ticket thread and in their bell. */
+/** Reply to the learner or visitor. A learner sees it in their ticket and bell; a visitor on their private link. */
 export const reply = staffMutation({
   permission: "tickets.reply",
   args: { ticketId: v.id("tickets"), body: v.string(), resolve: v.optional(v.boolean()) },
@@ -119,13 +120,14 @@ export const reply = staffMutation({
       assignedTo: t.assignedTo ?? staff._id,
       ...(resolved ? { resolvedAt: now } : {}),
     });
-    await notify(ctx, t.profileId, {
-      title: resolved ? `Ticket ${t.number} resolved` : `Support replied to ${t.number}`,
-      body: body.length > 140 ? `${body.slice(0, 140)}…` : body,
-      link: `/dashboard/support/${t._id}`,
-    });
-    // The in-app notice only helps people who open the app; email reaches the ones who do not.
-    await queueEmail(ctx, { profileId: t.profileId, kind: "ticket_reply", dedupeKey: `ticket:${t._id}:${now}`, data: { number: t.number, subject: t.subject, excerpt: body.length > 280 ? `${body.slice(0, 280)}…` : body, ticketId: t._id, resolved } });
+    // Replies live in the ticket. Signed-in learners also get an in-app notification; visitors see the reply on their private link.
+    if (t.profileId) {
+      await notify(ctx, t.profileId, {
+        title: resolved ? `Ticket ${t.number} resolved` : `Support replied to ${t.number}`,
+        body: body.length > 140 ? `${body.slice(0, 140)}…` : body,
+        link: `/dashboard/support/${t._id}`,
+      });
+    }
     await log({
       action: resolved ? "ticket.reply_resolve" : "ticket.reply",
       targetType: "ticket",
@@ -174,7 +176,7 @@ export const setStatus = staffMutation({
       assignedTo: t.assignedTo ?? staff._id,
       resolvedAt: args.status === "resolved" ? Date.now() : undefined,
     });
-    if (args.status === "resolved") {
+    if (args.status === "resolved" && t.profileId) {
       await notify(ctx, t.profileId, {
         title: `Ticket ${t.number} resolved`,
         body: "Support marked this ticket as resolved. Reply on the ticket if you still need help.",

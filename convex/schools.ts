@@ -7,7 +7,7 @@ import { fail } from "./lib/errors";
 import { requireNonEmpty } from "./lib/validation";
 import { addDays, computeStreak, eatDateKey } from "./lib/streakMath";
 
-const MAX_MEMBERS = 200;
+export const MAX_MEMBERS = 200;
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L: easy to read out in a staff room
 
 export async function newSchoolCode(ctx: Pick<MutationCtx, "db">) {

@@ -50,6 +50,9 @@ export default function CertificatePage() {
   const serial      = progress.certificateSerial ?? ''
   const postScore   = progress.postAssessment ? `${progress.postAssessment.score}/${progress.postAssessment.total}` : null
 
+  // Where this certificate can be checked: the address of the site it was issued from, never a made-up domain.
+  const verifyHost = typeof window !== 'undefined' ? window.location.host : ''
+
   // Scan-to-verify QR (deep-links to /verify with the serial pre-filled).
   const qrDataUrl = useMemo(() => {
     if (!serial || typeof window === 'undefined') return ''
@@ -246,7 +249,7 @@ export default function CertificatePage() {
 
             <p className="text-xs font-semibold tracking-[0.15em] text-gray-400 uppercase mt-5">Scan to verify this certificate</p>
             <p className="font-mono font-bold text-gray-800 tracking-wide mt-1">{serial || '—'}</p>
-            <p className="text-xs text-primary font-medium mt-1">mwalimu.ai/verify</p>
+            <p className="text-xs text-primary font-medium mt-1">{verifyHost}/verify</p>
 
             {/* issued-to summary */}
             <div className="mt-auto pt-4 border-t border-gray-100 flex items-end justify-between text-left">
@@ -269,7 +272,7 @@ export default function CertificatePage() {
       <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground text-center mt-4 print:hidden">
         <ShieldCheck className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         Anyone can verify this certificate at{' '}
-        <Link href="/verify" className="text-primary font-medium hover:underline">mwalimu.ai/verify</Link>
+        <Link href="/verify" className="text-primary font-medium hover:underline">{verifyHost}/verify</Link>
         {' '}using certificate number <span className="font-mono font-medium">{serial || '—'}</span>
       </p>
     </div>

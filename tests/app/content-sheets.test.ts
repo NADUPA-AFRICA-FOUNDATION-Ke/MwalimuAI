@@ -137,14 +137,13 @@ describe("other content", () => {
     expect(back.fallbackProgramIds).toEqual(NEEDS_FALLBACK);
   });
 
-  it("reads posts, makes slugs, and turns Excel dates and bare numbers into text", async () => {
+  it("reads posts, makes slugs, and turns bare numbers into text", async () => {
     const { sheets } = buildTemplate("posts");
-    sheets[1].rows.push(["", "Five ways to check understanding", "Short summary.", "x".repeat(300), "Jane", "Teacher", "Assessment", 5, 46300, ""]);
+    sheets[1].rows.push(["", "Five ways to check understanding", "Short summary.", "x".repeat(300), "Jane", "Teacher", "Assessment", 5, ""]);
     const parsed = parseWorkbook("posts", await readXlsx(buildXlsx(sheets)));
     expect(errors(parsed)).toEqual([]);
     expect(parsed.items[0]).toMatchObject({ key: "five-ways-to-check-understanding" });
     expect(parsed.items[0].data.readTime).toBe("5 min read");
-    expect(parsed.items[0].data.date).toMatch(/\d{4}$/);
   });
 
   it("validates resources: link and type", async () => {
@@ -157,7 +156,7 @@ describe("other content", () => {
 
   it("warns, but does not block, when a draft cannot be published yet", async () => {
     const { sheets } = buildTemplate("posts");
-    sheets[1].rows.push(["", "Short post", "", "Too short", "", "", "", "", "", ""]);
+    sheets[1].rows.push(["", "Short post", "", "Too short", "", "", "", "", ""]);
     const parsed = parseWorkbook("posts", await readXlsx(buildXlsx(sheets)));
     expect(errors(parsed)).toEqual([]);
     expect(parsed.problems.some((p) => p.level === "warning")).toBe(true);

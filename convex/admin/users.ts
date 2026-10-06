@@ -1,8 +1,9 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { api, internal } from "../_generated/api";
+import { internal } from "../_generated/api";
 import { action, internalMutation } from "../_generated/server";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
+import { invalidateSessions, modifyAccountCredentials } from "@convex-dev/auth/server";
 import { assertReason, requireStaff, staffMutation, staffQuery } from "../lib/staff";
 import { writeAudit } from "../lib/audit";
 import { buildSearchText, normalizePhone } from "../lib/profileSearch";
@@ -268,31 +269,50 @@ export const setStatus = staffMutation({
   },
 });
 
-// ── Password reset link: the only way staff touch credentials ────────────
-export const logResetLink = internalMutation({
+// ── Temporary password: how a locked-out account gets back in (no email involved) ──────────────────────────────
+// Staff set a one-time password and hand it to the person through their ticket or conversation. The person signs in
+// and changes it in Settings. The old password stops working and every existing session is ended.
+const TEMP_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const makeTempPassword = () => {
+  const bytes = crypto.getRandomValues(new Uint8Array(14));
+  return Array.from(bytes, (b) => TEMP_ALPHABET[b % TEMP_ALPHABET.length]).join("");
+};
+
+export const logTempPassword = internalMutation({
   args: { profileId: v.id("profiles"), reason: v.string() },
-  handler: async (ctx, args): Promise<string> => {
+  handler: async (ctx, args): Promise<{ email: string; userId: string }> => {
     const { staff } = await requireStaff(ctx, "auth.send_reset_link");
     assertReason(args.reason);
     const p = await ctx.db.get(args.profileId);
-    if (!p?.email) throw fail("NOT_FOUND", "User has no email on file");
+    if (!p) throw fail("NOT_FOUND", "User not found");
+    // Password sign-ups do not store the address on the profile, so go through the sign-in account.
+    const native = await ctx.db.get(p.authSubject as Id<"users">).catch(() => null);
+    const email = (native?.email ?? p.email)?.trim().toLowerCase();
+    if (!email) throw fail("NOT_FOUND", "This account has no email address to sign in with");
+    const user = native ?? (await ctx.db.query("users").withIndex("email" as never, (q: any) => q.eq("email", email)).first());
+    if (!user) throw fail("NOT_FOUND", "This account has no sign-in on file");
     await writeAudit(ctx, staff, {
-      action: "auth.send_reset_link",
+      action: "auth.temp_password",
       targetType: "profile",
       targetId: p._id,
-      targetLabel: p.email,
+      targetLabel: email,
       reason: args.reason.trim(),
     });
-    return p.email;
+    return { email, userId: user._id };
   },
 });
 
-export const sendResetLink = action({
+export const issueTemporaryPassword = action({
   args: { profileId: v.id("profiles"), reason: v.string() },
-  handler: async (ctx, args): Promise<{ sent: true }> => {
-    const email = await ctx.runMutation(internal.admin.users.logResetLink, args);
-    // Convex Auth's own reset flow emails a single-use link; staff never see or set a password.
-    await ctx.runAction(api.auth.signIn, { provider: "password", params: { flow: "reset", email } });
-    return { sent: true };
+  handler: async (ctx, args): Promise<{ password: string; email: string }> => {
+    const { email, userId } = await ctx.runMutation(internal.admin.users.logTempPassword, args);
+    const password = makeTempPassword();
+    try {
+      await modifyAccountCredentials(ctx, { provider: "password", account: { id: email, secret: password } });
+    } catch {
+      throw new ConvexError({ code: "NO_PASSWORD", message: "This account has no password to replace (it signs in with Google). Ask the person to use Continue with Google." });
+    }
+    await invalidateSessions(ctx, { userId: userId as Id<"users"> });
+    return { password, email };
   },
 });

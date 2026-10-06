@@ -23,8 +23,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { getLowBandwidth, setLowBandwidth } from '@/lib/accessibility'
 import { useProfile } from '@/context/profile-context'
-import { useAuthActions } from '@convex-dev/auth/react'
-import { useConvex, useMutation, useQuery } from 'convex/react'
+import { useAction, useConvex, useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { toast } from 'sonner'
 import { authedFetch } from '@/lib/authed-fetch'
@@ -40,11 +39,9 @@ const ALL_USER_KEYS = [
 
 export default function SettingsPage() {
   const { lang, setLang, profile, setProfile, user, signOut } = useProfile()
-  const { signIn } = useAuthActions()
   const [lowBandwidth, setLBW]       = useState(false)
   const [isDirty, setIsDirty]        = useState(false)
   const [isSaving, setIsSaving]      = useState(false)
-  const [isResetting, setIsResetting] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isDeleting, setIsDeleting]  = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -54,6 +51,8 @@ export default function SettingsPage() {
   const deleteMine = useMutation(api.dataRights.deleteMine)
   const logExport = useMutation(api.dataRights.logExport)
   const billing = useQuery(api.subscriptions.mine, {})
+  const changePassword = useAction(api.passwords.changeMine)
+  const siteFacts = useQuery(api.siteFacts.facts, {})
 
   const [formData, setFormData] = useState({
     name:      '',
@@ -114,19 +113,20 @@ export default function SettingsPage() {
     }
   }
 
-  const handlePasswordReset = async () => {
-    const email = user?.email
-    if (!email) { toast.error('No email on file'); return }
-    setIsResetting(true)
+  const [pw, setPw] = useState({ current: '', next: '', again: '' })
+  const [changingPw, setChangingPw] = useState(false)
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (pw.next !== pw.again) { toast.error('The new passwords do not match.'); return }
+    setChangingPw(true)
     try {
-      await signIn('password', {
-        flow: 'reset', email, redirectTo: '/auth/reset-password',
-      })
-      toast.success(`Password reset email sent to ${email}`)
-    } catch {
-      toast.error('Could not send reset email — check your connection')
+      await changePassword({ current: pw.current, next: pw.next })
+      setPw({ current: '', next: '', again: '' })
+      toast.success('Password changed.')
+    } catch (err) {
+      toast.error(errorMessage(err))
     } finally {
-      setIsResetting(false)
+      setChangingPw(false)
     }
   }
 
@@ -309,27 +309,64 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <EmailPreferences />
+      {siteFacts?.emailEnabled !== false && <EmailPreferences />}
+
+      {/* Plan: where a paid plan is shown and cancelled (cancelling used to be reachable only from the delete-account dialog). */}
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold">Your plan</h2>
+        {billing === undefined ? (
+          <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
+        ) : billing.entitlement.isPaid ? (
+          <div className="mt-2 space-y-3 text-sm">
+            <p>
+              You are on the <strong>{billing.entitlement.plan === 'school' ? 'School' : 'Professional'}</strong> plan.
+              {billing.entitlement.currentPeriodEnd ? ` Current billing period ends ${new Date(billing.entitlement.currentPeriodEnd).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="min-h-11" disabled={isCancelling}>{isCancelling ? 'Cancelling…' : 'Cancel my plan'}</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel your plan?</AlertDialogTitle>
+                  <AlertDialogDescription>Your plan ends straight away and you will not be charged again. You keep your account, progress and certificates, and go back to the free plan. You can subscribe again later.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep my plan</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleCancelPlan}>Cancel my plan</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-muted-foreground">
+            You are on the free plan. <a className="text-primary underline underline-offset-4" href="/pricing">See what the paid plans change.</a>
+          </p>
+        )}
+      </Card>
 
       {/* Account */}
       <Card className="p-6 space-y-4">
         <h2 className="text-xl font-semibold">Account</h2>
 
-        {/* Change Password */}
-        <Button
-          variant="outline"
-          className="w-full rounded-xl gap-2"
-          onClick={handlePasswordReset}
-          disabled={isResetting || !user?.email}
-        >
-          <KeyRound className="w-4 h-4" />
-          {isResetting ? 'Sending reset email…' : 'Change Password'}
-        </Button>
-        {user?.email && (
-          <p className="text-xs text-muted-foreground -mt-2">
-            A reset link will be sent to <strong>{user.email}</strong>
-          </p>
-        )}
+        {/* Change Password: done in the app, no email */}
+        <form onSubmit={handleChangePassword} className="space-y-3 rounded-xl border p-4">
+          <h3 className="flex items-center gap-2 font-medium"><KeyRound className="w-4 h-4" /> Change password</h3>
+          <div>
+            <Label htmlFor="pw-current">Current password</Label>
+            <Input id="pw-current" type="password" autoComplete="current-password" required value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} className="mt-1 max-w-sm" />
+          </div>
+          <div>
+            <Label htmlFor="pw-next">New password (at least 8 characters)</Label>
+            <Input id="pw-next" type="password" autoComplete="new-password" required minLength={8} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} className="mt-1 max-w-sm" />
+          </div>
+          <div>
+            <Label htmlFor="pw-again">New password again</Label>
+            <Input id="pw-again" type="password" autoComplete="new-password" required minLength={8} value={pw.again} onChange={(e) => setPw({ ...pw, again: e.target.value })} className="mt-1 max-w-sm" />
+          </div>
+          <Button type="submit" variant="outline" disabled={changingPw}>{changingPw ? 'Changing…' : 'Change password'}</Button>
+          <p className="text-xs text-muted-foreground">Signed in with Google? You have no password to change here. Forgot it? Ask support from the Support page and they will give you a temporary one.</p>
+        </form>
 
         {/* Download Data */}
         <Button

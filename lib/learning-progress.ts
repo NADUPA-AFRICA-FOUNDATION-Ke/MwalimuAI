@@ -1,4 +1,5 @@
 import type { Program } from './learning-paths-data'
+import { CERTIFICATE_PASS_RATIO, MIN_REFLECTIONS_FOR_CERTIFICATE } from '@/convex/lib/certificateRules'
 import { PROGRAMS } from './learning-paths-data'
 
 // Catalogue used by the eligibility helpers below. ContentProvider swaps in CMS content;
@@ -352,8 +353,6 @@ export function getProgramCompletionPct(program: Program, progress: ProgramProgr
 // Certificate eligibility bar: every lesson read, a meaningful number of
 // reflections written, and the post-assessment passed at the program's
 // required standard — not merely attempted.
-const MIN_REFLECTIONS_FOR_CERTIFICATE = 6
-const CERTIFICATE_PASS_RATIO = 0.85
 
 export function isProgramComplete(program: Program, progress: ProgramProgress): boolean {
   const total = program.modules.reduce((s, m) => s + m.lessons.length, 0)
