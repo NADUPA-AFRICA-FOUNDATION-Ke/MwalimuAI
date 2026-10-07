@@ -14,7 +14,8 @@ const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob: https://images.unsplash.com`,
+  // Ticket attachments are served from Convex file storage.
+  `img-src 'self' data: blob: https://images.unsplash.com ${convexUrl}`,
   `font-src 'self'`,
   `connect-src 'self' ${convexUrl} ${convexWs}`,
   `worker-src 'self'`,

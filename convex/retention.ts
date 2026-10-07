@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { notify } from "./lib/notices";
 import { internal } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
 import { addDays, eatDateKey } from "./lib/streakMath";
@@ -27,6 +28,23 @@ export const sweep = internalMutation({
     const usage = await ctx.db.query("aiUsage").withIndex("by_day_and_count", (q) => q.lt("day", cutoff)).take(BATCH);
     for (const u of usage) await ctx.db.delete(u._id);
     more ||= usage.length === BATCH;
+
+    // Resolved tickets with no reply for a week become closed (read-only).
+    const quiet = await ctx.db.query("tickets").withIndex("by_status", (q) => q.eq("status", "resolved").lt("lastMessageAt", now - 7 * DAY)).take(100);
+    for (const t of quiet) {
+      await ctx.db.patch(t._id, { status: "closed", closedAt: now });
+      if (t.profileId) await notify(ctx, t.profileId, { title: `Ticket ${t.number} was closed`, body: "It was resolved a week ago with no further reply. Open a new ticket if you need more help.", link: `/dashboard/support/${t._id}` });
+    }
+
+    // Closed support tickets: two years after they were last active.
+    const oldClosed = await ctx.db.query("tickets").withIndex("by_status", (q) => q.eq("status", "closed").lt("lastMessageAt", now - 730 * DAY)).take(20);
+    for (const t of oldClosed) {
+      for (const m of await ctx.db.query("ticketMessages").withIndex("by_ticket", (q) => q.eq("ticketId", t._id)).take(500)) {
+        for (const a of m.attachments ?? []) await ctx.storage.delete(a.storageId).catch(() => {});
+        await ctx.db.delete(m._id);
+      }
+      await ctx.db.delete(t._id);
+    }
 
     // Resolved support tickets: two years after they were resolved.
     const old = await ctx.db.query("tickets").withIndex("by_status", (q) => q.eq("status", "resolved").lt("lastMessageAt", now - 730 * DAY)).take(20);

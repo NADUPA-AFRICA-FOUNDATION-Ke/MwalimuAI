@@ -2,7 +2,7 @@
 // requirements) come from the same constants the product enforces. Update this when the product changes.
 import { CERTIFICATE_PASS_RATIO, MIN_REFLECTIONS_FOR_CERTIFICATE } from '../convex/lib/certificateRules'
 
-export type DocArticle = { id: string; title: string; body: string[] } // body: paragraphs; lines starting "- " render as a list
+export type DocArticle = { id: string; title: string; body: string[]; image?: { src: string; alt: string } } // body: paragraphs; lines starting "- " render as a list
 export type DocSection = { id: string; title: string; summary: string; articles: DocArticle[] }
 
 const passPercent = Math.round(CERTIFICATE_PASS_RATIO * 100)
@@ -199,6 +199,61 @@ export const DOCS: DocSection[] = [
         body: [
           'Settings → Download My Data saves a file of everything we hold about you.',
           'Settings → Delete Account removes your profile, progress, journal, AI conversations, activity and support tickets permanently, and removes your community posts. If you have a paid plan, cancel it first.',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'support',
+    title: 'Getting help: support tickets',
+    summary: 'How to ask our team for help, follow your request and reply, all inside the app.',
+    articles: [
+      {
+        id: 'open',
+        title: 'Open a ticket',
+        body: [
+          'Signed in: go to Dashboard → Support and choose New ticket.',
+          '- Pick what it is about (for example "A certificate" or "Something is not working")',
+          '- Write a short summary, then explain what happened: the dates, what you did and what you expected',
+          '- Attach up to 3 photos or PDFs (5 MB each) if they help: a screenshot of an error, a receipt. Please don’t include learners’ faces or names',
+          'Choose Send ticket. You get a reference number like MW-4F7K2Q. Quote it if you ever need to mention the ticket.',
+          'Not signed in, or locked out of your account? Use the Support page on the website instead. You get a private conversation page for the reply, so bookmark it. We do not send email.',
+        ],
+        image: { src: '/help/support-new-ticket.jpg', alt: 'The New ticket form with category, summary, details and the attach button' },
+      },
+      {
+        id: 'track',
+        title: 'Follow your ticket',
+        body: [
+          'Dashboard → Support lists your tickets. Use the filters (Waiting on you, Open, Resolved & closed) or search by number or subject.',
+          'Each ticket shows its status:',
+          '- Open: we have it and will reply',
+          '- In progress: someone is working on it',
+          '- Waiting on you: we replied and need something from you',
+          '- Resolved: we think it is solved. Replying reopens it',
+          '- Closed: finished. A resolved ticket closes by itself after 7 days without a reply',
+          'When there is news, you see a pop-up in the app, a number on the bell, a red badge on Support, and the count in your browser tab, for example "(1) Mwalimu AI".',
+        ],
+        image: { src: '/help/support-list.jpg', alt: 'The list of tickets with filters, a search box and status labels' },
+      },
+      {
+        id: 'reply',
+        title: 'Reply to a ticket',
+        body: [
+          'Open the ticket, write in the Reply box, attach files if needed, and choose Send reply. The whole conversation stays on that page.',
+          'Only our team marks a ticket resolved or closed. If a closed ticket comes back as a problem, open a new ticket and mention the old number.',
+        ],
+        image: { src: '/help/support-conversation.jpg', alt: 'A ticket conversation with the team’s reply and the reply box' },
+      },
+      {
+        id: 'support-faq',
+        title: 'Support questions',
+        body: [
+          'How fast will you reply? We aim to reply first within 4 hours for urgent problems, 8 hours for high, 24 hours for normal and 3 days for low. Account and payment problems are treated as high.',
+          'Will I get an email? No. Replies appear in the app (and on your private page if you wrote without an account).',
+          'I lost my private conversation link. Write again from the Support page using the same email address. If you later sign in with Google using that address, your conversations move into your account automatically.',
+          'Can I add a file after sending? Yes: attach it to a reply.',
+          'Who can read my ticket? You and our support team. Staff can add internal notes you do not see; they are only for working on your request.',
         ],
       },
     ],

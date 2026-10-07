@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useAttention } from '@/lib/attention'
 import { useRouter } from 'next/navigation'
 import { useMutation, useQuery } from 'convex/react'
 import { Bell, X, BookOpen, Award, MessageSquare, Megaphone, Check, Trash2 } from 'lucide-react'
@@ -92,6 +93,7 @@ export function NotificationCenter() {
   const notifications: Notification[] = [...personal, ...shared].sort((x, y) => (y.at ?? 0) - (x.at ?? 0))
 
   const unreadCount = notifications.filter(n => !n.read).length
+  useAttention({ unread: unreadCount, items: personal.filter(n => !n.read).map(n => ({ id: n.id, title: n.title, body: n.message, link: n.link })), onOpen: (link) => router.push(link) })
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

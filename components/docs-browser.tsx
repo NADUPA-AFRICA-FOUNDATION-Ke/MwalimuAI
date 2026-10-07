@@ -61,6 +61,10 @@ export function DocsBrowser({ sections }: { sections: DocSection[] }) {
                       ),
                     )}
                   </div>
+                  {a.image && (
+                    // eslint-disable-next-line @next/next/no-img-element -- static help screenshot
+                    <img src={a.image.src} alt={a.image.alt} loading="lazy" className="mt-3 w-full max-w-xl rounded-lg border shadow-sm" />
+                  )}
                 </article>
               ))}
             </div>

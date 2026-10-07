@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -62,8 +64,12 @@ const NAV_ITEMS = NAV_GROUPS.flatMap(g => g.items)
 
 export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onToggleCollapse }: SidebarNavProps) {
   const pathname = usePathname()
-  const { lang }  = useProfile()
+  const { lang, user } = useProfile()
   const t         = getT(lang)
+  // Tickets where support replied and is waiting on the learner: shown as a red badge on Support.
+  const tickets   = useQuery(api.tickets.listMine, user ? {} : 'skip')
+  const waiting   = (tickets ?? []).filter((x) => x.status === 'pending_user').length
+  const badge     = (href: string) => (href === '/dashboard/support' && waiting > 0 ? waiting : 0)
 
   useEffect(() => {
     if (!isOpen) return
@@ -105,14 +111,15 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
                 return (
                   <Tooltip key={href}>
                     <TooltipTrigger asChild>
-                      <Link href={href} onClick={onClose} aria-current={isActive ? 'page' : undefined} aria-label={label}
+                      <Link href={href} onClick={onClose} aria-current={isActive ? 'page' : undefined} aria-label={badge(href) ? `${label}, ${badge(href)} waiting on you` : label}
                         className={cn(
-                          'flex items-center justify-center min-w-11 min-h-11 mx-auto mb-0.5 rounded-xl transition-all duration-150',
+                          'relative flex items-center justify-center min-w-11 min-h-11 mx-auto mb-0.5 rounded-xl transition-all duration-150',
                           isActive
                             ? 'bg-secondary text-primary'
                             : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
                         )}>
                         <Icon className="w-4 h-4 shrink-0" />
+                        {badge(href) > 0 && <span className="absolute ml-5 -mt-5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground" aria-hidden="true">{badge(href)}</span>}
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={8}>{label}</TooltipContent>
@@ -141,6 +148,11 @@ export function SidebarNav({ isOpen = false, isCollapsed = false, onClose, onTog
                         {isActive && <span className="absolute left-0 w-0.5 h-5 bg-primary rounded-r-full" aria-hidden />}
                         <Icon className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate leading-none">{label}</span>
+                        {badge(href) > 0 && (
+                          <span className="ml-auto flex h-5 min-w-5 animate-pulse items-center justify-center rounded-full bg-destructive px-1.5 text-xs font-bold text-destructive-foreground motion-reduce:animate-none">
+                            {badge(href)}<span className="sr-only"> waiting on you</span>
+                          </span>
+                        )}
                       </Link>
                     )
                   })}

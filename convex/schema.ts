@@ -470,6 +470,7 @@ export default defineSchema({
       v.literal("support_agent"),
       v.literal("viewer"),
     ),
+    noticesSeenAt: v.optional(v.number()),
     status: v.union(v.literal("active"), v.literal("disabled")),
     createdBy: v.optional(v.id("staff")),
     // TOTP secret is AES-GCM encrypted (ADMIN_MFA_ENC_KEY); never returned to clients.
@@ -632,7 +633,13 @@ export default defineSchema({
       v.literal("feedback"),
       v.literal("other"),
     ),
-    status: v.union(v.literal("open"), v.literal("pending_user"), v.literal("resolved")),
+    // open: waiting for staff · in_progress: staff working on it · pending_user: waiting on the learner/visitor ·
+    // resolved: answered (a reply reopens it) · closed: finished, read-only (closed automatically 7 days after resolving)
+    status: v.union(v.literal("open"), v.literal("in_progress"), v.literal("pending_user"), v.literal("resolved"), v.literal("closed")),
+    priority: v.optional(v.union(v.literal("low"), v.literal("normal"), v.literal("high"), v.literal("urgent"))),
+    firstResponseAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    searchText: v.optional(v.string()), // number, subject and who wrote it, lower-cased, for staff search
     assignedTo: v.optional(v.id("staff")),
     lastMessageAt: v.number(),
     lastMessageBy: v.union(v.literal("user"), v.literal("staff")),
@@ -643,7 +650,8 @@ export default defineSchema({
     .index("by_profile", ["profileId", "lastMessageAt"])
     .index("by_status", ["status", "lastMessageAt"])
     .index("by_token_hash", ["tokenHash"])
-    .index("by_visitor_email", ["visitor.email", "createdAt"]),
+    .index("by_visitor_email", ["visitor.email", "createdAt"])
+    .searchIndex("search_tickets", { searchField: "searchText", filterFields: ["status"] }),
 
   // One sitting of a pre/post assessment: when it started and ended, the score, whether the learner switched on
   // assistive input, and the integrity events seen while it was open (copy/paste attempts, leaving the window,
@@ -669,8 +677,27 @@ export default defineSchema({
     authorLabel: v.string(),
     body: v.string(),
     internal: v.boolean(), // staff-only note, never returned to the learner
+    attachments: v.optional(v.array(v.object({ storageId: v.id("_storage"), name: v.string(), type: v.string(), size: v.number() }))),
     createdAt: v.number(),
   }).index("by_ticket", ["ticketId", "createdAt"]),
+
+  // Team-wide alerts for the admin console (new tickets and replies). Each staff member has a "seen up to" time.
+  staffNotices: defineTable({
+    kind: v.union(v.literal("ticket_new"), v.literal("ticket_reply"), v.literal("ticket_reopened")),
+    title: v.string(),
+    body: v.string(),
+    link: v.string(),
+    ticketId: v.optional(v.id("tickets")),
+    createdAt: v.number(),
+  }).index("by_created", ["createdAt"]),
+
+  // Saved replies staff can insert into a ticket answer.
+  cannedReplies: defineTable({
+    title: v.string(),
+    body: v.string(),
+    updatedBy: v.id("staff"),
+    updatedAt: v.number(),
+  }),
 
   // Pre-aggregated learning analytics, so dashboards never scan learner tables. Each counter is split over a few
   // shard rows so concurrent learners don't contend on one document; readers sum the shards.

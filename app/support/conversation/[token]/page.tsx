@@ -12,9 +12,10 @@ import { MarketingHeader } from '@/components/marketing-header'
 import { MarketingFooter } from '@/components/marketing-footer'
 import { forgetConversation } from '@/lib/support-conversations'
 import { errorMessage } from '@/lib/support'
+import { MessageAttachments } from '@/components/support/attachments'
 import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 
-const STATUS: Record<string, string> = { open: 'Waiting for our reply', pending_user: 'We replied: waiting for you', resolved: 'Resolved' }
+const STATUS: Record<string, string> = { open: 'Waiting for our reply', in_progress: 'We are working on it', pending_user: 'We replied: waiting for you', resolved: 'Resolved', closed: 'Closed' }
 const when = (ms: number) => new Date(ms).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })
 
 /** A visitor's private conversation with support. Anyone holding the link can read and reply, so the link is the secret. */
@@ -82,15 +83,20 @@ function Conversation({ token }: { token: string }) {
                 <li key={m._id} className={`rounded-lg border p-4 ${m.author === 'staff' ? 'bg-primary/5' : 'bg-background'}`}>
                   <p className="text-xs text-muted-foreground">{m.authorLabel} · {when(m.createdAt)}</p>
                   <p className="mt-2 whitespace-pre-wrap break-words">{m.body}</p>
+                  <MessageAttachments files={m.attachments} />
                 </li>
               ))}
             </ul>
 
+            {data.ticket.status === 'closed' ? (
+              <p className="mt-8 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">This conversation is closed. If you need more help, start a new one from the Support page and mention {data.ticket.number}.</p>
+            ) : (
             <form onSubmit={send} className="mt-8 space-y-3">
               <label htmlFor="conv-reply" className="text-sm font-medium">Reply</label>
               <Textarea id="conv-reply" rows={4} maxLength={4000} value={text} onChange={(e) => setText(e.target.value)} />
               <Button type="submit" disabled={busy || text.trim().length < 2}>Send reply</Button>
             </form>
+            )}
 
             <Card className="mt-10 p-5">
               <h2 className="font-semibold">Keep this in your account</h2>

@@ -1,10 +1,13 @@
 import { v } from "convex/values";
-import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { assertActiveSession, getCurrentProfile } from "./lib/auth";
 import { fail, notFound } from "./lib/errors";
 import { requireNonEmpty } from "./lib/validation";
 import { hashToken, newToken } from "./lib/visitorToken";
+import { notifyStaff } from "./lib/staffNotices";
+import { attachmentInput, checkAttachments, publicMessages, searchTextFor, statusV, priorityV } from "./lib/ticketing";
 import type { Id } from "./_generated/dataModel";
 
 const MAX_OPEN_TICKETS = 5;
@@ -27,7 +30,8 @@ const ticketSummary = v.object({
   number: v.string(),
   subject: v.string(),
   category,
-  status: v.union(v.literal("open"), v.literal("pending_user"), v.literal("resolved")),
+  status: statusV,
+  priority: priorityV,
   lastMessageAt: v.number(),
   lastMessageBy: v.union(v.literal("user"), v.literal("staff")),
   createdAt: v.number(),
@@ -40,6 +44,7 @@ function summary(t: Doc<"tickets">) {
     subject: t.subject,
     category: t.category,
     status: t.status,
+    priority: t.priority ?? "normal",
     lastMessageAt: t.lastMessageAt,
     lastMessageBy: t.lastMessageBy,
     createdAt: t.createdAt,
@@ -83,22 +88,13 @@ export const getMine = query({
     const profile = await mineOrThrow(ctx);
     const t = await ctx.db.get(ticketId);
     if (!t || t.profileId !== profile._id) throw notFound("Ticket");
-    const messages = await ctx.db
-      .query("ticketMessages")
-      .withIndex("by_ticket", (q) => q.eq("ticketId", t._id))
-      .take(200);
-    return {
-      ticket: summary(t),
-      // Internal staff notes never leave the server.
-      messages: messages
-        .filter((m) => !m.internal)
-        .map((m) => ({ _id: m._id, author: m.author, authorLabel: m.authorLabel, body: m.body, createdAt: m.createdAt })),
-    };
+    // Internal staff notes never leave the server.
+    return { ticket: summary(t), messages: await publicMessages(ctx, t._id) };
   },
 });
 
 export const create = mutation({
-  args: { subject: v.string(), category, body: v.string() },
+  args: { subject: v.string(), category, body: v.string(), attachments: v.optional(attachmentInput) },
   returns: v.object({ ticketId: v.id("tickets"), number: v.string() }),
   handler: async (ctx, args) => {
     const profile = await mineOrThrow(ctx);
@@ -120,6 +116,8 @@ export const create = mutation({
       subject,
       category: args.category,
       status: "open",
+      priority: "normal",
+      searchText: searchTextFor({ number, subject }, `${profile.name ?? ""} ${profile.email ?? ""}`),
       lastMessageAt: now,
       lastMessageBy: "user",
       createdAt: now,
@@ -130,20 +128,23 @@ export const create = mutation({
       authorLabel: profile.name || "Learner",
       body,
       internal: false,
+      ...(args.attachments?.length ? { attachments: await checkAttachments(ctx, args.attachments) } : {}),
       createdAt: now,
     });
+    await notifyStaff(ctx, (await ctx.db.get(ticketId))!, "ticket_new", profile.name || "A learner", body);
     return { ticketId, number };
   },
 });
 
 /** Learner reply. Replying to a resolved ticket reopens it. */
 export const reply = mutation({
-  args: { ticketId: v.id("tickets"), body: v.string() },
+  args: { ticketId: v.id("tickets"), body: v.string(), attachments: v.optional(attachmentInput) },
   returns: v.null(),
-  handler: async (ctx, { ticketId, body }) => {
+  handler: async (ctx, { ticketId, body, attachments }) => {
     const profile = await mineOrThrow(ctx);
     const t = await ctx.db.get(ticketId);
     if (!t || t.profileId !== profile._id) throw notFound("Ticket");
+    if (t.status === "closed") throw fail("TICKET_CLOSED", "This ticket is closed. Please open a new ticket and mention its number.");
     const text = requireNonEmpty(body, "Message", 4000);
     const messages = await ctx.db
       .query("ticketMessages")
@@ -159,6 +160,7 @@ export const reply = mutation({
       authorLabel: profile.name || "Learner",
       body: text,
       internal: false,
+      ...(attachments?.length ? { attachments: await checkAttachments(ctx, attachments) } : {}),
       createdAt: now,
     });
     await ctx.db.patch(ticketId, {
@@ -167,19 +169,7 @@ export const reply = mutation({
       lastMessageBy: "user",
       resolvedAt: undefined,
     });
-    return null;
-  },
-});
-
-/** Learner closes their own ticket ("my problem is solved"). */
-export const resolve = mutation({
-  args: { ticketId: v.id("tickets") },
-  returns: v.null(),
-  handler: async (ctx, { ticketId }) => {
-    const profile = await mineOrThrow(ctx);
-    const t = await ctx.db.get(ticketId);
-    if (!t || t.profileId !== profile._id) throw notFound("Ticket");
-    if (t.status !== "resolved") await ctx.db.patch(ticketId, { status: "resolved", resolvedAt: Date.now() });
+    await notifyStaff(ctx, t, t.status === "resolved" ? "ticket_reopened" : "ticket_reply", profile.name || "A learner", text);
     return null;
   },
 });
@@ -224,11 +214,14 @@ export const createPublic = mutation({
       subject,
       category: args.category,
       status: "open",
+      priority: args.category === "account" ? "high" : "normal", // locked-out people cannot use anything else
+      searchText: searchTextFor({ number, subject }, `${name} ${email} visitor`),
       lastMessageAt: now,
       lastMessageBy: "user",
       createdAt: now,
     });
     await ctx.db.insert("ticketMessages", { ticketId, author: "user", authorLabel: name, body, internal: false, createdAt: now });
+    await notifyStaff(ctx, (await ctx.db.get(ticketId))!, "ticket_new", `${name} (visitor)`, body);
     return { number, token };
   },
 });
@@ -245,11 +238,7 @@ export const publicThread = query({
   handler: async (ctx, { token }) => {
     const t = await byToken(ctx, token);
     if (!t) return null;
-    const messages = await ctx.db.query("ticketMessages").withIndex("by_ticket", (q) => q.eq("ticketId", t._id)).take(200);
-    return {
-      ticket: { ...summary(t), visitorName: t.visitor?.name ?? "" },
-      messages: messages.filter((m) => !m.internal).map((m) => ({ _id: m._id, author: m.author, authorLabel: m.authorLabel, body: m.body, createdAt: m.createdAt })),
-    };
+    return { ticket: { ...summary(t), visitorName: t.visitor?.name ?? "" }, messages: await publicMessages(ctx, t._id) };
   },
 });
 
@@ -259,12 +248,14 @@ export const publicReply = mutation({
   handler: async (ctx, { token, body }) => {
     const t = await byToken(ctx, token);
     if (!t) throw notFound("Conversation");
+    if (t.status === "closed") throw fail("TICKET_CLOSED", "This conversation is closed. Please start a new one from the Support page.");
     const text = requireNonEmpty(body, "Message", 4000);
     const messages = await ctx.db.query("ticketMessages").withIndex("by_ticket", (q) => q.eq("ticketId", t._id)).take(200);
     if (messages.filter((m) => m.author === "user").length >= MAX_USER_MESSAGES_PER_TICKET) throw fail("TICKET_FULL", "This conversation has reached its message limit. Please start a new one.");
     const now = Date.now();
     await ctx.db.insert("ticketMessages", { ticketId: t._id, author: "user", authorLabel: t.visitor?.name ?? "Visitor", body: text, internal: false, createdAt: now });
     await ctx.db.patch(t._id, { status: "open", lastMessageAt: now, lastMessageBy: "user", resolvedAt: undefined });
+    await notifyStaff(ctx, t, t.status === "resolved" ? "ticket_reopened" : "ticket_reply", `${t.visitor?.name ?? "A visitor"} (visitor)`, text);
     return null;
   },
 });
@@ -304,5 +295,31 @@ export const attachVerified = mutation({
       moved++;
     }
     return moved;
+  },
+});
+
+/** A one-time upload address for a ticket attachment. Signed-in learners only; files are checked when attached. */
+export const generateUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    await mineOrThrow(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/** One-off after deploy: give existing tickets their search text. Run: npx convex run tickets:backfillSearch '{}' */
+export const backfillSearch = internalMutation({
+  args: { cursor: v.optional(v.union(v.string(), v.null())) },
+  handler: async (ctx, { cursor }) => {
+    const page = await ctx.db.query("tickets").paginate({ numItems: 100, cursor: cursor ?? null });
+    for (const t of page.page) {
+      if (t.searchText) continue;
+      const p = t.profileId ? await ctx.db.get(t.profileId) : null;
+      const who = p ? `${p.name ?? ""} ${p.email ?? ""}` : `${t.visitor?.name ?? ""} ${t.visitor?.email ?? ""} visitor`;
+      await ctx.db.patch(t._id, { searchText: searchTextFor(t, who), ...(t.priority ? {} : { priority: "normal" as const }) });
+    }
+    if (!page.isDone) await ctx.scheduler.runAfter(0, internal.tickets.backfillSearch, { cursor: page.continueCursor });
+    return null;
   },
 });
