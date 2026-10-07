@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { ArrowLeft, PanelLeft } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 import { NotificationCenter } from '@/components/notification-center'
+import { GlobalSearch, SearchButton } from '@/components/global-search'
 import { AccountSheet } from '@/components/account-sheet'
 import { useProfile } from '@/context/profile-context'
 import { getT } from '@/lib/i18n'
@@ -65,6 +66,7 @@ export function DashboardHeader({ onLogout, sidebarCollapsed, onToggleCollapse }
 
         {/* Right */}
         <div className="ml-auto flex items-center gap-1">
+          <SearchButton />
           <NotificationCenter />
           <button type="button" onClick={() => setAccountOpen(true)} aria-label="Account and settings" aria-haspopup="dialog"
             className="flex h-11 w-11 items-center justify-center rounded-full">
@@ -72,6 +74,7 @@ export function DashboardHeader({ onLogout, sidebarCollapsed, onToggleCollapse }
           </button>
         </div>
       </div>
+      <GlobalSearch />
       <AccountSheet open={accountOpen} onOpenChange={setAccountOpen} onLogout={onLogout} />
     </header>
   )

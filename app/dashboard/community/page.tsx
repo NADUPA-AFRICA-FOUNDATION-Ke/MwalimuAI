@@ -55,7 +55,7 @@ export default function CommunityPage() {
         {!imagesOk && <span className="self-center text-xs text-muted-foreground">Describe each photo (or wait for uploads) to post.</span>}
       </div>
     </form>
-    {posts === undefined ? <p role="status" className="text-muted-foreground">Loading discussions…</p> : posts.length === 0 ? <p className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">No discussions yet. Start the first one.</p> : posts.map(post => <article key={post._id} className="space-y-3 rounded-2xl border p-4 sm:p-5">
+    {posts === undefined ? <p role="status" className="text-muted-foreground">Loading discussions…</p> : posts.length === 0 ? <p className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">No discussions yet. Start the first one.</p> : posts.map(post => <article key={post._id} id={post._id} className="scroll-mt-24 space-y-3 rounded-2xl border p-4 target:ring-2 target:ring-primary sm:p-5">
       <div><div className="flex justify-between gap-3"><h2 className="font-semibold">{post.title}</h2><span className="text-xs text-muted-foreground">{post.category}</span></div><p className="text-xs text-muted-foreground">{post.authorName} · {when(post.createdAt)}</p></div>
       <p className="whitespace-pre-wrap text-sm">{post.content}</p>
       <ImageGallery images={post.images} />

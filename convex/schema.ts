@@ -225,7 +225,9 @@ export default defineSchema({
   })
     .index("by_status_and_created_at", ["status", "createdAt"])
     .index("by_status_category_and_created_at", ["status", "category", "createdAt"])
-    .index("by_user_and_created_at", ["userId", "createdAt"]),
+    .index("by_user_and_created_at", ["userId", "createdAt"])
+    .searchIndex("search_title", { searchField: "title", filterFields: ["status"] })
+    .searchIndex("search_content", { searchField: "content", filterFields: ["status"] }),
 
   communityComments: defineTable({
     postId: v.id("communityPosts"),

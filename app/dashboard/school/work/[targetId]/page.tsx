@@ -73,13 +73,14 @@ export default function WorkItemPage() {
           <ul className="mt-3 space-y-2">
             {item.modules.map((m, i) => {
               const program = getProgramById(m.programId)
-              const moduleTitle = m.moduleKey ? program?.modules.find((x) => x.id === m.moduleKey)?.title : null
+              const mod = m.moduleKey ? program?.modules.find((x) => x.id === m.moduleKey) : null
+              const moduleTitle = mod?.title ?? null
               return (
                 <li key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm">
                   <span className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" aria-hidden="true" />{program?.title ?? m.programId}{moduleTitle ? ` · ${moduleTitle}` : ''}</span>
                   <span className="flex items-center gap-3">
                     {item.kind !== 'assessment' && <span className="text-xs text-muted-foreground">{m.done}/{m.lessons} lessons</span>}
-                    <Button asChild size="sm"><Link href={item.kind === 'assessment' ? `/dashboard/learning/${m.programId}/assessment?type=post` : m.moduleKey ? `/dashboard/learning/${m.programId}/${m.moduleKey}` : `/dashboard/learning/${m.programId}`}>{item.kind === 'assessment' ? 'Take it' : 'Open'}</Link></Button>
+                    <Button asChild size="sm"><Link href={item.kind === 'assessment' ? `/dashboard/learning/${m.programId}/assessment?type=post` : mod?.lessons[0] ? `/dashboard/learning/${m.programId}/${mod.id}/${mod.lessons[0].id}` : `/dashboard/learning/${m.programId}`}>{item.kind === 'assessment' ? 'Take it' : 'Open'}</Link></Button>
                   </span>
                 </li>
               )
