@@ -92,6 +92,7 @@ import type * as schools from "../schools.js";
 import type * as sessions from "../sessions.js";
 import type * as siteFacts from "../siteFacts.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as teacherRecord from "../teacherRecord.js";
 import type * as tickets from "../tickets.js";
 import type * as tools from "../tools.js";
 
@@ -186,6 +187,7 @@ declare const fullApi: ApiFromModules<{
   sessions: typeof sessions;
   siteFacts: typeof siteFacts;
   subscriptions: typeof subscriptions;
+  teacherRecord: typeof teacherRecord;
   tickets: typeof tickets;
   tools: typeof tools;
 }>;

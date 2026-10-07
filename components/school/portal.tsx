@@ -149,9 +149,11 @@ function Staff({ isPrincipal }: { isPrincipal: boolean }) {
     catch (e) { toast.error(errorMessage(e, 'Not saved.')) }
   }
   return (
+    <div className="space-y-4">
+    {isPrincipal && <TransferInbox />}
     <ul className="divide-y rounded-2xl border bg-card">{staff.map((m) => (
       <li key={m.memberId} className="space-y-2 p-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2"><p className="font-medium">{m.name}</p><p className="text-xs text-muted-foreground">{m.completed}/{m.assigned} done{m.overdue ? <span className="font-semibold text-destructive"> · {m.overdue} overdue</span> : null}</p></div>
+        <div className="flex flex-wrap items-baseline justify-between gap-2"><Link href={`/dashboard/school/teacher/${m.profileId}`} className="font-medium text-primary hover:underline">{m.name}</Link><p className="text-xs text-muted-foreground">{m.completed}/{m.assigned} done{m.overdue ? <span className="font-semibold text-destructive"> · {m.overdue} overdue</span> : null}</p></div>
         {isPrincipal && m.role !== 'head' ? (
           <div className="grid gap-2 sm:grid-cols-3">
             <label className="text-xs"><span className="sr-only">Role for {m.name}</span><select className={select} value={m.role} onChange={(e) => void save(m.memberId, e.target.value as 'teacher', m.department?._id ?? null, m.canAssign)}>{(['teacher', 'hod', 'deputy'] as const).map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select></label>
@@ -161,6 +163,28 @@ function Staff({ isPrincipal }: { isPrincipal: boolean }) {
         ) : <p className="text-xs text-muted-foreground">{ROLE_LABEL[m.role]}{m.department ? ` · ${m.department.name}` : ''}</p>}
       </li>
     ))}</ul>
+    </div>
+  )
+}
+
+function TransferInbox() {
+  const inbox = useQuery(api.teacherRecord.transferInbox, {})
+  const decide = useMutation(api.teacherRecord.decideTransfer)
+  if (!inbox?.length) return null
+  return (
+    <section className="space-y-2 rounded-2xl border-2 border-primary bg-primary/5 p-4" aria-label="Transfer requests">
+      <h3 className="font-semibold">Transfer requests ({inbox.length})</h3>
+      {inbox.map((r) => (
+        <div key={r._id} className="space-y-1 rounded-lg border bg-card p-3 text-sm">
+          <p><b>{r.record.name}</b>{r.from ? ` from ${r.from}` : ''} · {r.record.certificates.length} certificates · {r.record.lessonsCompleted} lessons</p>
+          {r.message && <p className="text-muted-foreground">“{r.message}”</p>}
+          <div className="flex gap-2">
+            <Button size="sm" className="min-h-11" onClick={() => void decide({ id: r._id, accept: true }).then(() => toast.success('Accepted'))}>Accept</Button>
+            <Button size="sm" variant="outline" className="min-h-11" onClick={() => void decide({ id: r._id, accept: false }).then(() => toast.success('Declined'))}>Decline</Button>
+          </div>
+        </div>
+      ))}
+    </section>
   )
 }
 

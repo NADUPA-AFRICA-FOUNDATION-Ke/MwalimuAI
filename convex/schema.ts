@@ -883,6 +883,37 @@ export default defineSchema({
     termEnd: v.number(),
   }).index("by_school", ["schoolId"]),
 
+  // A teacher's professional record belongs to the teacher. These rows say how much of it a school may see.
+  recordSharing: defineTable({
+    profileId: v.id("profiles"),
+    schoolId: v.id("schools"),
+    level: v.union(v.literal("summary"), v.literal("full")),
+    updatedAt: v.number(),
+  }).index("by_profile_and_school", ["profileId", "schoolId"]),
+
+  // Every time school leadership opens a teacher's record. The teacher can read this list.
+  recordViews: defineTable({
+    ownerId: v.id("profiles"),
+    viewerId: v.id("profiles"),
+    schoolId: v.id("schools"),
+    level: v.union(v.literal("summary"), v.literal("full")),
+    at: v.number(),
+  }).index("by_owner", ["ownerId", "at"]),
+
+  // A teacher asks to move to another school; that school's principal accepts or declines.
+  transferRequests: defineTable({
+    profileId: v.id("profiles"),
+    fromSchoolId: v.optional(v.id("schools")),
+    toSchoolId: v.id("schools"),
+    message: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"), v.literal("cancelled")),
+    createdAt: v.number(),
+    decidedAt: v.optional(v.number()),
+    decidedBy: v.optional(v.id("profiles")),
+  })
+    .index("by_profile", ["profileId", "status"])
+    .index("by_to_school", ["toSchoolId", "status"]),
+
   // Daily AI allowance per learner, so one heavy user (or a script) cannot run up the bill.
   aiUsage: defineTable({
     profileId: v.id("profiles"),

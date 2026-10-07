@@ -30,6 +30,7 @@ export const MORE_ROUTES: { href: string; labelKey: TranslationKey }[] = [
   { href: '/dashboard/modules', labelKey: 'nav.modules' },
   { href: '/dashboard/assessment', labelKey: 'nav.assessment' },
   { href: '/dashboard/school', labelKey: 'nav.school' },
+  { href: '/dashboard/record', labelKey: 'nav.record' },
   { href: '/dashboard/support', labelKey: 'nav.support' },
   { href: '/dashboard/settings', labelKey: 'nav.settings' },
 ]

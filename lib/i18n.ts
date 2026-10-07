@@ -17,6 +17,7 @@ const translations = {
     'nav.settings':    'Settings',
     'nav.support':     'Help & support',
     'nav.school':      'My school',
+    'nav.record':      'My record',
     // Short labels for the phone tab bar (must fit on one line at 12px)
     'nav.tabHome':     'Home',
     'nav.tabLearn':    'Learn',
@@ -137,6 +138,7 @@ const translations = {
     'nav.settings':    'Mipangilio',
     'nav.support':     'Msaada',
     'nav.school':      'Shule yangu',
+    'nav.record':      'Rekodi yangu',
     'nav.tabHome':     'Nyumbani',
     'nav.tabLearn':    'Jifunze',
     'nav.tabCoach':    'Kocha',
