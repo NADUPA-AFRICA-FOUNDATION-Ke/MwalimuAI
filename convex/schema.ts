@@ -785,13 +785,103 @@ export default defineSchema({
   schoolMembers: defineTable({
     schoolId: v.id("schools"),
     profileId: v.id("profiles"),
-    role: v.union(v.literal("head"), v.literal("teacher")),
+    // head = principal. Deputies and HODs manage only when the principal delegates it (canAssign); an HOD only
+    // within their own department.
+    role: v.union(v.literal("head"), v.literal("deputy"), v.literal("hod"), v.literal("teacher")),
+    departmentId: v.optional(v.id("departments")),
+    canAssign: v.optional(v.boolean()),
     status: v.union(v.literal("active"), v.literal("left"), v.literal("removed")),
     joinedAt: v.number(),
     leftAt: v.optional(v.number()),
   })
     .index("by_school_and_status", ["schoolId", "status"])
     .index("by_profile", ["profileId", "status"]),
+
+  departments: defineTable({
+    schoolId: v.id("schools"),
+    name: v.string(),
+    createdAt: v.number(),
+  }).index("by_school", ["schoolId"]),
+
+  // Professional-development work set by school leadership. `kind`: a module or whole path from the library, its
+  // final assessment, a practical task with evidence, or a school's own path (an ordered list of modules).
+  schoolAssignments: defineTable({
+    schoolId: v.id("schools"),
+    title: v.string(),
+    description: v.string(),
+    objectives: v.array(v.string()),
+    skillArea: v.string(),
+    kind: v.union(v.literal("module"), v.literal("assessment"), v.literal("task"), v.literal("path")),
+    modules: v.array(v.object({ programId: v.string(), moduleKey: v.optional(v.string()) })), // module/path: what to complete; assessment: the program
+    taskInstructions: v.optional(v.string()),
+    rubric: v.optional(v.array(v.object({ criterion: v.string(), levels: v.array(v.string()) }))), // levels: EE, ME, AE, BE descriptors
+    attachments: v.optional(v.array(v.object({ storageId: v.id("_storage"), name: v.string(), type: v.string(), size: v.number() }))),
+    opensAt: v.number(),
+    dueAt: v.number(),
+    mandatory: v.boolean(),
+    graceMinutes: v.number(), // 0 = strict lock at the due time
+    allowResubmit: v.boolean(),
+    audience: v.object({ kind: v.union(v.literal("all"), v.literal("department"), v.literal("teachers")), departmentId: v.optional(v.id("departments")), profileIds: v.optional(v.array(v.id("profiles"))) }),
+    createdBy: v.id("profiles"),
+    createdAt: v.number(),
+    archivedAt: v.optional(v.number()),
+  }).index("by_school", ["schoolId", "dueAt"]),
+
+  // One row per teacher per assignment: their status, extension, score and review.
+  assignmentTargets: defineTable({
+    assignmentId: v.id("schoolAssignments"),
+    schoolId: v.id("schools"),
+    profileId: v.id("profiles"),
+    status: v.union(v.literal("not_started"), v.literal("in_progress"), v.literal("submitted"), v.literal("reviewed"), v.literal("returned")),
+    late: v.boolean(),
+    extensionUntil: v.optional(v.number()),
+    extensionReason: v.optional(v.string()),
+    submittedAt: v.optional(v.number()),
+    score: v.optional(v.number()), // assessment percentage
+    passed: v.optional(v.boolean()),
+    rating: v.optional(v.number()), // rubric average 1-4 (BE=1 … EE=4)
+    blockedAttempts: v.optional(v.array(v.number())), // tries after the window closed (recorded, refused)
+    reminded: v.optional(v.array(v.string())), // "48h", "24h"
+    updatedAt: v.number(),
+  })
+    .index("by_assignment", ["assignmentId"])
+    .index("by_profile", ["profileId", "status"])
+    .index("by_school", ["schoolId"]),
+
+  taskSubmissions: defineTable({
+    targetId: v.id("assignmentTargets"),
+    profileId: v.id("profiles"),
+    text: v.string(),
+    attachments: v.optional(v.array(v.object({ storageId: v.id("_storage"), name: v.string(), type: v.string(), size: v.number() }))),
+    submittedAt: v.number(),
+    review: v.optional(v.object({ levels: v.array(v.number()), feedback: v.string(), reviewedBy: v.id("profiles"), reviewedAt: v.number(), allowResubmit: v.boolean() })),
+  }).index("by_target", ["targetId", "submittedAt"]),
+
+  schoolPaths: defineTable({
+    schoolId: v.id("schools"),
+    title: v.string(),
+    description: v.string(),
+    items: v.array(v.object({ programId: v.string(), moduleKey: v.string() })),
+    createdBy: v.id("profiles"),
+    createdAt: v.number(),
+  }).index("by_school", ["schoolId"]),
+
+  // What school leadership did: assignments, extensions, overrides, reviews, role changes.
+  schoolAudit: defineTable({
+    schoolId: v.id("schools"),
+    actorId: v.id("profiles"),
+    action: v.string(),
+    targetLabel: v.string(),
+    detail: v.optional(v.string()),
+    at: v.number(),
+  }).index("by_school", ["schoolId", "at"]),
+
+  schoolSettings: defineTable({
+    schoolId: v.id("schools"),
+    termName: v.string(),
+    termStart: v.number(),
+    termEnd: v.number(),
+  }).index("by_school", ["schoolId"]),
 
   // Daily AI allowance per learner, so one heavy user (or a script) cannot run up the bill.
   aiUsage: defineTable({

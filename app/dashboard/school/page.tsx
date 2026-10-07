@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { usePrograms } from '@/context/content-context'
 import { downloadXlsx } from '@/lib/admin/xlsx'
 import { errorMessage } from '@/lib/support'
+import { SchoolPortal } from '@/components/school/portal'
 
 export default function SchoolPage() {
   return (
@@ -31,6 +32,7 @@ function School() {
       <h1 className="text-2xl font-bold">My school</h1>
       {me.state === 'none' && <JoinOrCreate canCreate={me.canCreate} />}
       {me.state === 'teacher' && <TeacherView name={me.school.name} />}
+      {me.state !== 'none' && <SchoolPortal />}
       {me.state === 'head' && <HeadView name={me.school.name} county={me.school.county} code={me.school.code ?? ''} />}
     </div>
   )

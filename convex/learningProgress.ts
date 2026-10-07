@@ -4,6 +4,7 @@ import { requireCurrentProfile } from "./lib/auth";
 import { CERTIFICATE_PASS_RATIO, isProgramCompleteServer, loadProgramDef, rescoreAssessment, SERIAL_PATTERN } from "./lib/eligibility";
 import { fail } from "./lib/errors";
 import { applyProgressDelta } from "./lib/analytics";
+import { syncAssignmentsFromLearning } from "./schoolPortal";
 
 export const mine = query({
   args: {},
@@ -58,8 +59,10 @@ export const save = mutation({
       cohortJoined: progress?.cohortJoined === true, updatedAt: Date.now(),
     };
     await applyProgressDelta(ctx, programId, existing, value, existing?._creationTime ?? Date.now());
-    if (existing) { await ctx.db.patch(existing._id, value); return existing._id; }
-    return await ctx.db.insert("learningProgress", value);
+    const id = existing ? (await ctx.db.patch(existing._id, value), existing._id) : await ctx.db.insert("learningProgress", value);
+    // School assignments to complete these modules are marked done the moment they are.
+    await syncAssignmentsFromLearning(ctx, profile._id, programId);
+    return id;
   },
 });
 
@@ -105,6 +108,7 @@ export const submitAssessment = mutation({
     await applyProgressDelta(ctx, programId, existing, value as never, existing?._creationTime ?? now);
     if (existing) await ctx.db.patch(existing._id, { [field]: result, updatedAt: now });
     else await ctx.db.insert("learningProgress", value as never);
+    await syncAssignmentsFromLearning(ctx, profile._id, programId);
     const explanations = questions as { correct: number; explanation?: string }[];
     return {
       score,

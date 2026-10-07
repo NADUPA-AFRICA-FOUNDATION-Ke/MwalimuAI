@@ -10,4 +10,8 @@ crons.daily("email log cleanup", { hourUTC: 2, minuteUTC: 30 }, internal.emails.
 crons.daily("audit log checkpoint", { hourUTC: 3, minuteUTC: 15 }, internal.auditWitness.check, {});
 crons.weekly("audit log full re-check", { dayOfWeek: "sunday", hourUTC: 3, minuteUTC: 45 }, internal.auditWitness.check, { full: true });
 crons.daily("retention sweep", { hourUTC: 1, minuteUTC: 30 }, internal.retention.sweep, {});
+crons.hourly("school assignment reminders", { minuteUTC: 5 }, internal.schoolPortal.remind, {});
+// Monday 06:00 Kenya time (03:00 UTC).
+crons.weekly("school weekly summary", { dayOfWeek: "monday", hourUTC: 3, minuteUTC: 0 }, internal.schoolPortal.weeklySummary, {});
+
 export default crons;
