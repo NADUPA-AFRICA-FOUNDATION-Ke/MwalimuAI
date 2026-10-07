@@ -83,9 +83,16 @@ export const thread = staffQuery({
     const post = await ctx.db.get(postId);
     if (!post) throw notFound("Post");
     const comments = await ctx.db.query("communityComments").withIndex("by_post_and_created_at", (q) => q.eq("postId", postId)).order("asc").take(200);
+    const imgs = async (list: Doc<"communityPosts">["images"]) => {
+      const out = [];
+      for (const im of list ?? []) out.push({ url: im.status === "removed" ? null : await ctx.storage.getUrl(im.storageId), alt: im.alt, status: im.status, removedReason: im.removedReason ?? null });
+      return out;
+    };
+    const rows = [];
+    for (const c of comments) rows.push({ _id: c._id, body: c.body, authorName: c.authorName, authorId: c.userId, hidden: c.hiddenAt !== undefined, createdAt: c.createdAt, images: await imgs(c.images) });
     return {
-      post: { _id: post._id, title: post.title, content: post.content, authorName: post.authorName, authorId: post.userId, status: post.status, createdAt: post.createdAt },
-      comments: comments.map((c) => ({ _id: c._id, body: c.body, authorName: c.authorName, authorId: c.userId, hidden: c.hiddenAt !== undefined, createdAt: c.createdAt })),
+      post: { _id: post._id, title: post.title, content: post.content, authorName: post.authorName, authorId: post.userId, status: post.status, createdAt: post.createdAt, images: await imgs(post.images) },
+      comments: rows,
     };
   },
 });
@@ -159,6 +166,26 @@ export const dismiss = staffMutation({
     const closed = await closeReports(ctx, args.postId, args.commentId, staff._id, "dismissed");
     if (closed === 0) throw fail("NO_CHANGES", "There are no open reports on this");
     await log({ action: "community.dismiss_reports", targetType: args.commentId ? "community_comment" : "community_post", targetId: args.commentId ?? args.postId, after: { dismissed: closed } });
+    return null;
+  },
+});
+
+/** Take one photo down (the post or reply stays). The file is deleted; the author is told why. */
+export const removeImage = staffMutation({
+  permission: "community.moderate",
+  requireReason: true,
+  args: { postId: v.id("communityPosts"), commentId: v.optional(v.id("communityComments")), index: v.number(), reason: v.string() },
+  handler: async (ctx, args, _staff, log) => {
+    const doc = args.commentId ? await ctx.db.get(args.commentId) : await ctx.db.get(args.postId);
+    if (!doc || (args.commentId && (doc as Doc<"communityComments">).postId !== args.postId)) throw notFound("Post");
+    const im = doc.images?.[args.index];
+    if (!im || im.status === "removed") throw fail("NO_CHANGES", "That photo is already removed");
+    const images = [...doc.images!];
+    images[args.index] = { ...im, status: "removed", removedReason: args.reason.trim() };
+    await ctx.db.patch(doc._id, { images });
+    await ctx.storage.delete(im.storageId);
+    await notify(ctx, doc.userId, { title: "A photo of yours was removed", body: `Our team removed a photo: ${args.reason.trim()}. Contact support if you think this was a mistake.`, link: "/dashboard/support" });
+    await log({ action: "community.remove_image", targetType: args.commentId ? "community_comment" : "community_post", targetId: doc._id, targetLabel: im.alt, before: { status: im.status }, after: { status: "removed" } });
     return null;
   },
 });

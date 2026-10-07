@@ -3,6 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { requireAuthUser } from '@/lib/require-auth'
 import { consumeAi } from '@/lib/ai-guard'
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit'
+import { prepareImages } from '@/lib/ai-images'
 
 const groq = createOpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
@@ -16,6 +17,8 @@ const ollama = createOpenAI({
 })
 
 const GROQ_MODEL = process.env.GROQ_MODEL ?? 'openai/gpt-oss-20b'
+// Used only when the teacher attaches a photo.
+const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL ?? 'meta-llama/llama-4-scout-17b-16e-instruct'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma2:2b'
 
 function buildSystemPrompt(lang?: string, profile?: {
@@ -143,15 +146,17 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Messages are required.' }, { status: 400 })
   }
   // Cap history to last 12 messages to prevent unbounded token growth in long sessions
-  const recentMessages = messages.slice(-12)
-  const converted = await convertToModelMessages(recentMessages)
+  const prepared = prepareImages(messages.slice(-12))
+  if (prepared.error) return Response.json({ error: prepared.error }, { status: 400 })
+  const recentMessages = prepared.messages
+  const converted = await convertToModelMessages(recentMessages as Parameters<typeof convertToModelMessages>[0])
   const system = buildSystemPrompt(lang, profile, currentLesson, timeZone)
 
   const canUseGroq = process.env.GROQ_API_KEY && !groqOnCooldown()
 
   if (canUseGroq) {
     const result = streamText({
-      model: groq(GROQ_MODEL),
+      model: groq(prepared.images ? GROQ_VISION_MODEL : GROQ_MODEL),
       system,
       messages: converted,
       temperature: 0.7,
@@ -175,7 +180,8 @@ export async function POST(req: Request) {
     return response
   }
 
-  // Fall back to local Ollama
+  // Fall back to local Ollama (text only)
+  if (prepared.images) return Response.json({ error: 'Photos need the online AI service, which is busy right now. Try again in a minute, or send your question without the photo.' }, { status: 503 })
   const ollamaUp = await isOllamaAvailable()
   if (!ollamaUp) {
     return Response.json(

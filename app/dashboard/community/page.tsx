@@ -3,60 +3,97 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
-import { useProfile } from '@/context/profile-context'
+import type { Id } from '@/convex/_generated/dataModel'
 import { BackButton } from '@/components/back-button'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { ImageGallery, ImagePicker, type PickedImage } from '@/components/community/images'
 import { toast } from 'sonner'
 import { Flag } from 'lucide-react'
 import { errorMessage } from '@/lib/support'
 
 const categories = ['Assessment', 'Pedagogy', 'Technology', 'Inclusion', 'Wellbeing', 'Resources', 'Ask a Question'] as const
+const when = (ms: number) => new Date(ms).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Nairobi' })
 
 export default function CommunityPage() {
-  const { profile } = useProfile()
   const posts = useQuery(api.community.listPosts, {})
   const createPost = useMutation(api.community.createPost)
-  const addComment = useMutation(api.community.addComment)
+  const uploadUrl = useMutation(api.communityImages.uploadUrl)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [category, setCategory] = useState<typeof categories[number]>('Ask a Question')
-  const [reply, setReply] = useState<Record<string, string>>({})
+  const [images, setImages] = useState<PickedImage[]>([])
+  const [imagesOk, setImagesOk] = useState(true)
+  const [pickerKey, setPickerKey] = useState(0)
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!title.trim() || !content.trim()) return
+    setBusy(true)
+    try {
+      await createPost({ title: title.trim(), content: content.trim(), category, ...(images.length ? { images } : {}) })
+      setTitle(''); setContent(''); setImages([]); setPickerKey((k) => k + 1)
+      if (images.length) toast.success('Posted. Your photos appear to others once they have been checked, usually within a minute.')
+    } catch (err) {
+      toast.error(errorMessage(err, 'Your post was not sent. Please try again.'))
+    } finally { setBusy(false) }
+  }
 
   return <div className="max-w-3xl space-y-6">
     <BackButton fallbackHref="/dashboard" label="Back to Dashboard" />
     <div><h1 className="text-2xl font-bold">Teacher Community</h1><p className="text-muted-foreground">Share ideas and learn from fellow teachers.</p></div>
-    <form className="glass rounded-2xl p-5 space-y-3" onSubmit={async e => { e.preventDefault(); if (!title.trim() || !content.trim()) return; try { await createPost({ title: title.trim(), content: content.trim(), category }); setTitle(''); setContent('') } catch (err) { toast.error(errorMessage(err, 'Your post was not sent. Please try again.')) } }}>
+    <form className="glass space-y-3 rounded-2xl p-4 sm:p-5" onSubmit={submit}>
       <h2 className="font-semibold">Start a discussion</h2>
-      <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" required />
-      <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="What would you like to share?" required />
-      <div className="flex gap-3"><select value={category} onChange={e => setCategory(e.target.value as typeof category)} className="rounded-xl border px-3 bg-background">{categories.map(c => <option key={c}>{c}</option>)}</select><Button type="submit">Post</Button></div>
+      <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" aria-label="Title" required maxLength={150} className="min-h-11" />
+      <Textarea value={content} onChange={e => setContent(e.target.value)} placeholder="What would you like to share?" aria-label="Post" required maxLength={5000} />
+      <ImagePicker key={pickerKey} max={4} getUploadUrl={() => uploadUrl({})} onChange={(i, ok) => { setImages(i); setImagesOk(ok) }} disabled={busy} />
+      <div className="flex flex-wrap gap-3">
+        <select aria-label="Category" value={category} onChange={e => setCategory(e.target.value as typeof category)} className="min-h-11 rounded-xl border bg-background px-3">{categories.map(c => <option key={c}>{c}</option>)}</select>
+        <Button type="submit" className="min-h-11" disabled={busy || !imagesOk}>{busy ? 'Posting…' : 'Post'}</Button>
+        {!imagesOk && <span className="self-center text-xs text-muted-foreground">Describe each photo (or wait for uploads) to post.</span>}
+      </div>
     </form>
-    {posts === undefined ? <p className="text-muted-foreground">Loading discussions…</p> : posts.map(post => <article key={post._id} className="rounded-2xl border p-5 space-y-3">
-      <div><div className="flex justify-between gap-3"><h2 className="font-semibold">{post.title}</h2><span className="text-xs text-muted-foreground">{post.category}</span></div><p className="text-xs text-muted-foreground">{post.authorName} · {new Date(post.createdAt).toLocaleDateString()}</p></div>
+    {posts === undefined ? <p role="status" className="text-muted-foreground">Loading discussions…</p> : posts.length === 0 ? <p className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">No discussions yet. Start the first one.</p> : posts.map(post => <article key={post._id} className="space-y-3 rounded-2xl border p-4 sm:p-5">
+      <div><div className="flex justify-between gap-3"><h2 className="font-semibold">{post.title}</h2><span className="text-xs text-muted-foreground">{post.category}</span></div><p className="text-xs text-muted-foreground">{post.authorName} · {when(post.createdAt)}</p></div>
       <p className="whitespace-pre-wrap text-sm">{post.content}</p>
+      <ImageGallery images={post.images} />
       <ReportButton postId={post._id} />
-      <Comments postId={post._id} reply={reply[post._id] ?? ''} setReply={value => setReply(r => ({ ...r, [post._id]: value }))} addComment={addComment} />
+      <Comments postId={post._id} />
     </article>)}
   </div>
 }
 
-function Comments({ postId, reply, setReply, addComment }: { postId: any; reply: string; setReply: (value: string) => void; addComment: any }) {
+function Comments({ postId }: { postId: Id<'communityPosts'> }) {
   const comments = useQuery(api.community.comments, { postId })
-  return <div className="border-t pt-3 space-y-2"><p className="text-xs font-semibold">{comments?.length ?? 0} replies</p>{comments?.map(c => <div key={c._id} className="flex flex-wrap items-start justify-between gap-2"><p className="text-sm"><b>{c.authorName}:</b> {c.body}</p><ReportButton postId={postId} commentId={c._id} /></div>)}<form className="flex gap-2" onSubmit={async e => { e.preventDefault(); if (!reply.trim()) return; try { await addComment({ postId, body: reply.trim() }); setReply('') } catch (err) { toast.error(errorMessage(err, 'Your reply was not sent. Please try again.')) } }}><Input value={reply} onChange={e => setReply(e.target.value)} placeholder="Reply…" /><Button type="submit" variant="outline">Reply</Button></form></div>
+  const addComment = useMutation(api.community.addComment)
+  const uploadUrl = useMutation(api.communityImages.uploadUrl)
+  const [reply, setReply] = useState('')
+  const [images, setImages] = useState<PickedImage[]>([])
+  const [imagesOk, setImagesOk] = useState(true)
+  const [withPhoto, setWithPhoto] = useState(false)
+  const [pickerKey, setPickerKey] = useState(0)
+  return <div className="space-y-2 border-t pt-3">
+    <p className="text-xs font-semibold">{comments?.length ?? 0} replies</p>
+    {comments?.map(c => <div key={c._id} className="space-y-1"><div className="flex flex-wrap items-start justify-between gap-2"><p className="text-sm"><b>{c.authorName}:</b> {c.body}</p><ReportButton postId={postId} commentId={c._id} /></div><ImageGallery images={c.images} /></div>)}
+    <form className="space-y-2" onSubmit={async e => { e.preventDefault(); if (!reply.trim()) return; try { await addComment({ postId, body: reply.trim(), ...(images.length ? { images } : {}) }); setReply(''); setImages([]); setPickerKey(k => k + 1); setWithPhoto(false) } catch (err) { toast.error(errorMessage(err, 'Your reply was not sent. Please try again.')) } }}>
+      <div className="flex gap-2"><Input value={reply} onChange={e => setReply(e.target.value)} placeholder="Reply…" aria-label="Reply" maxLength={2000} className="min-h-11" /><Button type="submit" variant="outline" className="min-h-11" disabled={!imagesOk}>Reply</Button></div>
+      {withPhoto ? <ImagePicker key={pickerKey} max={2} getUploadUrl={() => uploadUrl({})} onChange={(i, ok) => { setImages(i); setImagesOk(ok) }} /> : <button type="button" className="min-h-11 text-xs text-muted-foreground underline" onClick={() => setWithPhoto(true)}>Add a photo to your reply</button>}
+    </form>
+  </div>
 }
 
 const REASONS = [
   { value: 'spam', label: 'Spam or advert' },
   { value: 'abusive', label: 'Rude or abusive' },
   { value: 'misleading', label: 'Wrong or misleading' },
-  { value: 'personal_info', label: 'Shares private information' },
+  { value: 'personal_info', label: 'Shares private information (including in a photo)' },
   { value: 'other', label: 'Something else' },
 ] as const
 
-/** Lets a learner flag a post or reply for staff. Nothing is hidden until a person has looked at it. */
-function ReportButton({ postId, commentId }: { postId: any; commentId?: any }) {
+/** Lets a learner flag a post or reply (and its photos) for staff. Nothing is hidden until a person has looked at it. */
+function ReportButton({ postId, commentId }: { postId: Id<'communityPosts'>; commentId?: Id<'communityComments'> }) {
   const report = useMutation(api.community.report)
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState<(typeof REASONS)[number]['value']>('spam')

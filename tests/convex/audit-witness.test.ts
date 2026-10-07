@@ -37,7 +37,10 @@ describe("audit log witness", () => {
     const t = newTest();
     const admin = await makeStaff(t, "super_admin");
     const learner = await makeLearner(t);
-    for (const school of ["A", "B", "C"]) await admin.as.mutation(api.admin.users.updateProfile, { profileId: learner.profileId, school, reason: REASON });
+    // Entries a second apart, so "the second entry" is never the one the checkpoint ends on.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    for (const school of ["A", "B", "C"]) { vi.setSystemTime(Date.now() + 1000); await admin.as.mutation(api.admin.users.updateProfile, { profileId: learner.profileId, school, reason: REASON }); }
+    vi.useRealTimers();
     await t.mutation(internal.auditWitness.check, {});
 
     // Someone quietly edits an old entry's content (without being able to redo every hash after it).

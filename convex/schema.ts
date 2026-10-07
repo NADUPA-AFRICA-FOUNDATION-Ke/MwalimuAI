@@ -214,6 +214,14 @@ export default defineSchema({
     moderatedAt: v.optional(v.number()),
     moderatedBy: v.optional(v.id("staff")),
     moderationReason: v.optional(v.string()),
+    // Photos on the post. Each needs alt text. "pending" until metadata is stripped (and screened, when enabled);
+    // "removed" when screening or staff took it down. Only "ok" images are shown to other teachers.
+    images: v.optional(v.array(v.object({
+      storageId: v.id("_storage"),
+      alt: v.string(),
+      status: v.union(v.literal("pending"), v.literal("ok"), v.literal("removed")),
+      removedReason: v.optional(v.string()),
+    }))),
   })
     .index("by_status_and_created_at", ["status", "createdAt"])
     .index("by_status_category_and_created_at", ["status", "category", "createdAt"])
@@ -230,6 +238,14 @@ export default defineSchema({
     hiddenAt: v.optional(v.number()),
     hiddenBy: v.optional(v.id("staff")),
     hiddenReason: v.optional(v.string()),
+    // Photos on the post. Each needs alt text. "pending" until metadata is stripped (and screened, when enabled);
+    // "removed" when screening or staff took it down. Only "ok" images are shown to other teachers.
+    images: v.optional(v.array(v.object({
+      storageId: v.id("_storage"),
+      alt: v.string(),
+      status: v.union(v.literal("pending"), v.literal("ok"), v.literal("removed")),
+      removedReason: v.optional(v.string()),
+    }))),
   })
     .index("by_post_and_created_at", ["postId", "createdAt"])
     .index("by_user_and_created_at", ["userId", "createdAt"]),
@@ -683,7 +699,7 @@ export default defineSchema({
 
   // Team-wide alerts for the admin console (new tickets and replies). Each staff member has a "seen up to" time.
   staffNotices: defineTable({
-    kind: v.union(v.literal("ticket_new"), v.literal("ticket_reply"), v.literal("ticket_reopened")),
+    kind: v.union(v.literal("ticket_new"), v.literal("ticket_reply"), v.literal("ticket_reopened"), v.literal("image_flagged")),
     title: v.string(),
     body: v.string(),
     link: v.string(),

@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input'
 import { BackButton } from '@/components/back-button'
 import {
   Send, Lightbulb, AlertCircle, RefreshCw, Wifi, WifiOff,
-  Cpu, BookMarked, X, Globe, Plus, Trash2, MessageSquare, History,
+  Cpu, BookMarked, X, Globe, Plus, Trash2, MessageSquare, History, ImagePlus,
 } from 'lucide-react'
+import { shrink } from '@/components/support/attachments'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { useProfile } from '@/context/profile-context'
 import { authHeaders } from '@/lib/authed-fetch'
@@ -219,6 +220,19 @@ function ChatPanel({
   onConversationCreated, onMessageSaved, onToggleSidebar,
 }: ChatPanelProps) {
   const [input, setInput]           = useState('')
+  const [photo, setPhoto]           = useState<{ url: string; name: string } | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+  const photoInput = useRef<HTMLInputElement>(null)
+  // Photos are redrawn at most 1024px (smaller upload, no hidden metadata) and sent with the message only.
+  const attachPhoto = useCallback(async (file: File | undefined) => {
+    setPhotoError(null)
+    if (!file) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setPhotoError('JPG, PNG or WebP photos only.'); return }
+    const blob = await shrink(file, 1024)
+    if (blob.size > 1_500_000) { setPhotoError('That photo is too large. Try a smaller one.'); return }
+    const url = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsDataURL(blob) })
+    setPhoto({ url, name: file.name })
+  }, [])
   const [backend, setBackend]       = useState<Backend>(null)
   const [isOnline, setIsOnline]     = useState(true)
   const [lessonCtx, setLessonCtx]   = useState<LessonContext | null>(null)
@@ -310,13 +324,17 @@ function ChatPanel({
   }, [messages, isLoading])
 
   const handleSend = useCallback(async (text: string = input) => {
-    const trimmed = text.trim()
+    const sentPhoto = photo
+    const trimmed = text.trim() || (sentPhoto ? 'Please look at this photo and tell me how it relates to my teaching.' : '')
     if (!trimmed || isLoading) return
     setInput('')
+    setPhoto(null)
     hasSentMessageRef.current = true
 
     // Send to AI immediately — don't block on DB writes
-    void sendMessage({ text: trimmed })
+    void sendMessage(sentPhoto
+      ? { text: trimmed, files: [{ type: 'file', mediaType: sentPhoto.url.slice(5, sentPhoto.url.indexOf(';')), url: sentPhoto.url, filename: sentPhoto.name }] }
+      : { text: trimmed })
 
     let convId = convIdRef.current
 
@@ -329,10 +347,10 @@ function ChatPanel({
 
     // Save user message — log if it fails so we can diagnose persistence issues
     if (convId) {
-      void appendMessage({ conversationId: convId as Id<'aiConversations'>, role: 'user', content: trimmed, clientId: `user-${Date.now()}` })
+      void appendMessage({ conversationId: convId as Id<'aiConversations'>, role: 'user', content: sentPhoto ? `${trimmed}\n\n(Photo attached)` : trimmed, clientId: `user-${Date.now()}` })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isLoading, userId, createConversation, appendMessage, onConversationCreated, sendMessage])
+  }, [input, photo, isLoading, userId, createConversation, appendMessage, onConversationCreated, sendMessage])
 
   const errorMessage = (() => {
     if (!error) return null
@@ -463,6 +481,10 @@ function ChatPanel({
                       ? 'bg-primary text-primary-foreground rounded-tr-sm whitespace-pre-wrap'
                       : 'bg-muted text-foreground rounded-tl-sm'
                   }`}>
+                    {(message.parts as { type: string; url?: string; mediaType?: string }[])?.filter((p) => p.type === 'file' && p.mediaType?.startsWith('image/')).map((p, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element -- photo the teacher just attached
+                      <img key={i} src={p.url} alt="Photo you sent" className="mb-2 max-h-48 rounded-lg" />
+                    ))}
                     {message.role === 'user'
                       ? textContent
                       : <MarkdownRenderer content={textContent} compact />
@@ -503,18 +525,35 @@ function ChatPanel({
             </button>
           </div>
         )}
-        <form className="flex gap-2 max-w-4xl mx-auto" onSubmit={e => { e.preventDefault(); void handleSend() }}>
+        {(photo || photoError) && (
+          <div className="mx-auto mb-2 flex max-w-4xl items-center gap-2 text-xs">
+            {photo && <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- local preview */}
+              <img src={photo.url} alt="Photo to send" className="h-12 w-12 rounded object-cover" />
+              <span className="text-muted-foreground">Photo will be sent with your message. Avoid learners’ faces or names.</span>
+              <button type="button" onClick={() => setPhoto(null)} aria-label="Remove photo" className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted"><X className="h-4 w-4" /></button>
+            </>}
+            {photoError && <span role="alert" className="text-destructive">{photoError}</span>}
+          </div>
+        )}
+        <form className="flex gap-2 max-w-4xl mx-auto" onSubmit={e => { e.preventDefault(); void handleSend() }}
+          onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); void attachPhoto(e.dataTransfer.files[0]) }}>
+          <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e => { void attachPhoto(e.target.files?.[0]); e.target.value = '' }} />
+          <Button type="button" variant="outline" aria-label="Attach a photo" title="Attach a photo" disabled={isLoading} onClick={() => photoInput.current?.click()} className="min-w-11 rounded-xl px-3">
+            <ImagePlus className="w-4 h-4" />
+          </Button>
           <Input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+            onPaste={e => { const f = e.clipboardData.files[0]; if (f) { e.preventDefault(); void attachPhoto(f) } }}
             placeholder={isOnline ? 'Ask your AI coach anything about CBC…' : 'Offline — using local Ollama…'}
             aria-label="Message to AI coach"
             autoComplete="off"
             disabled={isLoading}
             className="flex-1 rounded-xl border-border/60 focus:border-primary/50 bg-background"
           />
-          <Button type="submit" disabled={isLoading || !input.trim()} aria-label="Send message" className="min-w-11 rounded-xl gap-2 px-4 sm:px-5">
+          <Button type="submit" disabled={isLoading || (!input.trim() && !photo)} aria-label="Send message" className="min-w-11 rounded-xl gap-2 px-4 sm:px-5">
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Send</span>
           </Button>

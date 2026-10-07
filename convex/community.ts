@@ -3,6 +3,8 @@ import { mutation, query } from "./_generated/server";
 import { requireCurrentProfile } from "./lib/auth";
 import { fail } from "./lib/errors";
 import { requireNonEmpty } from "./lib/validation";
+import { internal } from "./_generated/api";
+import { checkImages, imagesInput, shownImages } from "./communityImages";
 
 const category = v.union(v.literal("Assessment"), v.literal("Pedagogy"), v.literal("Technology"), v.literal("Inclusion"), v.literal("Wellbeing"), v.literal("Resources"), v.literal("Ask a Question"));
 const reportReason = v.union(v.literal("spam"), v.literal("abusive"), v.literal("misleading"), v.literal("personal_info"), v.literal("other"));
@@ -14,19 +16,24 @@ const DAILY_REPORTS = 15;
 export const listPosts = query({
   args: { category: v.optional(category) },
   handler: async (ctx, args) => {
-    await requireCurrentProfile(ctx);
-    return args.category
+    const me = await requireCurrentProfile(ctx);
+    const rows = args.category
       ? await ctx.db.query("communityPosts").withIndex("by_status_category_and_created_at", (q) => q.eq("status", "active").eq("category", args.category!)).order("desc").take(100)
       : await ctx.db.query("communityPosts").withIndex("by_status_and_created_at", (q) => q.eq("status", "active")).order("desc").take(100);
+    const out = [];
+    for (const { images, ...p } of rows) out.push({ ...p, images: await shownImages(ctx, images, p.userId === me._id) });
+    return out;
   },
 });
 
 export const comments = query({
   args: { postId: v.id("communityPosts") },
   handler: async (ctx, { postId }) => {
-    await requireCurrentProfile(ctx);
+    const me = await requireCurrentProfile(ctx);
     const rows = await ctx.db.query("communityComments").withIndex("by_post_and_created_at", (q) => q.eq("postId", postId)).order("asc").take(200);
-    return rows.filter((c) => c.hiddenAt === undefined);
+    const out = [];
+    for (const { images, ...c } of rows.filter((c) => c.hiddenAt === undefined)) out.push({ ...c, images: await shownImages(ctx, images, c.userId === me._id) });
+    return out;
   },
 });
 
@@ -38,27 +45,32 @@ async function assertNotFlooding(ctx: { db: import("./_generated/server").Mutati
 }
 
 export const createPost = mutation({
-  args: { title: v.string(), content: v.string(), category },
+  args: { title: v.string(), content: v.string(), category, images: v.optional(imagesInput) },
   handler: async (ctx, args) => {
     const profile = await requireCurrentProfile(ctx);
     const title = requireNonEmpty(args.title, "Title", 150);
     const content = requireNonEmpty(args.content, "Post", 5000);
     await assertNotFlooding(ctx, profile._id);
+    const images = await checkImages(ctx, args.images, 4);
     const now = Date.now();
-    return await ctx.db.insert("communityPosts", { title, content, category: args.category, userId: profile._id, authorName: profile.name ?? "Teacher", county: profile.county ?? "", likesCount: 0, commentsCount: 0, isPinned: false, status: "active", createdAt: now, updatedAt: now });
+    const id = await ctx.db.insert("communityPosts", { title, content, category: args.category, userId: profile._id, authorName: profile.name ?? "Teacher", county: profile.county ?? "", likesCount: 0, commentsCount: 0, isPinned: false, status: "active", createdAt: now, updatedAt: now, ...(images.length ? { images } : {}) });
+    if (images.length) await ctx.scheduler.runAfter(0, internal.communityImages.sanitize, { target: { kind: "post", id } });
+    return id;
   },
 });
 
 export const addComment = mutation({
-  args: { postId: v.id("communityPosts"), body: v.string() },
-  handler: async (ctx, { postId, body }) => {
+  args: { postId: v.id("communityPosts"), body: v.string(), images: v.optional(imagesInput) },
+  handler: async (ctx, { postId, body, images: input }) => {
     const profile = await requireCurrentProfile(ctx);
     const text = requireNonEmpty(body, "Reply", 2000);
     const post = await ctx.db.get(postId);
     if (!post || post.status !== "active") throw fail("NOT_FOUND", "That post is no longer available");
     await assertNotFlooding(ctx, profile._id);
     const now = Date.now();
-    const id = await ctx.db.insert("communityComments", { postId, userId: profile._id, authorName: profile.name ?? "Teacher", body: text, createdAt: now, updatedAt: now });
+    const images = await checkImages(ctx, input, 2);
+    const id = await ctx.db.insert("communityComments", { postId, userId: profile._id, authorName: profile.name ?? "Teacher", body: text, createdAt: now, updatedAt: now, ...(images.length ? { images } : {}) });
+    if (images.length) await ctx.scheduler.runAfter(0, internal.communityImages.sanitize, { target: { kind: "comment", id } });
     await ctx.db.patch(postId, { commentsCount: post.commentsCount + 1, updatedAt: now });
     return id;
   },

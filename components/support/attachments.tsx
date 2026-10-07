@@ -15,11 +15,11 @@ const MAX_SIDE = 1600
  * Photos are redrawn at most 1600px on the long side and saved as JPEG before upload: much smaller on mobile data,
  * and redrawing drops the hidden metadata (including GPS location). PDFs go up unchanged.
  */
-async function shrink(file: File): Promise<Blob> {
+export async function shrink(file: File, maxSide = MAX_SIDE): Promise<Blob> {
   if (!file.type.startsWith('image/')) return file
   try {
     const bitmap = await createImageBitmap(file)
-    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
     const canvas = document.createElement('canvas')
     canvas.width = Math.round(bitmap.width * scale)
     canvas.height = Math.round(bitmap.height * scale)

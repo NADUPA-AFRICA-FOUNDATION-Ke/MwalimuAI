@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { usePaginatedQuery, useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
@@ -15,9 +16,15 @@ type Action =
   | { kind: 'hideReply'; commentId: Id<'communityComments'>; label: string }
   | { kind: 'restoreReply'; commentId: Id<'communityComments'>; label: string }
   | { kind: 'dismiss'; postId: Id<'communityPosts'>; commentId?: Id<'communityComments'>; label: string }
+  | { kind: 'removeImage'; postId: Id<'communityPosts'>; commentId?: Id<'communityComments'>; index: number; label: string }
 
 /** Reported posts and replies, plus a way to look through recent posts. Hiding keeps the content and can be undone. */
 export default function CommunityModerationPage() {
+  return <Suspense fallback={<Loading />}><Moderation /></Suspense>
+}
+
+function Moderation() {
+  const flagged = useSearchParams().get('post') as Id<'communityPosts'> | null
   const [tab, setTab] = useState<'reports' | 'recent' | 'hidden'>('reports')
   const reports = useQuery(api.admin.community.reports, {})
   const recent = usePaginatedQuery(api.admin.community.posts, { status: 'active' }, { initialNumItems: 15 })
@@ -27,12 +34,13 @@ export default function CommunityModerationPage() {
   const hideComment = useMutation(api.admin.community.hideComment)
   const restoreComment = useMutation(api.admin.community.restoreComment)
   const dismiss = useMutation(api.admin.community.dismiss)
+  const removeImage = useMutation(api.admin.community.removeImage)
   const { ok } = useRun()
   const [action, setAction] = useState<Action | null>(null)
   const [openThread, setOpenThread] = useState<Id<'communityPosts'> | null>(null)
 
   const TITLES: Record<Action['kind'], string> = {
-    hidePost: 'Hide this post?', restorePost: 'Restore this post?', hideReply: 'Hide this reply?', restoreReply: 'Restore this reply?', dismiss: 'Dismiss the reports?',
+    hidePost: 'Hide this post?', restorePost: 'Restore this post?', hideReply: 'Hide this reply?', restoreReply: 'Restore this reply?', dismiss: 'Dismiss the reports?', removeImage: 'Remove this photo?',
   }
   const confirm = (reason: string) =>
     ok(() => {
@@ -41,12 +49,19 @@ export default function CommunityModerationPage() {
       if (a.kind === 'restorePost') return restorePost({ postId: a.postId, reason })
       if (a.kind === 'hideReply') return hideComment({ commentId: a.commentId, reason })
       if (a.kind === 'restoreReply') return restoreComment({ commentId: a.commentId, reason })
+      if (a.kind === 'removeImage') return removeImage({ postId: a.postId, commentId: a.commentId, index: a.index, reason })
       return dismiss({ postId: a.postId, commentId: a.commentId, reason })
     }, 'Done')
 
   return (
     <>
       <PageHeader title="Community moderation" description="Reports from teachers, and recent discussions. Hiding removes content from view but keeps it, and the author is told why." />
+      {flagged && (
+        <section className="mb-4 space-y-2 rounded-lg border-2 border-primary p-3" aria-label="Thread from a notice">
+          <h2 className="text-sm font-semibold">Thread from your notice</h2>
+          <Thread postId={flagged} act={setAction} />
+        </section>
+      )}
       <div role="tablist" aria-label="Moderation views" className="mb-4 flex flex-wrap gap-2">
         {([['reports', `Reports${reports ? ` (${reports.length})` : ''}`], ['recent', 'Recent posts'], ['hidden', 'Hidden']] as const).map(([id, label]) => (
           <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`min-h-10 rounded-full border px-4 text-sm ${tab === id ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}>{label}</button>
@@ -75,7 +90,7 @@ export default function CommunityModerationPage() {
                 <Button size="sm" variant="outline" onClick={() => setAction({ kind: 'dismiss', postId: r.postId, commentId: r.commentId ?? undefined, label: r.title })}>Dismiss reports…</Button>
                 <Button size="sm" variant="ghost" onClick={() => setOpenThread(openThread === r.postId ? null : r.postId)}>{openThread === r.postId ? 'Hide thread' : 'See the thread'}</Button>
               </div>
-              {openThread === r.postId && <Thread postId={r.postId} onHideReply={(id, label) => setAction({ kind: 'hideReply', commentId: id, label })} />}
+              {openThread === r.postId && <Thread postId={r.postId} act={setAction} />}
             </li>
           ))}
         </ul>
@@ -113,25 +128,45 @@ export default function CommunityModerationPage() {
         title={action ? TITLES[action.kind] : ''}
         description={action ? `“${action.label}”. ${action.kind.startsWith('hide') ? 'The author is told, with your reason.' : ''}` : undefined}
         confirmLabel="Confirm"
-        destructive={action?.kind === 'hidePost' || action?.kind === 'hideReply'}
+        destructive={action?.kind === 'hidePost' || action?.kind === 'hideReply' || action?.kind === 'removeImage'}
         onConfirm={confirm}
       />
     </>
   )
 }
 
-function Thread({ postId, onHideReply }: { postId: Id<'communityPosts'>; onHideReply: (id: Id<'communityComments'>, label: string) => void }) {
+type ThreadImage = { url: string | null; alt: string; status: string; removedReason: string | null }
+function Photos({ images, onRemove }: { images: ThreadImage[]; onRemove: (index: number, alt: string) => void }) {
+  if (!images.length) return null
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {images.map((im, i) => (
+        <li key={i} className="w-32 space-y-1 text-xs">
+          {/* eslint-disable-next-line @next/next/no-img-element -- private storage address */}
+          {im.url ? <img src={im.url} alt={im.alt} className="h-24 w-32 rounded object-cover" /> : <div className="flex h-24 w-32 items-center justify-center rounded border text-muted-foreground">Removed</div>}
+          <p className="truncate" title={im.alt}>{im.alt}</p>
+          {im.status === 'removed' ? <p className="text-muted-foreground">{im.removedReason}</p> : <Button size="sm" variant="ghost" onClick={() => onRemove(i, im.alt)}>Remove photo…</Button>}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function Thread({ postId, act }: { postId: Id<'communityPosts'>; act: (a: Action) => void }) {
   const t = useQuery(api.admin.community.thread, { postId })
   if (!t) return <p className="text-xs text-muted-foreground">Loading…</p>
+  const onHideReply = (id: Id<'communityComments'>, label: string) => act({ kind: 'hideReply', commentId: id, label })
   return (
     <div className="space-y-2 rounded-md bg-muted/40 p-3">
       <p className="whitespace-pre-wrap text-sm">{t.post.content}</p>
+      <Photos images={t.post.images} onRemove={(index, label) => act({ kind: 'removeImage', postId, index, label })} />
       {t.comments.length === 0 ? <p className="text-xs text-muted-foreground">No replies.</p> : (
         <ul className="space-y-1 border-t pt-2">
           {t.comments.map((c) => (
             <li key={c._id} className="flex flex-wrap items-start justify-between gap-2 text-sm">
               <span className={c.hidden ? 'text-muted-foreground line-through' : ''}><b>{c.authorName}:</b> {c.body}</span>
               {!c.hidden && <Button size="sm" variant="ghost" onClick={() => onHideReply(c._id, c.body.slice(0, 40))}>Hide reply…</Button>}
+              <div className="w-full"><Photos images={c.images} onRemove={(index, label) => act({ kind: 'removeImage', postId, commentId: c._id, index, label })} /></div>
             </li>
           ))}
         </ul>
