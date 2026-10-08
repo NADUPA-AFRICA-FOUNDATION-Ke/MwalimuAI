@@ -70,8 +70,8 @@ export function AnalyticsExport({ days, programs }: { days: number; programs: { 
         {
           name: 'Daily activity',
           rows: [
-            ['Date', 'Active learners', 'Learners who did a lesson', 'Learners who used a tool', 'Assessments'],
-            ...trend.map((d): Cell[] => [d.date, d.active, d.lessons, d.tools, d.assessments]),
+            ['Date', 'Active learners', 'Learners who did a lesson', 'Learners who used a tool', 'Assessments', 'Learners who wrote in the journal', 'Learners active in the community'],
+            ...trend.map((d): Cell[] => [d.date, d.active, d.lessons, d.tools, d.assessments, d.journal, d.community]),
           ],
         },
       ]

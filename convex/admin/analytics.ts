@@ -8,7 +8,7 @@ import { getProgramDef } from "../lib/contentRead";
 import { addDays, eatDateKey } from "../lib/streakMath";
 import { fail } from "../lib/errors";
 
-const TREND_TYPES = ["login", "lesson", "tool", "assessment"] as const;
+const TREND_TYPES = ["login", "lesson", "tool", "assessment", "journal", "community"] as const;
 const REBUILD_DAYS = 120;
 const MAX_EXPORT_ROWS = 50_000;
 
@@ -76,6 +76,8 @@ export const trend = staffQuery({
       lessons: counters.get(`d:${date}:lesson`) ?? 0,
       tools: counters.get(`d:${date}:tool`) ?? 0,
       assessments: counters.get(`d:${date}:assessment`) ?? 0,
+      journal: counters.get(`d:${date}:journal`) ?? 0,
+      community: counters.get(`d:${date}:community`) ?? 0,
     }));
   },
 });

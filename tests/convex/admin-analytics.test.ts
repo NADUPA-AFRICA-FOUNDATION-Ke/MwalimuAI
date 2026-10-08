@@ -46,8 +46,11 @@ describe("learning analytics", () => {
     await a.as.mutation(api.activity.record, { date: today, type: "login" }); // same day again: not double counted
     await b.as.mutation(api.activity.record, { date: today, type: "login" });
     await b.as.mutation(api.activity.record, { date: today, type: "lesson" });
+    await a.as.mutation(api.activity.record, { date: today, type: "journal" });
+    await b.as.mutation(api.activity.record, { date: today, type: "community" });
+    await b.as.mutation(api.activity.record, { date: today, type: "tool" });
     const trend = await viewer.as.query(api.admin.analytics.trend, { days: 7 });
-    expect(trend.at(-1)).toMatchObject({ date: today, active: 2, lessons: 1 });
+    expect(trend.at(-1)).toMatchObject({ date: today, active: 2, lessons: 1, tools: 1, journal: 1, community: 1, assessments: 0 });
     expect(trend).toHaveLength(7);
   });
 
