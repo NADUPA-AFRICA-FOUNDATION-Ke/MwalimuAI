@@ -130,3 +130,37 @@ describe("visitor tickets only come through the website's contact route", () => 
     }
   });
 });
+
+describe("content four-eyes includes the last editor", () => {
+  it("does not let someone approve a draft they edited, even if another person submitted it", async () => {
+    const t = newTest();
+    const editor = await makeStaff(t, "content_manager");
+    const submitter = await makeStaff(t, "content_manager");
+    const independent = await makeStaff(t, "super_admin");
+    const itemId = await editor.as.mutation(api.admin.content.createItem, {
+      kind: "program", key: "four-eyes",
+      data: { title: "Four Eyes", shortTitle: "FE", tagline: "t", description: "d", track: "core", kicdAlignment: "KICD", hours: 1, orderIndex: 0,
+        assignment: { title: "A", context: "c", task: "do it", hints: [], rubric: [] }, certificate: { subtitle: "s", skills: ["x"] },
+        tags: { cbcLevels: ["Grade 4"], subjects: ["Mathematics"], counties: [] } },
+    });
+    await submitter.as.mutation(api.admin.content.submitForReview, { itemId });
+    await expect(editor.as.mutation(api.admin.content.review, { itemId, decision: "approve", reason: REASON })).rejects.toThrow(/SELF_REVIEW|submitted or edited/);
+    await independent.as.mutation(api.admin.content.review, { itemId, decision: "approve", reason: REASON });
+  });
+});
+
+describe("legacy module lessons are public only for published modules", () => {
+  it("returns nothing for an unpublished module", async () => {
+    const t = newTest();
+    const ids = await t.run(async (ctx) => {
+      const mod = (slug: string, isPublished: boolean) =>
+        ctx.db.insert("modules", { programId: "legacy", slug, title: slug, category: "c", difficultyLevel: "beginner", contentType: "text", orderIndex: 0, isPublished, updatedAt: Date.now() } as never);
+      const draft = await mod("draft", false);
+      const live = await mod("live", true);
+      for (const moduleId of [draft, live]) await ctx.db.insert("lessons", { moduleId, slug: "l1", title: "L1", orderIndex: 0, updatedAt: Date.now() });
+      return { draft, live };
+    });
+    expect(await t.query(api.modules.lessons, { moduleId: ids.draft })).toEqual([]);
+    expect(await t.query(api.modules.lessons, { moduleId: ids.live })).toHaveLength(1);
+  });
+});

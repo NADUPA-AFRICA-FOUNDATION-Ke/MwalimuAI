@@ -10,9 +10,17 @@ import { addDays, computeStreak, eatDateKey } from "./lib/streakMath";
 export const MAX_MEMBERS = 200;
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L: easy to read out in a staff room
 
+/** Unbiased characters from a CSPRNG (rejection sampling): join codes are the only thing needed to join a school. */
+function randomCode(length: number) {
+  const out: string[] = [];
+  const limit = 256 - (256 % CODE_ALPHABET.length);
+  while (out.length < length) for (const b of crypto.getRandomValues(new Uint8Array(length * 2))) if (b < limit && out.length < length) out.push(CODE_ALPHABET[b % CODE_ALPHABET.length]);
+  return out.join("");
+}
+
 export async function newSchoolCode(ctx: Pick<MutationCtx, "db">) {
   for (let i = 0; i < 20; i++) {
-    const code = Array.from({ length: 8 }, () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]).join("");
+    const code = randomCode(8);
     if (!(await ctx.db.query("schools").withIndex("by_code", (q) => q.eq("code", code)).first())) return code;
   }
   throw fail("TRY_AGAIN", "Could not create a join code. Please try again.");

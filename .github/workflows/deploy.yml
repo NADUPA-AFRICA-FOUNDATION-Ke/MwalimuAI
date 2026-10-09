@@ -8,6 +8,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Least privilege for the built-in GitHub token: these jobs only need to read the repository.
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false

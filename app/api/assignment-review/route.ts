@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   const { lang } = parsed
   const assignment = typeof parsed.assignment === 'string' ? parsed.assignment.slice(0, 4000) : ''
   const submission = typeof parsed.submission === 'string' ? parsed.submission.slice(0, 8000) : ''
-  const rubric = Array.isArray(parsed.rubric) ? parsed.rubric.filter((r): r is string => typeof r === 'string').slice(0, 10) : []
+  const rubric = Array.isArray(parsed.rubric) ? parsed.rubric.filter((r): r is string => typeof r === 'string').slice(0, 10).map((r) => r.slice(0, 500)) : []
   if (!submission.trim()) {
     return Response.json({ error: 'A submission is required.' }, { status: 400 })
   }

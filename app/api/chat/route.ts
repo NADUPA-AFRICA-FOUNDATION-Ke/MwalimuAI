@@ -68,7 +68,8 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Messages are required.' }, { status: 400 })
   }
   // Cap history to last 12 messages to prevent unbounded token growth in long sessions
-  const prepared = prepareImages(messages.slice(-12))
+  // Only the learner's and the coach's turns: a client-supplied 'system' turn must not reach the model.
+  const prepared = prepareImages(messages.slice(-12).filter((m: { role?: unknown }) => m?.role === 'user' || m?.role === 'assistant'))
   if (prepared.error) return Response.json({ error: prepared.error }, { status: 400 })
   const recentMessages = prepared.messages
   const converted = await convertToModelMessages(recentMessages as Parameters<typeof convertToModelMessages>[0])

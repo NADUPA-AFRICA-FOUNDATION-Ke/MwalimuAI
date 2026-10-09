@@ -400,7 +400,8 @@ export const review = staffMutation({
     const draft = i.draftVersionId ? await ctx.db.get(i.draftVersionId) : null;
     if (!draft || draft.status !== "in_review") throw fail("INVALID_STATE", "Nothing is awaiting review");
     // Four-eyes rule: applies to everyone, including Super Admins.
-    if (draft.submittedBy === staff._id) throw fail("SELF_REVIEW", "You cannot review content you submitted");
+    // The last editor counts as an author too, so nobody can edit a draft someone else submitted and then approve it.
+    if (draft.submittedBy === staff._id || draft.authorId === staff._id) throw fail("SELF_REVIEW", "You cannot review content you submitted or edited");
     await ctx.db.patch(draft._id, {
       status: args.decision === "approve" ? "approved" : "rejected",
       reviewedBy: staff._id,

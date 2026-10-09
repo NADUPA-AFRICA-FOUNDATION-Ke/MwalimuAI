@@ -5,8 +5,10 @@ export const BACKUP_CODE_COUNT = 10;
 export const BACKUP_CODE_PATTERN = /^[A-HJKMNP-Z2-9]{4}-?[A-HJKMNP-Z2-9]{4}$/i;
 
 const randomCode = () => {
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
-  const chars = [...bytes].map((b) => ALPHABET[b % ALPHABET.length]).join("");
+  // Rejection sampling keeps every character equally likely (plain modulo would favour the first few).
+  const limit = 256 - (256 % ALPHABET.length);
+  let chars = "";
+  while (chars.length < 8) for (const b of crypto.getRandomValues(new Uint8Array(16))) if (b < limit && chars.length < 8) chars += ALPHABET[b % ALPHABET.length];
   return `${chars.slice(0, 4)}-${chars.slice(4)}`;
 };
 const normalize = (code: string) => code.replace(/-/g, "").toUpperCase();

@@ -13,5 +13,10 @@ export const listPublished = query({
 
 export const lessons = query({
   args: { moduleId: v.id("modules") },
-  handler: async (ctx, { moduleId }) => await ctx.db.query("lessons").withIndex("by_module_and_order", (q) => q.eq("moduleId", moduleId)).collect(),
+  handler: async (ctx, { moduleId }) => {
+    // Public: only lessons of a published module.
+    const mod = await ctx.db.get(moduleId);
+    if (!mod?.isPublished) return [];
+    return await ctx.db.query("lessons").withIndex("by_module_and_order", (q) => q.eq("moduleId", moduleId)).collect();
+  },
 });

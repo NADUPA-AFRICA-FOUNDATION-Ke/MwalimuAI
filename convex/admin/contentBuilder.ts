@@ -295,7 +295,7 @@ export const reviewProgram = staffMutation({
       if (!i.draftVersionId) continue;
       const draft = await ctx.db.get(i.draftVersionId);
       if (!draft || draft.status !== "in_review") continue;
-      if (draft.submittedBy === staff._id) {
+      if (draft.submittedBy === staff._id || draft.authorId === staff._id) {
         ownWork++; // four-eyes: never your own submission
         continue;
       }
