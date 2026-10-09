@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AnalyticsExport } from '@/components/admin/analytics-export'
-import { Empty, Loading, PageHeader, ReasonDialog, selectClass, useRun, useStaff } from '@/components/admin/common'
+import { Empty, Loading, PageHeader, ReasonDialog, selectClass, StatCard, useRun, useStaff } from '@/components/admin/common'
 import { filterPrograms, LOW_COMPLETION_PCT, type ProgramFilter, type ProgramSort } from '@/lib/admin/analytics-filter'
 
 const fmt = (n: number) => n.toLocaleString()
@@ -61,15 +61,15 @@ export default function AnalyticsPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi icon={<Users />} label="Learners started" value={fmt(overview.totals.enrolments)} sub={`across ${overview.programs.length} programs`} />
-        <Kpi icon={<Award />} label="Certificates" value={fmt(overview.totals.certificates)} sub={`${overview.totals.completionRate}% completion rate`} />
-        <Kpi
+        <StatCard icon={<Users />} label="Learners started" value={fmt(overview.totals.enrolments)} sub={`across ${overview.programs.length} programs`} />
+        <StatCard icon={<Award />} label="Certificates" value={fmt(overview.totals.certificates)} sub={`${overview.totals.completionRate}% completion rate`} />
+        <StatCard
           icon={<TrendingUp />}
           label="Avg test score gain"
           value={avgGain === null ? '—' : signed(avgGain)}
           sub={`${fmt(assignments)} assignments submitted`}
         />
-        <Kpi icon={<Activity />} label="Active learners / day" value={fmt(avgActive)} sub={`average, last ${days} days`} />
+        <StatCard icon={<Activity />} label="Active learners / day" value={fmt(avgActive)} sub={`average, last ${days} days`} />
       </div>
 
       <Tabs defaultValue="programs" className="mt-8">
@@ -351,19 +351,6 @@ function ActivityPanel({ trend, days, setDays }: { trend: Day[]; days: number; s
           </table>
         </div>
       </details>
-    </div>
-  )
-}
-
-function Kpi({ icon, label, value, sub }: { icon: ReactNode; label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-xl border bg-background p-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary [&_svg]:h-4 [&_svg]:w-4" aria-hidden="true">{icon}</span>
-        {label}
-      </div>
-      <div className="mt-3 text-2xl font-bold tabular-nums">{value}</div>
-      <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>
     </div>
   )
 }

@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useConvex, usePaginatedQuery, useQuery } from 'convex/react'
-import { ShieldCheck, Download } from 'lucide-react'
+import { ChevronRight, Download, ScrollText, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { downloadCsv } from '@/lib/admin/csv'
 import { Input } from '@/components/ui/input'
-import { Empty, Field, fmtTime, JsonDiff, Loading, PageHeader, selectClass, useStaff } from '@/components/admin/common'
+import { Avatar, compactSelect, Empty, fmtTime, JsonDiff, LoadMore, Loading, PageHeader, Panel, Toolbar, useStaff } from '@/components/admin/common'
 
 const ACTIONS = [
   'streak.restore',
@@ -129,77 +129,106 @@ export default function AuditPage() {
         }
       />
       {checkpoint !== undefined && (
-        <p role="status" className={`mb-4 rounded-md border p-3 text-sm ${checkpoint?.status === 'broken' ? 'border-red-300 bg-red-50 text-red-900 dark:bg-red-950 dark:text-red-100' : 'bg-muted/40'}`}>
-          {checkpoint === null
-            ? 'No daily integrity check has run yet. The first one runs overnight.'
-            : checkpoint.status === 'ok'
-              ? `Integrity check passed ${fmtTime(checkpoint.at)}: ${checkpoint.newRows} new entr${checkpoint.newRows === 1 ? 'y' : 'ies'} verified. Fingerprint ${checkpoint.headHash.slice(0, 12)}…, also emailed to Super Admins.`
-              : `Integrity check FAILED ${fmtTime(checkpoint.at)}: ${checkpoint.note ?? 'the chain does not match'} Investigate now.`}
-        </p>
+        <div
+          role="status"
+          className={`mb-6 flex items-start gap-3 rounded-xl border p-4 text-sm ${checkpoint?.status === 'broken' ? 'border-destructive/50 bg-destructive/5' : 'bg-background'}`}
+        >
+          <span
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${checkpoint?.status === 'broken' ? 'bg-destructive/10 text-destructive' : checkpoint ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
+            aria-hidden="true"
+          >
+            {checkpoint?.status === 'broken' ? <ShieldAlert className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+          </span>
+          <div className="min-w-0">
+            <div className={`font-semibold ${checkpoint?.status === 'broken' ? 'text-destructive' : ''}`}>
+              {checkpoint === null ? 'Daily integrity check not run yet' : checkpoint.status === 'ok' ? 'Integrity check passed' : 'Integrity check FAILED'}
+            </div>
+            <p className="text-muted-foreground">
+              {checkpoint === null
+                ? 'The first one runs overnight.'
+                : checkpoint.status === 'ok'
+                  ? `${fmtTime(checkpoint.at)}: ${checkpoint.newRows} new entr${checkpoint.newRows === 1 ? 'y' : 'ies'} verified. Fingerprint ${checkpoint.headHash.slice(0, 12)}…, also emailed to Super Admins.`
+                  : `${fmtTime(checkpoint.at)}: ${checkpoint.note ?? 'the chain does not match'} Investigate now.`}
+            </p>
+          </div>
+        </div>
       )}
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <Field label="Action">
-          <select className={selectClass} value={action} onChange={(e) => setAction(e.target.value)}>
+      <Panel>
+        <Toolbar end={status === 'LoadingFirstPage' ? undefined : `${results.length}${status === 'CanLoadMore' ? '+' : ''} entries`}>
+          <select aria-label="Action" className={compactSelect} value={action} onChange={(e) => setAction(e.target.value)}>
             <option value="">All actions</option>
             {ACTIONS.map((a) => (
               <option key={a}>{a}</option>
             ))}
           </select>
-        </Field>
-        <Field label="From">
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        </Field>
-        <Field label="To">
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        </Field>
-      </div>
-      {status === 'LoadingFirstPage' ? (
-        <Loading />
-      ) : results.length === 0 ? (
-        <Empty>No entries match.</Empty>
-      ) : (
-        <>
-          <ul className="divide-y rounded-lg border bg-background text-sm">
-            {results.map((r) => (
-              <li key={r._id} className="p-3">
-                <button
-                  className="flex w-full flex-wrap items-start justify-between gap-2 text-left"
-                  aria-expanded={open === r._id}
-                  onClick={() => setOpen(open === r._id ? null : r._id)}
-                >
-                  <span>
-                    <span className="font-medium">{r.action}</span>{' '}
-                    <span className="text-muted-foreground">
-                      · {r.targetType}: {r.targetLabel ?? r.targetId}
-                    </span>
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {fmtTime(r.createdAt)} · {r.actorEmail}
-                  </span>
-                </button>
-                {open === r._id && (
-                  <div className="mt-3 space-y-2 border-t pt-3">
-                    {r.reason && (
-                      <p>
-                        <span className="text-muted-foreground">Reason:</span> {r.reason}
-                      </p>
-                    )}
-                    <JsonDiff before={r.before} after={r.after} />
-                    <p className="font-mono text-[10px] text-muted-foreground">
-                      hash {r.hash.slice(0, 16)}… ← {r.prevHash.slice(0, 16)}…
-                    </p>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-          {status === 'CanLoadMore' && (
-            <Button variant="outline" className="mt-4" onClick={() => loadMore(25)}>
-              Load more
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            From
+            <Input type="date" aria-label="From date" className="h-9 w-auto bg-background" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </label>
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            To
+            <Input type="date" aria-label="To date" className="h-9 w-auto bg-background" value={to} onChange={(e) => setTo(e.target.value)} />
+          </label>
+          {(action || from || to) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setAction('')
+                setFrom('')
+                setTo('')
+              }}
+            >
+              Clear
             </Button>
           )}
-        </>
-      )}
+        </Toolbar>
+        {status === 'LoadingFirstPage' ? (
+          <div className="px-4"><Loading /></div>
+        ) : results.length === 0 ? (
+          <div className="p-4"><Empty icon={<ScrollText />}>No entries match.</Empty></div>
+        ) : (
+          <>
+            <ul className="divide-y text-sm">
+              {results.map((r) => (
+                <li key={r._id}>
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/40"
+                    aria-expanded={open === r._id}
+                    onClick={() => setOpen(open === r._id ? null : r._id)}
+                  >
+                    <Avatar name={r.actorEmail} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">
+                        <span className="font-medium">{r.action}</span>
+                        <span className="text-muted-foreground"> · {r.targetType}: {r.targetLabel ?? r.targetId}</span>
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">{r.actorEmail}</span>
+                    </span>
+                    <span className="hidden shrink-0 text-xs text-muted-foreground sm:block">{fmtTime(r.createdAt)}</span>
+                    <ChevronRight className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open === r._id ? 'rotate-90' : ''}`} aria-hidden="true" />
+                  </button>
+                  {open === r._id && (
+                    <div className="space-y-2 bg-muted/20 px-4 py-3 sm:pl-15">
+                      <p className="text-xs text-muted-foreground sm:hidden">{fmtTime(r.createdAt)}</p>
+                      {r.reason && (
+                        <p>
+                          <span className="text-muted-foreground">Reason:</span> {r.reason}
+                        </p>
+                      )}
+                      <JsonDiff before={r.before} after={r.after} />
+                      <p className="font-mono text-[10px] text-muted-foreground">
+                        hash {r.hash.slice(0, 16)}… ← {r.prevHash.slice(0, 16)}…
+                      </p>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {status === 'CanLoadMore' && <LoadMore onClick={() => loadMore(25)} />}
+          </>
+        )}
+      </Panel>
     </>
   )
 }

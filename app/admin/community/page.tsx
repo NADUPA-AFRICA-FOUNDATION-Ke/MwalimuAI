@@ -7,7 +7,8 @@ import { usePaginatedQuery, useMutation, useQuery } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import type { Id } from '@/convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
-import { Empty, fmtTime, Loading, PageHeader, Pill, ReasonDialog, useRun } from '@/components/admin/common'
+import { Flag, MessagesSquare } from 'lucide-react'
+import { Empty, fmtTime, LoadMore, Loading, PageHeader, Panel, Pill, ReasonDialog, Segmented, useRun } from '@/components/admin/common'
 
 const REASON_LABEL: Record<string, string> = { spam: 'Spam', abusive: 'Abusive', misleading: 'Misleading', personal_info: 'Private info', other: 'Other' }
 type Action =
@@ -57,21 +58,27 @@ function Moderation() {
     <>
       <PageHeader title="Community moderation" description="Reports from teachers, and recent discussions. Hiding removes content from view but keeps it, and the author is told why." />
       {flagged && (
-        <section className="mb-4 space-y-2 rounded-lg border-2 border-primary p-3" aria-label="Thread from a notice">
-          <h2 className="text-sm font-semibold">Thread from your notice</h2>
-          <Thread postId={flagged} act={setAction} />
-        </section>
+        <Panel title="Thread from your notice" className="mb-6 border-primary/60">
+          <div className="p-4"><Thread postId={flagged} act={setAction} /></div>
+        </Panel>
       )}
-      <div role="tablist" aria-label="Moderation views" className="mb-4 flex flex-wrap gap-2">
-        {([['reports', `Reports${reports ? ` (${reports.length})` : ''}`], ['recent', 'Recent posts'], ['hidden', 'Hidden']] as const).map(([id, label]) => (
-          <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`min-h-10 rounded-full border px-4 text-sm ${tab === id ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}>{label}</button>
-        ))}
+      <div className="mb-4">
+        <Segmented
+          label="Moderation views"
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: 'reports', label: 'Reports', count: reports?.length, alert: true },
+            { value: 'recent', label: 'Recent posts' },
+            { value: 'hidden', label: 'Hidden' },
+          ]}
+        />
       </div>
 
-      {tab === 'reports' && (reports === undefined ? <Loading /> : reports.length === 0 ? <Empty>No open reports. Nice and quiet.</Empty> : (
+      {tab === 'reports' && (reports === undefined ? <Loading /> : reports.length === 0 ? <Empty icon={<Flag />}>No open reports. Nice and quiet.</Empty> : (
         <ul className="space-y-3">
           {reports.map((r) => (
-            <li key={r.key} className="space-y-2 rounded-lg border bg-background p-4 text-sm">
+            <li key={r.key} className={`space-y-3 rounded-xl border border-l-4 bg-background p-4 text-sm ${r.count >= 3 ? 'border-l-destructive' : 'border-l-amber-400'}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">{r.kind === 'reply' ? 'Reply' : 'Post'}: {r.title}</span>
                 <span className="flex flex-wrap gap-1.5">
@@ -80,12 +87,12 @@ function Moderation() {
                   {r.alreadyHidden && <Pill tone="gray">hidden</Pill>}
                 </span>
               </div>
-              <p className="whitespace-pre-wrap">{r.text}</p>
+              <blockquote className="whitespace-pre-wrap rounded-lg bg-muted/50 px-3 py-2">{r.text}</blockquote>
               <p className="text-xs text-muted-foreground">
                 By {r.authorId ? <Link href={`/admin/users/${r.authorId}`} className="text-primary hover:underline">{r.authorName}</Link> : r.authorName}{r.county ? ` · ${r.county}` : ''} · latest report {fmtTime(r.latestAt)}
               </p>
               {r.notes.length > 0 && <ul className="list-inside list-disc text-xs text-muted-foreground">{r.notes.map((n, i) => <li key={i}>“{n}”</li>)}</ul>}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 border-t pt-3">
                 {!r.alreadyHidden && <Button size="sm" variant="destructive" onClick={() => setAction(r.commentId ? { kind: 'hideReply', commentId: r.commentId, label: r.title } : { kind: 'hidePost', postId: r.postId, label: r.title })}>Hide {r.kind}…</Button>}
                 <Button size="sm" variant="outline" onClick={() => setAction({ kind: 'dismiss', postId: r.postId, commentId: r.commentId ?? undefined, label: r.title })}>Dismiss reports…</Button>
                 <Button size="sm" variant="ghost" onClick={() => setOpenThread(openThread === r.postId ? null : r.postId)}>{openThread === r.postId ? 'Hide thread' : 'See the thread'}</Button>
@@ -98,11 +105,11 @@ function Moderation() {
 
       {(tab === 'recent' || tab === 'hidden') && (() => {
         const list = tab === 'recent' ? recent : hidden
-        return list.status === 'LoadingFirstPage' ? <Loading /> : list.results.length === 0 ? <Empty>Nothing here.</Empty> : (
-          <>
-            <ul className="divide-y rounded-lg border bg-background text-sm">
+        return list.status === 'LoadingFirstPage' ? <Loading /> : list.results.length === 0 ? <Empty icon={<MessagesSquare />}>{tab === 'hidden' ? 'Nothing is hidden.' : 'No posts yet.'}</Empty> : (
+          <Panel>
+            <ul className="divide-y text-sm">
               {list.results.map((p) => (
-                <li key={p._id} className="space-y-1 p-3">
+                <li key={p._id} className="space-y-1 px-4 py-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">{p.title}</span>
                     <span className="flex items-center gap-2">
@@ -112,13 +119,13 @@ function Moderation() {
                         : <Button size="sm" variant="outline" onClick={() => setAction({ kind: 'restorePost', postId: p._id, label: p.title })}>Restore…</Button>}
                     </span>
                   </div>
-                  <p className="text-muted-foreground">{p.text}</p>
+                  <p className="line-clamp-2 text-muted-foreground">{p.text}</p>
                   <p className="text-xs text-muted-foreground">{p.authorName}{p.county ? ` · ${p.county}` : ''} · {p.commentsCount} replies · {fmtTime(p.createdAt)}{p.moderationReason ? ` · hidden because: ${p.moderationReason}` : ''}</p>
                 </li>
               ))}
             </ul>
-            {list.status === 'CanLoadMore' && <Button className="mt-3" variant="outline" onClick={() => list.loadMore(15)}>Load more</Button>}
-          </>
+            {list.status === 'CanLoadMore' && <LoadMore onClick={() => list.loadMore(15)} />}
+          </Panel>
         )
       })()}
 
@@ -157,7 +164,7 @@ function Thread({ postId, act }: { postId: Id<'communityPosts'>; act: (a: Action
   if (!t) return <p className="text-xs text-muted-foreground">Loading…</p>
   const onHideReply = (id: Id<'communityComments'>, label: string) => act({ kind: 'hideReply', commentId: id, label })
   return (
-    <div className="space-y-2 rounded-md bg-muted/40 p-3">
+    <div className="space-y-2 rounded-lg bg-muted/40 p-3">
       <p className="whitespace-pre-wrap text-sm">{t.post.content}</p>
       <Photos images={t.post.images} onRemove={(index, label) => act({ kind: 'removeImage', postId, index, label })} />
       {t.comments.length === 0 ? <p className="text-xs text-muted-foreground">No replies.</p> : (

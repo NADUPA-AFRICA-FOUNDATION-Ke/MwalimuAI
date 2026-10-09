@@ -6,16 +6,22 @@ import { api } from '@/convex/_generated/api'
 import type { Id } from '@/convex/_generated/dataModel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { KeyRound, MailPlus, Plus, UserCheck, Users } from 'lucide-react'
 import {
+  Avatar,
+  compactSelect,
   Empty,
   Field,
   fmtTime,
   Loading,
   PageHeader,
+  Panel,
   Pill,
   ReasonDialog,
   ROLE_LABELS,
   selectClass,
+  StatCard,
+  StatGrid,
   StatusPill,
   useRun,
   useStaff,
@@ -40,6 +46,7 @@ export default function StaffPage() {
   const { run } = useRun()
   const [now] = useState(() => Date.now())
   const [form, setForm] = useState({ email: '', name: '', role: 'support_agent' as Role })
+  const [inviting, setInviting] = useState(false)
   const [act, setAct] = useState<
     | null
     | { kind: 'invite' }
@@ -54,8 +61,24 @@ export default function StaffPage() {
       <PageHeader
         title="Staff"
         description="Everyone with access to this console. They sign in with the invited email address and must set up two-factor on first use."
+        actions={!inviting && <Button size="sm" onClick={() => setInviting(true)}><Plus className="mr-1.5 h-4 w-4" />Invite someone</Button>}
       />
-      <section className="mb-8 rounded-lg border bg-background p-4">
+      {staff && (
+        <StatGrid>
+          <StatCard icon={<Users />} label="Staff" value={staff.length} />
+          <StatCard icon={<UserCheck />} label="Active" value={staff.filter((s) => s.status === 'active').length} sub={`${staff.filter((s) => s.status !== 'active').length} disabled`} />
+          <StatCard icon={<KeyRound />} label="Two-factor set up" value={staff.filter((s) => s.mfaEnrolledAt).length} sub={`of ${staff.length}`} />
+          <StatCard
+            icon={<MailPlus />}
+            label="Pending invites"
+            value={staff.filter((s) => !s.mfaEnrolledAt && s.inviteExpiresAt).length}
+            sub={`${staff.filter((s) => !s.mfaEnrolledAt && s.inviteExpiresAt && s.inviteExpiresAt < now).length} expired`}
+            tone={staff.some((s) => !s.mfaEnrolledAt && s.inviteExpiresAt && s.inviteExpiresAt < now) ? 'warn' : 'default'}
+          />
+        </StatGrid>
+      )}
+      {inviting && (
+      <section className="mb-6 rounded-xl border bg-background p-4">
         <h2 className="mb-3 font-semibold">Invite someone</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Email">
@@ -78,23 +101,29 @@ export default function StaffPage() {
             </select>
           </Field>
         </div>
-        <Button className="mt-3" disabled={!form.email.includes('@')} onClick={() => setAct({ kind: 'invite' })}>
-          Invite…
-        </Button>
+        <div className="mt-3 flex gap-2">
+          <Button disabled={!form.email.includes('@')} onClick={() => setAct({ kind: 'invite' })}>
+            Invite…
+          </Button>
+          <Button variant="ghost" onClick={() => setInviting(false)}>Cancel</Button>
+        </div>
       </section>
+      )}
       {!staff ? (
         <Loading />
       ) : staff.length === 0 ? (
-        <Empty>No staff yet.</Empty>
+        <Empty icon={<Users />}>No staff yet.</Empty>
       ) : (
-        <ul className="divide-y rounded-lg border bg-background text-sm">
+        <Panel>
+        <ul className="divide-y text-sm">
           {staff.map((s) => (
-            <li key={s._id} className="flex flex-wrap items-center justify-between gap-3 p-3">
-              <div>
-                <div className="font-medium">
+            <li key={s._id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+              <Avatar name={s.name || s.email} />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium">
                   {s.name || s.email} {s.email === me && <Pill tone="blue">you</Pill>}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="truncate text-xs text-muted-foreground">
                   {s.email} · {s.mfaEnrolledAt ? `2FA since ${fmtTime(s.mfaEnrolledAt)}` : s.inviteExpiresAt && s.inviteExpiresAt < now ? 'Invitation expired: resend it' : s.inviteExpiresAt ? `Invited, not signed in yet. Expires ${fmtTime(s.inviteExpiresAt)}` : '2FA not set up yet'}
                 </div>
               </div>
@@ -102,7 +131,7 @@ export default function StaffPage() {
                 <StatusPill status={s.status} />
                 <select
                   aria-label={`Role for ${s.email}`}
-                  className={`${selectClass} w-auto`}
+                  className={compactSelect}
                   value={s.role}
                   disabled={s.email === me}
                   onChange={(e) => setAct({ kind: 'role', id: s._id, role: e.target.value as Role, email: s.email })}
@@ -147,6 +176,7 @@ export default function StaffPage() {
             </li>
           ))}
         </ul>
+        </Panel>
       )}
       <ReasonDialog
         open={act !== null}
@@ -185,7 +215,10 @@ export default function StaffPage() {
                     ? () => resendInvite({ staffId: act.id, reason })
                     : () => resetMfa({ staffId: act.id, reason })
           const r = await run(fn, 'Done')
-          if (r !== undefined && act.kind === 'invite') setForm({ email: '', name: '', role: 'support_agent' })
+          if (r !== undefined && act.kind === 'invite') {
+            setForm({ email: '', name: '', role: 'support_agent' })
+            setInviting(false)
+          }
           return r !== undefined
         }}
       />

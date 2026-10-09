@@ -10,15 +10,21 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { AiPathWizard } from '@/components/admin/content/ai-path-wizard'
 import { StudioSections } from '@/components/admin/content/studio-sections'
+import { BookMarked, ChevronRight, ClipboardCheck, FilePen, Radio } from 'lucide-react'
 import {
   Empty,
   Field,
   fmtTime,
   Loading,
   PageHeader,
+  Panel,
   Pill,
   ReasonDialog,
+  SearchField,
   selectClass,
+  StatCard,
+  StatGrid,
+  Toolbar,
   useRun,
   useStaff,
 } from '@/components/admin/common'
@@ -55,9 +61,15 @@ function ContentStudio() {
   const [form, setForm] = useState({ title: '', track: 'core', description: '', modules: 3, lessons: 3, quizzes: true })
   const [importOpen, setImportOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [pathSearch, setPathSearch] = useState('')
   const tab = (TABS.find((t) => t.id === search.get('tab'))?.id ?? 'paths') as (typeof TABS)[number]['id']
   const aiTopic = search.get('ai')
   const [aiOpen, setAiOpen] = useState(Boolean(aiTopic))
+
+  const pq = pathSearch.trim().toLowerCase()
+  const shownPrograms = programs?.filter(
+    (p) => !pq || [p.title, p.key, ...p.cbcLevels, ...p.subjects].some((v) => v.toLowerCase().includes(pq)),
+  )
 
   const createProgram = async () => {
     const r = await run(
@@ -95,15 +107,22 @@ function ContentStudio() {
           </>
         }
       />
+      {programs && (
+        <StatGrid>
+          <StatCard icon={<BookMarked />} label="Learning paths" value={programs.filter((p) => !p.archived).length} sub={`${programs.filter((p) => p.archived).length} archived`} />
+          <StatCard icon={<Radio />} label="Live" value={programs.filter((p) => p.published && !p.archived).length} sub="visible to learners" />
+          <StatCard icon={<FilePen />} label="With drafts" value={programs.filter((p) => p.hasDraft).length} sub="unpublished changes" />
+          <StatCard icon={<ClipboardCheck />} label="Awaiting review" value={reviews?.length ?? '…'} sub="need a second person" tone={reviews?.length ? 'warn' : 'default'} />
+        </StatGrid>
+      )}
       {reviews && reviews.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-2 font-semibold">Waiting for review ({reviews.length})</h2>
-          <ul className="divide-y rounded-lg border bg-background text-sm">
+        <Panel title={`Waiting for review (${reviews.length})`} description="Nothing reaches learners until a second person approves it." className="mb-6 border-amber-300/70 dark:border-amber-900">
+          <ul className="divide-y text-sm">
             {reviews.map((r) => (
               <li key={r.versionId}>
                 <Link
                   href={`/admin/content/item/${r.itemId}`}
-                  className="flex flex-wrap justify-between gap-2 p-3 hover:bg-muted/30"
+                  className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 transition-colors hover:bg-muted/40"
                 >
                   <span>
                     <b>{r.title}</b>{' '}
@@ -111,17 +130,18 @@ function ContentStudio() {
                       · {r.kind} in {r.programKey} · v{r.version}
                     </span>
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
                     by {r.submittedBy} · {fmtTime(r.createdAt)}
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
-        </section>
+        </Panel>
       )}
 
-      <div role="tablist" aria-label="Kinds of content" className="mb-6 flex flex-wrap gap-2">
+      <div role="tablist" aria-label="Kinds of content" className="mb-6 inline-flex max-w-full flex-wrap gap-1 rounded-lg bg-muted p-1">
         {TABS.map((t) => (
           <Link
             key={t.id}
@@ -129,7 +149,7 @@ function ContentStudio() {
             aria-selected={tab === t.id}
             href={t.id === 'paths' ? '/admin/content' : `/admin/content?tab=${t.id}`}
             scroll={false}
-            className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm ${tab === t.id ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}`}
+            className={`inline-flex min-h-8 items-center rounded-md px-3 text-sm transition-colors ${tab === t.id ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
           >
             {t.label}
           </Link>
@@ -140,7 +160,7 @@ function ContentStudio() {
         <>
       {can('content.edit') && aiOpen && <AiPathWizard initialTopic={aiTopic ?? ''} onClose={() => setAiOpen(false)} />}
       {can('content.edit') && (
-        <section className="mb-8 rounded-lg border bg-background p-4" aria-labelledby="new-path-h">
+        <section className="mb-6 rounded-xl border bg-background p-4" aria-labelledby="new-path-h">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 id="new-path-h" className="font-semibold">Create a learning path</h2>
@@ -197,7 +217,7 @@ function ContentStudio() {
       )}
 
       {can('content.publish') && programs && !programs.some((p) => p.key === 'module-1') && (
-        <section className="mb-6 rounded-lg border bg-background p-4" aria-labelledby="legacy-h">
+        <section className="mb-6 rounded-xl border border-dashed bg-background p-4" aria-labelledby="legacy-h">
           <h2 id="legacy-h" className="font-semibold">Older Learning Modules library</h2>
           <p className="mb-3 text-sm text-muted-foreground">
             Learners still see the original Modules pages, whose progress only lives on each device. Bring them in as short courses and they become normal learning paths you can edit, with progress saved to the account and counted in analytics. Existing device progress carries over, and the old addresses forward to the new ones.
@@ -206,7 +226,6 @@ function ContentStudio() {
         </section>
       )}
 
-      <h2 className="mb-2 font-semibold">Learning paths</h2>
       {!programs ? (
         <Loading />
       ) : programs.length === 0 ? (
@@ -220,14 +239,20 @@ function ContentStudio() {
           {role !== 'super_admin' && <p className="mt-2">Ask a Super Admin to import it.</p>}
         </Empty>
       ) : (
-        <ul className="divide-y rounded-lg border bg-background text-sm">
-          {programs.map((p) => (
+        <Panel title="Learning paths">
+        <Toolbar end={`${shownPrograms!.length} of ${programs.length}`}>
+          <SearchField value={pathSearch} onChange={setPathSearch} placeholder="Search by title, key, level or subject" label="Search learning paths" />
+        </Toolbar>
+        {shownPrograms!.length === 0 ? <div className="p-4"><Empty>No learning paths match “{pathSearch}”.</Empty></div> : (
+        <ul className="divide-y text-sm">
+          {shownPrograms!.map((p) => (
             <li key={p._id}>
               <Link
                 href={`/admin/content/${p.key}`}
-                className="flex flex-wrap items-center justify-between gap-2 p-3 hover:bg-muted/30"
+                className={`flex flex-wrap items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40 ${p.archived ? 'opacity-60' : ''}`}
               >
-                <div>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true"><BookMarked className="h-4 w-4" /></span>
+                <div className="min-w-0 flex-1">
                   <div className="font-medium">{p.title}</div>
                   <div className="text-xs text-muted-foreground">
                     {p.key}
@@ -235,23 +260,26 @@ function ContentStudio() {
                     {p.subjects.length ? ` · ${p.subjects.join(', ')}` : ''}
                   </div>
                 </div>
-                <div className="flex gap-1.5">
+                <div className="flex items-center gap-1.5">
                   {p.archived && <Pill>archived</Pill>}
                   {p.published ? <Pill tone="green">live</Pill> : <Pill tone="gray">not live</Pill>}
                   {p.inReview && <Pill tone="amber">in review</Pill>}
                   {p.hasDraft && !p.inReview && <Pill tone="blue">draft</Pill>}
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 </div>
               </Link>
             </li>
           ))}
         </ul>
+        )}
+        </Panel>
       )}
 
         </>
       )}
 
       {tab === 'needs' && (
-      <section className="mb-8 rounded-lg border bg-background p-4" aria-labelledby="needs-h">
+      <section className="mb-8 rounded-xl border bg-background p-4" aria-labelledby="needs-h">
         <h2 id="needs-h" className="font-semibold">Needs assessment</h2>
         <p className="text-sm text-muted-foreground">
           The questionnaire new teachers answer to get recommended learning paths. Edit the questions, sections and which paths are recommended.

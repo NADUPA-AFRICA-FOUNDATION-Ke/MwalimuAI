@@ -8,17 +8,8 @@ import { api } from '@/convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Empty,
-  Field,
-  fmtTime,
-  Loading,
-  PageHeader,
-  ReasonDialog,
-  StatusPill,
-  useRun,
-  useStaff,
-} from '@/components/admin/common'
+import { CheckCircle2, ChevronRight, Plus, Siren, Users } from 'lucide-react'
+import { Empty, Field, fmtTime, Loading, PageHeader, Panel, ReasonDialog, StatCard, StatGrid, StatusPill, useRun, useStaff } from '@/components/admin/common'
 
 export default function IncidentsPage() {
   const { can } = useStaff()
@@ -28,16 +19,26 @@ export default function IncidentsPage() {
   const router = useRouter()
   const [form, setForm] = useState({ title: '', description: '', windowStart: '', windowEnd: '' })
   const [dialog, setDialog] = useState(false)
+  const [creating, setCreating] = useState(false)
   const valid = form.title.trim() && form.windowStart && form.windowEnd && form.windowStart <= form.windowEnd
+  const openCount = incidents?.filter((i) => ['draft', 'approved', 'running'].includes(i.status)).length ?? 0
+  const done = incidents?.filter((i) => i.status === 'completed').length ?? 0
+  const affected = incidents?.reduce((n, i) => n + (i.candidatesReady ? (i.candidateCount ?? 0) : 0), 0) ?? 0
 
   return (
     <>
       <PageHeader
         title="Incidents"
-        description="Bulk streak restoration for outages that hit many learners. Everyone who was on a streak going into the window and is missing days inside it is restored, after a preview and (above 50 people) a Super Admin's approval."
+        description="Bulk streak restoration for outages that hit many learners. Everyone on a streak going into the window who is missing days inside it is restored, after a preview and (above 50 people) a Super Admin's approval."
+        actions={can('streaks.restore_bulk') && !creating && <Button size="sm" onClick={() => setCreating(true)}><Plus className="mr-1.5 h-4 w-4" />New incident</Button>}
       />
-      {can('streaks.restore_bulk') && (
-        <section className="mb-8 rounded-lg border bg-background p-4">
+      <StatGrid cols={3}>
+        <StatCard icon={<Siren />} label="Open incidents" value={incidents ? openCount : '…'} sub="draft, approved or running" tone={openCount ? 'warn' : 'default'} />
+        <StatCard icon={<CheckCircle2 />} label="Completed" value={incidents ? done : '…'} />
+        <StatCard icon={<Users />} label="Learners affected" value={incidents ? affected.toLocaleString() : '…'} sub="across all incidents" />
+      </StatGrid>
+      {can('streaks.restore_bulk') && creating && (
+        <section className="mb-6 rounded-xl border bg-background p-4">
           <h2 className="mb-3 font-semibold">New incident</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Title">
@@ -76,24 +77,27 @@ export default function IncidentsPage() {
           <p className="mt-2 text-xs text-muted-foreground">
             Dates are Kenya time. The window must be in the past, within 30 days, and at most 14 days long.
           </p>
-          <Button className="mt-3" disabled={!valid} onClick={() => setDialog(true)}>
-            Create and calculate impact…
-          </Button>
+          <div className="mt-3 flex gap-2">
+            <Button disabled={!valid} onClick={() => setDialog(true)}>Create and calculate impact…</Button>
+            <Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+          </div>
         </section>
       )}
       {!incidents ? (
         <Loading />
       ) : incidents.length === 0 ? (
-        <Empty>No incidents yet.</Empty>
+        <Empty icon={<Siren />}>No incidents yet. Create one after an outage to restore affected streaks.</Empty>
       ) : (
-        <ul className="divide-y rounded-lg border bg-background text-sm">
+        <Panel>
+        <ul className="divide-y text-sm">
           {incidents.map((i) => (
             <li key={i._id}>
               <Link
                 href={`/admin/incidents/${i._id}`}
-                className="flex flex-wrap items-center justify-between gap-2 p-3 hover:bg-muted/30"
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40"
               >
-                <div>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true"><Siren className="h-4 w-4" /></span>
+                <div className="min-w-0 flex-1">
                   <div className="font-medium">{i.title}</div>
                   <div className="text-xs text-muted-foreground">
                     {i.windowStart} → {i.windowEnd} · created {fmtTime(i.createdAt)}
@@ -104,11 +108,13 @@ export default function IncidentsPage() {
                     {i.candidatesReady ? `${i.candidateCount ?? 0} affected` : 'calculating…'}
                   </span>
                   <StatusPill status={i.status} />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 </div>
               </Link>
             </li>
           ))}
         </ul>
+        </Panel>
       )}
       <ReasonDialog
         open={dialog}
