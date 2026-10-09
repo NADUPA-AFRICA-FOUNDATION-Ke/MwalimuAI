@@ -31,9 +31,11 @@ export async function resolveStaff(ctx: QueryCtx | MutationCtx): Promise<StaffCo
   if (!staff || staff.status !== "active") throw forbidden();
   // An invitation nobody acted on is not a standing credential: it lapses after 14 days until staff re-invite them.
   if (staff.mfaEnrolledAt === undefined && staff.invitedAt !== undefined && Date.now() - staff.invitedAt > INVITE_TTL_MS) throw forbidden();
+  // Newest verification wins: an older, expired row for the same sign-in must not hide a fresh code.
   const session = await ctx.db
     .query("staffSessions")
     .withIndex("by_session", (q) => q.eq("authSessionId", authSessionId))
+    .order("desc")
     .first();
   const mfaVerified = Boolean(
     session &&
@@ -42,6 +44,18 @@ export async function resolveStaff(ctx: QueryCtx | MutationCtx): Promise<StaffCo
     Date.now() - session.verifiedAt < MFA_SESSION_TTL_MS,
   );
   return { staff, authSessionId, mfaVerified };
+}
+
+/** Records that this sign-in passed the code check now, refreshing its existing row rather than adding another. */
+export async function markMfaVerified(ctx: MutationCtx, staffId: Id<"staff">, authSessionId: string, now: number) {
+  const rows = await ctx.db
+    .query("staffSessions")
+    .withIndex("by_session", (q) => q.eq("authSessionId", authSessionId))
+    .take(50);
+  const [keep, ...extra] = rows.filter((r) => r.staffId === staffId);
+  for (const r of extra) await ctx.db.delete(r._id);
+  if (keep) await ctx.db.patch(keep._id, { verifiedAt: now });
+  else await ctx.db.insert("staffSessions", { staffId, authSessionId, verifiedAt: now });
 }
 
 export async function requireStaff(ctx: QueryCtx | MutationCtx, permission: Permission): Promise<StaffContext> {

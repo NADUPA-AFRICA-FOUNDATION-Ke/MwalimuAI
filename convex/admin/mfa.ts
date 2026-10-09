@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "../_generated/server";
-import { resolveStaff } from "../lib/staff";
+import { markMfaVerified, resolveStaff } from "../lib/staff";
 import { writeAudit } from "../lib/audit";
 import { decryptSecret, encryptSecret, generateTotpSecret, otpauthUri, verifyTotp } from "../lib/totp";
 import { fail } from "../lib/errors";
@@ -56,7 +56,7 @@ export const verifyCode = mutation({
       if (at < 0) return await failed();
       const remaining = stored.filter((_, i) => i !== at);
       await ctx.db.patch(staff._id, { backupCodes: remaining, mfaFailedAttempts: 0, updatedAt: now });
-      await ctx.db.insert("staffSessions", { staffId: staff._id, authSessionId, verifiedAt: now });
+      await markMfaVerified(ctx, staff._id, authSessionId, now);
       await writeAudit(ctx, staff, { action: "staff.login_backup_code", targetType: "staff", targetId: staff._id, targetLabel: staff.email, after: { backupCodesLeft: remaining.length } });
       return { ok: true as const, usedBackupCode: true, backupCodesLeft: remaining.length };
     }
@@ -74,7 +74,7 @@ export const verifyCode = mutation({
       ...(fresh ? { backupCodes: fresh.stored } : {}),
       updatedAt: now,
     });
-    await ctx.db.insert("staffSessions", { staffId: staff._id, authSessionId, verifiedAt: now });
+    await markMfaVerified(ctx, staff._id, authSessionId, now);
     await writeAudit(ctx, staff, {
       action: firstEnrollment ? "staff.mfa_enrolled" : "staff.login",
       targetType: "staff",

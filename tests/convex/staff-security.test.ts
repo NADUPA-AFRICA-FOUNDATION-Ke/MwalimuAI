@@ -90,3 +90,23 @@ describe("staff invitations", () => {
     expect(await as.query(api.admin.me.me, {})).toMatchObject({ state: "mfa_enrollment_required" });
   });
 });
+
+describe("staff sign-in session", () => {
+  // Production incident 9 Oct 2026: a sign-in session first verified >12h earlier kept asking for a code. Every
+  // correct code was accepted and recorded, but the oldest (expired) verification for the session was the one read.
+  it("treats a session as verified after a fresh code, even if an older verification for it has expired", async () => {
+    const t = newTest();
+    const { s, secret } = await enrol(t);
+    const as = newSession(s, t, "long-lived");
+    const thirteenHoursAgo = Date.now() - 13 * 3_600_000;
+    await t.run(async (ctx) => {
+      await ctx.db.insert("staffSessions", { staffId: s.staffId, authSessionId: "long-lived", verifiedAt: thirteenHoursAgo });
+    });
+    expect(await as.query(api.admin.me.me, {})).toMatchObject({ state: "mfa_required" });
+
+    // The authenticator moves on a step, as it would hours later; the code must be newer than the enrolment one.
+    const r = await as.mutation(api.admin.mfa.verifyCode, { code: await totpCode(secret, Date.now() + 30_000) });
+    expect(r.ok).toBe(true);
+    expect(await as.query(api.admin.me.me, {})).toMatchObject({ state: "ready" });
+  });
+});
