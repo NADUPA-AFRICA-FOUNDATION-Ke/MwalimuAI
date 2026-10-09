@@ -38,17 +38,33 @@ export const requestPlanChange = mutation({
   },
 });
 
+const STRIPE_STATUSES = new Set(["active", "trialing", "past_due", "canceled", "incomplete", "incomplete_expired", "unpaid", "paused"]);
+
 export const fulfillFromStripe = mutation({
-  args: { webhookSecret: v.string(), legacyUserId: v.string(), plan: v.string(), status: v.string(), stripeCustomerId: v.optional(v.string()), stripeSubscriptionId: v.optional(v.string()), currentPeriodEnd: v.optional(v.number()) },
+  args: { webhookSecret: v.string(), legacyUserId: v.optional(v.string()), plan: v.string(), status: v.string(), stripeCustomerId: v.optional(v.string()), stripeSubscriptionId: v.optional(v.string()), currentPeriodEnd: v.optional(v.number()) },
   handler: async (ctx, args) => {
     if (!process.env.STRIPE_WEBHOOK_SECRET || args.webhookSecret !== process.env.STRIPE_WEBHOOK_SECRET) throw new Error("Invalid webhook secret");
     // Migrated learners are known by their old id; learners who signed up natively are known by their profile id.
-    const byLegacy = await ctx.db.query("profiles").withIndex("by_legacy_supabase_user_id", (q) => q.eq("legacySupabaseUserId", args.legacyUserId)).unique();
-    const nativeId = byLegacy ? null : ctx.db.normalizeId("profiles", args.legacyUserId);
-    const profile = byLegacy ?? (nativeId ? await ctx.db.get(nativeId) : null);
+    // Subscription lifecycle events may carry neither (subscriptions created before checkout stamped the learner on
+    // them), so fall back to the Stripe subscription id recorded at checkout. Without this, cancellations and failed
+    // renewals in Stripe never reached the app and paid access was never revoked.
+    let profile = null;
+    if (args.legacyUserId) {
+      const legacyUserId = args.legacyUserId;
+      const byLegacy = await ctx.db.query("profiles").withIndex("by_legacy_supabase_user_id", (q) => q.eq("legacySupabaseUserId", legacyUserId)).unique();
+      const nativeId = byLegacy ? null : ctx.db.normalizeId("profiles", legacyUserId);
+      profile = byLegacy ?? (nativeId ? await ctx.db.get(nativeId) : null);
+    }
+    if (!profile && args.stripeSubscriptionId) {
+      const stripeSubscriptionId = args.stripeSubscriptionId;
+      const row = await ctx.db.query("subscriptions").withIndex("by_stripe_subscription_id", (q) => q.eq("stripeSubscriptionId", stripeSubscriptionId)).first();
+      profile = row ? await ctx.db.get(row.userId) : null;
+    }
     if (!profile) throw new Error("Profile not found for subscription event");
     const existing = await ctx.db.query("subscriptions").withIndex("by_user", (q) => q.eq("userId", profile._id)).unique();
-    const value = { plan: args.plan === "school" ? "school" as const : "professional" as const, status: args.status === "active" ? "active" as const : args.status === "trialing" ? "trialing" as const : args.status === "canceled" ? "canceled" as const : "past_due" as const, ...(args.stripeCustomerId ? { stripeCustomerId: args.stripeCustomerId } : {}), ...(args.stripeSubscriptionId ? { stripeSubscriptionId: args.stripeSubscriptionId } : {}), ...(args.currentPeriodEnd !== undefined ? { currentPeriodEnd: args.currentPeriodEnd } : {}), updatedAt: Date.now() };
+    // Unknown statuses fail closed (not paid).
+    const mapped = (STRIPE_STATUSES.has(args.status) ? args.status : "past_due") as "active" | "trialing" | "past_due" | "canceled" | "incomplete" | "incomplete_expired" | "unpaid" | "paused";
+    const value = { plan: args.plan === "school" ? "school" as const : "professional" as const, status: mapped, ...(args.stripeCustomerId ? { stripeCustomerId: args.stripeCustomerId } : {}), ...(args.stripeSubscriptionId ? { stripeSubscriptionId: args.stripeSubscriptionId } : {}), ...(args.currentPeriodEnd !== undefined ? { currentPeriodEnd: args.currentPeriodEnd } : {}), updatedAt: Date.now() };
     if (existing) { await ctx.db.patch(existing._id, value); return existing._id; }
     return await ctx.db.insert("subscriptions", { userId: profile._id, ...value, createdAt: Date.now() });
   },

@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
       // can record fulfillment against the right account.
       client_reference_id: userId ?? undefined,
       metadata: { plan },
+      // Stamped on the subscription too, so later lifecycle events (cancel, failed renewal) can find the learner.
+      ...(userId ? { subscription_data: { metadata: { legacyUserId: userId, plan } } } : {}),
       customer_email: customerEmail,
       line_items: [
         {

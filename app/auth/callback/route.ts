@@ -6,7 +6,10 @@ export async function GET(request: NextRequest) {
   const next = requestedNext.startsWith('/') && !requestedNext.startsWith('//')
     ? requestedNext
     : '/dashboard'
-  const destination = new URL(next, origin)
+  let destination = new URL(next, origin)
+  // The prefix check alone is not enough: URL parsing turns '/\\evil.com' (and tab/newline tricks) into another host.
+  // Only ever redirect to this site.
+  if (destination.origin !== origin) destination = new URL('/dashboard', origin)
 
   // ConvexAuthProvider completes verification in the browser. Preserve all
   // callback values while preventing an external/open redirect.

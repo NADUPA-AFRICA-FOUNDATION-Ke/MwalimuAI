@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { internal } from "../_generated/api";
-import { action, internalMutation } from "../_generated/server";
+import { action, internalMutation, type MutationCtx } from "../_generated/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import { invalidateSessions, modifyAccountCredentials } from "@convex-dev/auth/server";
 import { assertReason, requireStaff, staffMutation, staffQuery } from "../lib/staff";
@@ -222,6 +222,7 @@ export const setStatus = staffMutation({
   handler: async (ctx, args, _staff, log) => {
     const p = await ctx.db.get(args.profileId);
     if (!p) throw notFound("User");
+    await assertNotStaffAccount(ctx, p);
     const current = p.status ?? "active";
     if (current === args.status) throw fail("NO_CHANGES", `Account is already ${current}`);
     await ctx.db.patch(p._id, {
@@ -269,6 +270,19 @@ export const setStatus = staffMutation({
   },
 });
 
+/**
+ * Staff accounts are only managed from the Staff page (super_admin, staff.manage). Learner-account tools must never
+ * reach them: a support agent could otherwise reset a Super Admin's password or sign them out.
+ */
+async function assertNotStaffAccount(ctx: MutationCtx, p: Doc<"profiles">) {
+  const native = await ctx.db.get(p.authSubject as Id<"users">).catch(() => null);
+  const emails = [...new Set([native?.email, p.email].filter((e): e is string => Boolean(e)).map((e) => e.trim().toLowerCase()))];
+  for (const email of emails) {
+    const staff = await ctx.db.query("staff").withIndex("by_email", (q) => q.eq("email", email)).first();
+    if (staff) throw fail("FORBIDDEN", "This is a staff account. Staff access is managed by a Super Admin on the Staff page.");
+  }
+}
+
 // ── Temporary password: how a locked-out account gets back in (no email involved) ──────────────────────────────
 // Staff set a one-time password and hand it to the person through their ticket or conversation. The person signs in
 // and changes it in Settings. The old password stops working and every existing session is ended.
@@ -285,6 +299,7 @@ export const logTempPassword = internalMutation({
     assertReason(args.reason);
     const p = await ctx.db.get(args.profileId);
     if (!p) throw fail("NOT_FOUND", "User not found");
+    await assertNotStaffAccount(ctx, p);
     // Password sign-ups do not store the address on the profile, so go through the sign-in account.
     const native = await ctx.db.get(p.authSubject as Id<"users">).catch(() => null);
     const email = (native?.email ?? p.email)?.trim().toLowerCase();

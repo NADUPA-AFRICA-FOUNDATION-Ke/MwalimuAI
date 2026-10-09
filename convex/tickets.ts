@@ -186,11 +186,25 @@ const VISITOR_PER_ADDRESS = 3;
 const VISITOR_SITE_WIDE = 100;
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Starts a conversation. Returns the private token ONCE: it is only stored hashed. */
+/** Constant-time string comparison for shared server keys. */
+function sameKey(a: string, b: string) {
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
+
+/**
+ * Starts a conversation. Returns the private token ONCE: it is only stored hashed.
+ * When CONTACT_FORM_KEY is set, only the website's /api/contact route (which limits each IP address and checks the
+ * email domain) may call this. Otherwise anyone could call it directly with made-up addresses and fill the site-wide
+ * hourly cap below, shutting every real visitor (including locked-out learners) out of support.
+ */
 export const createPublic = mutation({
-  args: { name: v.string(), email: v.string(), subject: v.string(), body: v.string(), category },
+  args: { name: v.string(), email: v.string(), subject: v.string(), body: v.string(), category, formKey: v.optional(v.string()) },
   returns: v.object({ number: v.string(), token: v.string() }),
   handler: async (ctx, args) => {
+    const formKey = process.env.CONTACT_FORM_KEY;
+    if (formKey && !sameKey(args.formKey ?? "", formKey)) throw fail("FORBIDDEN", "Please use the contact form on the website.");
     const name = requireNonEmpty(args.name, "Name", 100);
     if (name.length < 2) throw fail("INVALID_ARGUMENT", "Please enter your name.");
     const email = args.email.trim().toLowerCase();

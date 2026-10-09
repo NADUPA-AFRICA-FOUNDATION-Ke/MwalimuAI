@@ -1,7 +1,7 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { getCurrentProfile, sessionIdOf } from "./lib/auth";
+import { assertProfileActive, getCurrentProfile, sessionIdOf } from "./lib/auth";
 
 const LOG_SIZE = 20;
 
@@ -16,8 +16,17 @@ export const claim = mutation({
   handler: async (ctx, { tabId, confirm, agent }) => {
     const { identity, profile } = await getCurrentProfile(ctx);
     if (!profile) return { status: "ok" as const };
+    assertProfileActive(profile);
     const sessionId = sessionIdOf(identity);
     const now = Date.now();
+    // A session that was replaced had its sign-in deleted, but its access token stays valid until it expires (up to an
+    // hour). It must not be able to take the account back and sign out the person who replaced it, so only a session
+    // whose sign-in still exists may claim.
+    const ownId = ctx.db.normalizeId("authSessions", sessionId);
+    const own = ownId ? await ctx.db.get(ownId) : null;
+    if (!own || own.expirationTime <= now) {
+      throw new ConvexError({ code: "SESSION_REPLACED", message: "This account was opened on another device or browser, so you were signed out here." });
+    }
     const holder = profile.activeAuthSession;
     let replaced = false;
     if (holder && holder !== sessionId) {

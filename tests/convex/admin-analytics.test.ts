@@ -63,7 +63,8 @@ describe("learning analytics", () => {
     await save(nakuru, ["m1/l1", "m1/l2"]);
     await save(kisumu, ["m1/l1"]);
 
-    const page = await support.as.query(api.admin.analytics.learners, {
+    const page = await support.as.mutation(api.admin.analytics.learners, {
+      reason: REASON,
       programId: "cbc-foundations",
       paginationOpts: { numItems: 50, cursor: null },
     });
@@ -73,22 +74,27 @@ describe("learning analytics", () => {
     expect(row.lessonsTotal).toBeGreaterThan(2);
     expect(row.progressPct).toBeGreaterThan(0);
 
-    const nak = await support.as.query(api.admin.analytics.learners, {
+    const nak = await support.as.mutation(api.admin.analytics.learners, {
+      reason: REASON,
       programId: "cbc-foundations",
       paginationOpts: { numItems: 50, cursor: null },
       county: "nakuru",
     });
     expect(nak.page.map((r) => r.name)).toEqual(["Wanjiru"]);
-    const done = await support.as.query(api.admin.analytics.learners, {
+    const done = await support.as.mutation(api.admin.analytics.learners, {
+      reason: REASON,
       programId: "cbc-foundations",
       paginationOpts: { numItems: 50, cursor: null },
       status: "completed",
     });
     expect(done.page).toHaveLength(0);
+    // Every page of learner-level data is audited on the server, whatever the client does afterwards.
+    const audited = await t.run((ctx) => ctx.db.query("auditLog").collect());
+    expect(audited.filter((a) => a.action === "analytics.export_page")).toHaveLength(3);
 
     // Aggregates are open to content managers; learner identities are not.
     await expect(content.as.query(api.admin.analytics.overview, {})).resolves.toBeTruthy();
-    await rejects(content.as.query(api.admin.analytics.learners, { programId: "cbc-foundations", paginationOpts: { numItems: 5, cursor: null } }), "FORBIDDEN");
+    await rejects(content.as.mutation(api.admin.analytics.learners, { reason: REASON, programId: "cbc-foundations", paginationOpts: { numItems: 5, cursor: null } }), "FORBIDDEN");
     await rejects(content.as.mutation(api.admin.analytics.logExport, { reason: REASON, programs: [], rows: 0 }), "FORBIDDEN");
   });
 

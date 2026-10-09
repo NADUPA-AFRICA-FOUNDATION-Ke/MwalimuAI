@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Local migration exports contain user data and must never be committed.
 migration-data/
+
+# Browser profiles from local testing: cookies, saved logins and session tokens. Never commit.
+prof-*/

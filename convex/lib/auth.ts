@@ -21,13 +21,16 @@ export async function getCurrentProfile(ctx: DatabaseCtx) {
   // Convex Auth's subject is the native `users` document id. Resolve that
   // document first so migrated profiles can still be found when the JWT does
   // not expose an email claim.
-  let nativeUser: { email?: string } | null = null;
+  let nativeUser: { email?: string; emailVerificationTime?: number } | null = null;
   try {
     nativeUser = await ctx.db.get(nativeUserId as Id<"users">);
   } catch {
     // Some non-Convex identity providers use a non-document subject.
   }
-  const nativeEmail = nativeUser?.email?.trim().toLowerCase();
+  // Only a verified address may match someone else's (e.g. migrated) profile. Password sign-up does not verify the
+  // email, so trusting it here let anyone claim a migrated learner's profile by signing up with their address.
+  // Verification happens through the reset-password email or a provider that vouches for the address.
+  const nativeEmail = nativeUser?.emailVerificationTime ? nativeUser.email?.trim().toLowerCase() : undefined;
   const email = identity.email?.trim().toLowerCase() ?? nativeEmail;
   const candidates = [
     ...(await ctx.db.query("profiles")

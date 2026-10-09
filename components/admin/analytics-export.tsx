@@ -84,7 +84,8 @@ export function AnalyticsExport({ days, programs }: { days: number; programs: { 
         outer: for (const p of chosen) {
           let cursor: string | null = null
           for (;;) {
-            const res: Awaited<ReturnType<typeof convex.query<typeof api.admin.analytics.learners>>> = await convex.query(api.admin.analytics.learners, {
+            const res: Awaited<ReturnType<typeof convex.mutation<typeof api.admin.analytics.learners>>> = await convex.mutation(api.admin.analytics.learners, {
+              reason: reason ?? '',
               programId: p.id,
               paginationOpts: { numItems: PAGE, cursor },
               county: county.trim() || undefined,

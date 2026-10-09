@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { requireCurrentProfile } from "./lib/auth";
 import { fail, notFound } from "./lib/errors";
+import { loadProgramDef } from "./lib/eligibility";
 
 const MAX_EVENTS = 300;
 const EVENT_TYPES = new Set([
@@ -15,6 +16,7 @@ export const startAttempt = mutation({
   returns: v.id("assessmentAttempts"),
   handler: async (ctx, args) => {
     const profile = await requireCurrentProfile(ctx);
+    if ((args.kind === "pre" || args.kind === "post") && !(await loadProgramDef(ctx, args.programId))) throw fail("INVALID_ARGUMENT", "Unknown program");
     const now = Date.now();
     const recent = await ctx.db.query("assessmentAttempts").withIndex("by_profile_and_program", (q) => q.eq("profileId", profile._id).eq("programId", args.programId).gt("startedAt", now - 3_600_000)).take(30);
     if (recent.length >= 20) throw fail("RATE_LIMITED", "Too many attempts started. Please wait a while.");

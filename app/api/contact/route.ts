@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   if (!url) return NextResponse.json({ error: 'Support is temporarily unavailable. Please try again later.' }, { status: 503 })
   const category = CATEGORIES.find((c) => c === body.category) ?? 'other'
   try {
-    const result = await new ConvexHttpClient(url).mutation(api.tickets.createPublic, { name, email, subject, body: message, category })
+    const result = await new ConvexHttpClient(url).mutation(api.tickets.createPublic, { name, email, subject, body: message, category, ...(process.env.CONTACT_FORM_KEY ? { formKey: process.env.CONTACT_FORM_KEY } : {}) })
     return NextResponse.json({ ok: true, number: result.number, token: result.token })
   } catch (e) {
     const data = e instanceof ConvexError ? (e.data as { code?: string; message?: string }) : undefined

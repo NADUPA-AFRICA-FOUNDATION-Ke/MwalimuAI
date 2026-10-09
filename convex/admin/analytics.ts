@@ -83,18 +83,21 @@ export const trend = staffQuery({
 });
 
 /**
- * One page of learner-level rows for a program, newest progress first. Used by the on-screen table and the Excel
- * export, which walks the pages. Learner identity is included, so it needs the export permission.
+ * One page of learner-level rows for a program, newest progress first, for the Excel export, which walks the pages.
+ * Learner identity is included, so it needs the export permission and a reason, and every page it hands out is written
+ * to the audit log here on the server (a query could not audit, and a client-side log call can simply be skipped).
  */
-export const learners = staffQuery({
+export const learners = staffMutation({
   permission: "analytics.export",
+  requireReason: true,
   args: {
+    reason: v.string(),
     programId: v.string(),
     paginationOpts: paginationOptsValidator,
     county: v.optional(v.string()),
     status: v.optional(v.union(v.literal("all"), v.literal("completed"), v.literal("in_progress"))),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args, _staff, log) => {
     const def = await getProgramDef(ctx, args.programId);
     const catalog = (await programCatalog(ctx)).find((p) => p.id === args.programId);
     const total = def?.activeLessonKeys.size ?? 0;
@@ -136,6 +139,13 @@ export const learners = staffQuery({
         lastActivityAt: r.updatedAt,
       });
     }
+    await log({
+      action: "analytics.export_page",
+      targetType: "analytics",
+      targetId: args.programId,
+      targetLabel: `${rows.length} learner rows`,
+      after: { programId: args.programId, county: args.county ?? null, status: args.status ?? "all", rows: rows.length, firstPage: args.paginationOpts.cursor === null },
+    });
     return { page: rows, isDone: page.isDone, continueCursor: page.continueCursor };
   },
 });

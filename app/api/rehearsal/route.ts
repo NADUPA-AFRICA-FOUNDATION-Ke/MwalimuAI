@@ -1,4 +1,5 @@
 import { streamText, convertToModelMessages } from 'ai'
+import { textOnlyMessages } from '@/lib/ai-text-messages'
 import { createOpenAI } from '@ai-sdk/openai'
 import { requireAuthUser } from '@/lib/require-auth'
 import { consumeAi } from '@/lib/ai-guard'
@@ -84,10 +85,11 @@ export async function POST(req: Request) {
     return Response.json({ error: 'Messages are required.' }, { status: 400 })
   }
 
-  // Cap history to last 10 messages to prevent unbounded token growth
-  const recentMessages = messages.slice(-10)
-  const converted = await convertToModelMessages(recentMessages as Parameters<typeof convertToModelMessages>[0])
-  const system    = buildSystem(lessonPlan ?? '', grade ?? 'Grade 4', lang)
+  // Text only, last 10 turns: no file parts (the SDK would fetch their URLs from this server) and no forged system turns.
+  const recentMessages = textOnlyMessages(messages.slice(-10))
+  if (recentMessages.length === 0) return Response.json({ error: 'Messages are required.' }, { status: 400 })
+  const converted = await convertToModelMessages(recentMessages)
+  const system    = buildSystem(lessonPlan ?? '', (typeof grade === 'string' ? grade : 'Grade 4').slice(0, 40), lang)
 
   const canUseGroq = process.env.GROQ_API_KEY && !groqOnCooldown()
 

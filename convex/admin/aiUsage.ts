@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { staffMutation, staffQuery } from "../lib/staff";
+import { roleHasPermission } from "../lib/permissions";
 import { readCounters } from "../lib/analytics";
 import { addDays, eatDateKey } from "../lib/streakMath";
 import { DEFAULT_AI_SETTINGS, readAiSettings } from "../lib/settings";
@@ -11,13 +12,19 @@ const TOOLS = ["chat", "tools", "assignment-review", "rehearsal", "detect-ai", "
 export const overview = staffQuery({
   permission: "analytics.read",
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx, _args, { staff }) => {
+    // Learner identity needs users.read; content managers see usage without knowing who it is.
+    const seesIdentity = roleHasPermission(staff.role, "users.read");
     const today = eatDateKey(Date.now());
     const days = Array.from({ length: 14 }, (_, i) => addDays(today, -(13 - i)));
     const counters = await readCounters(ctx, days.flatMap((d) => [`ai:${d}:total`, ...TOOLS.map((t) => `ai:${d}:${t}`)]));
     const heavy = await ctx.db.query("aiUsage").withIndex("by_day_and_count", (q) => q.eq("day", today)).order("desc").take(10);
     const users = [];
-    for (const u of heavy) {
+    for (const [i, u] of heavy.entries()) {
+      if (!seesIdentity) {
+        users.push({ profileId: null, name: `Learner ${i + 1}`, count: u.count });
+        continue;
+      }
       const p = await ctx.db.get(u.profileId);
       users.push({ profileId: u.profileId, name: p?.name || p?.email || "Unknown", count: u.count });
     }

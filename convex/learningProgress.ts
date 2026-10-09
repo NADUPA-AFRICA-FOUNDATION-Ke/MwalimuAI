@@ -95,7 +95,10 @@ export const submitAssessment = mutation({
     const passed = kind === "pre" || score / total >= CERTIFICATE_PASS_RATIO;
     // Record the attempt (with its integrity log) and the result.
     const attempt = attemptId ? await ctx.db.get(attemptId) : null;
-    if (attempt && attempt.profileId === profile._id && attempt.submittedAt === undefined) await ctx.db.patch(attempt._id, { submittedAt: now, score, total });
+    // The sitting must belong to this program, this kind and today's window, or the daily limit above (which counts
+    // this program's rows) could be dodged by submitting with attempts opened for something else.
+    const sameSitting = attempt && attempt.profileId === profile._id && attempt.submittedAt === undefined && attempt.programId === programId && attempt.kind === kind && attempt.startedAt > now - 86_400_000;
+    if (attempt && sameSitting) await ctx.db.patch(attempt._id, { submittedAt: now, score, total });
     else await ctx.db.insert("assessmentAttempts", { profileId: profile._id, programId, kind, startedAt: now, submittedAt: now, score, total, assistive: false, events: [] });
     const existing = await ctx.db.query("learningProgress").withIndex("by_user_and_program", (q) => q.eq("userId", profile._id).eq("programId", programId)).unique();
     const result = { score, total, date: new Date(now).toLocaleDateString("en-KE"), answers };

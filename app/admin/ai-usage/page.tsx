@@ -92,7 +92,7 @@ export default function AiUsagePage() {
           ) : (
             <ol className="divide-y text-sm">
               {data.heaviestToday.map((u) => (
-                <li key={u.profileId} className="flex items-center gap-3 px-4 py-2.5">
+                <li key={u.profileId ?? u.name} className="flex items-center gap-3 px-4 py-2.5">
                   <Avatar name={u.name} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate">{u.name}</div>
