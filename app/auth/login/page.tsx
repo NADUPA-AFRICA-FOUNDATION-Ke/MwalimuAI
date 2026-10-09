@@ -1,5 +1,6 @@
 'use client'
 
+import { isNetworkFailure, NETWORK_MESSAGE, retryOnNetworkFailure } from '@/lib/network-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,6 +18,7 @@ import { ConvexNativeAuthBoundary, FORCED_LOGOUT_FLAG } from '@/context/profile-
 const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
+  if (isNetworkFailure(msg)) return NETWORK_MESSAGE
   if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials') || msg.includes('Invalid credentials'))
     return 'Incorrect email or password.'
   if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed'))
@@ -70,7 +72,8 @@ function LoginContent() {
     setIsLoading(true)
     try {
       const normalizedEmail = email.trim().toLowerCase()
-      const result = await signIn('password', { flow: 'signIn', email: normalizedEmail, password })
+      // A dropped connection is retried; a wrong password is not.
+      const result = await retryOnNetworkFailure(() => signIn('password', { flow: 'signIn', email: normalizedEmail, password }))
       if (!result.signingIn) throw new Error('Invalid credentials')
       // Convex updates its auth state immediately after this resolves. Let the
       // single effect above perform navigation so the page never starts two

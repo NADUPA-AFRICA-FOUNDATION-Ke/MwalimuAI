@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
+import { isNetworkFailure, NETWORK_MESSAGE } from '@/lib/network-error'
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ export function errorMessage(e: unknown): string {
   if (/ArgumentValidationError|Validator error/.test(msg))
     return 'Some fields are not valid. Please check them and try again.'
   if (/FORBIDDEN/.test(msg)) return 'You do not have permission to do that.'
+  if (isNetworkFailure(e)) return NETWORK_MESSAGE
   return 'Something went wrong. Please try again.'
 }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { isNetworkFailure, NETWORK_MESSAGE } from '@/lib/network-error'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthActions } from '@convex-dev/auth/react'
@@ -14,6 +15,7 @@ import { BrandMark } from '@/components/brand-mark'
 import Link from 'next/link'
 
 function mapError(msg: string): string {
+  if (isNetworkFailure(msg)) return NETWORK_MESSAGE
   if (msg.includes('Invalid password') || msg.includes('least 8')) return 'Password must be at least 8 characters.'
   if (msg.includes('Invalid code') || msg.includes('Expired')) return 'This password reset link has expired or already been used.'
   if (msg.includes('same as') || msg.includes('different')) return 'New password must be different from your current password.'

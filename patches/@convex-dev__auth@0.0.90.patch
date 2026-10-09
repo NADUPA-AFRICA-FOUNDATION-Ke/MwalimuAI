@@ -1,0 +1,58 @@
+diff --git a/dist/react/client.js b/dist/react/client.js
+index 99b4651583f7045c86fd89d878b695f66bb635d5..3a267879264ea928854b991746dfd43b910befb1 100644
+--- a/dist/react/client.js
++++ b/dist/react/client.js
+@@ -2,7 +2,26 @@ import { jsx as _jsx } from "react/jsx-runtime";
+ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, } from "react";
+ import isNetworkError from "is-network-error";
+ // Retry after this much time, based on the retry number.
+-const RETRY_BACKOFF = [500, 2000]; // In ms
++// Mwalimu AI patch: four quick retries spread over ~10s (the server's refresh-token reuse window, so a retry is
++// safe even if an earlier attempt reached the server), then, if the device is offline, wait for the connection
++// instead of giving up: offline requests never reached the server, so the same refresh token is still valid.
++const RETRY_BACKOFF = [500, 1500, 3000, 4500]; // In ms
++const OFFLINE_WAIT_MS = 120000;
++const OFFLINE_ROUNDS = 3;
++function isOffline() {
++    return typeof navigator !== "undefined" && navigator.onLine === false;
++}
++function waitForOnline(ms) {
++    return new Promise((resolve) => {
++        const done = () => {
++            clearTimeout(timer);
++            window.removeEventListener?.("online", done);
++            resolve();
++        };
++        const timer = setTimeout(done, ms);
++        window.addEventListener?.("online", done);
++    });
++}
+ const RETRY_JITTER = 100; // In ms
+ export const ConvexAuthActionsContext = createContext(undefined);
+ const ConvexAuthInternalContext = createContext(undefined);
+@@ -106,7 +125,8 @@ export function AuthProvider({ client, serverState, onChange, shouldHandleCode,
+         // while making a call and hits a network error, but will succeed with a
+         // retry once the app is brought to the foreground.
+         let retry = 0;
+-        while (retry < RETRY_BACKOFF.length) {
++        let offlineRounds = 0;
++        for (;;) {
+             try {
+                 return await client.unauthenticatedCall("auth:signIn", "code" in args
+                     ? { params: { code: args.code }, verifier: args.verifier }
+@@ -117,6 +137,15 @@ export function AuthProvider({ client, serverState, onChange, shouldHandleCode,
+                 if (!isNetworkError(e)) {
+                     break;
+                 }
++                if (retry >= RETRY_BACKOFF.length) {
++                    if (!isOffline() || offlineRounds >= OFFLINE_ROUNDS) {
++                        break;
++                    }
++                    offlineRounds++;
++                    logVerbose(`verifyCode offline, waiting for the connection (${offlineRounds} of ${OFFLINE_ROUNDS})`);
++                    await waitForOnline(OFFLINE_WAIT_MS);
++                    continue;
++                }
+                 const wait = RETRY_BACKOFF[retry] + RETRY_JITTER * Math.random();
+                 retry++;
+                 logVerbose(`verifyCode failed with network error, retry ${retry} of ${RETRY_BACKOFF.length} in ${wait}ms`);

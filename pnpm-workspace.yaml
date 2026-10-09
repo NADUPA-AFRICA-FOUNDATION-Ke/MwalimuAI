@@ -3,3 +3,5 @@ allowBuilds:
   core-js: set this to true or false
   protobufjs: set this to true or false
   sharp: true
+patchedDependencies:
+  '@convex-dev/auth@0.0.90': patches/@convex-dev__auth@0.0.90.patch

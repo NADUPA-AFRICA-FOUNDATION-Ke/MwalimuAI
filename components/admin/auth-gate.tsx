@@ -5,6 +5,7 @@
  * sign-in, the not-staff screen, authenticator enrolment and the 6-digit challenge.
  * The server enforces all of it; this only decides what to show.
  */
+import { isNetworkFailure, NETWORK_MESSAGE, retryOnNetworkFailure } from '@/lib/network-error'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useConvexAuth, useMutation, useQuery } from 'convex/react'
@@ -109,9 +110,12 @@ function SignIn() {
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setBusy(true); setError(null)
     try {
-      const r = await signIn('password', { flow: 'signIn', email: email.trim().toLowerCase(), password })
+      // A dropped connection is retried; a wrong password is not, and the two get different messages.
+      const r = await retryOnNetworkFailure(() => signIn('password', { flow: 'signIn', email: email.trim().toLowerCase(), password }))
       if (!r.signingIn) throw new Error('bad')
-    } catch { setError('Incorrect email or password.') } finally { setBusy(false) }
+    } catch (err) {
+      setError(isNetworkFailure(err) ? NETWORK_MESSAGE : 'Incorrect email or password.')
+    } finally { setBusy(false) }
   }
 
   // Same reset flow as the main site: an emailed single-use link. Opening it also marks the email

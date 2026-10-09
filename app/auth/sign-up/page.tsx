@@ -1,5 +1,6 @@
 'use client'
 
+import { isNetworkFailure, NETWORK_MESSAGE } from '@/lib/network-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +17,7 @@ import { ConvexNativeAuthBoundary } from '@/context/profile-context'
 const DARK = 'var(--hero-bg)'
 
 function mapError(msg: string): string {
+  if (isNetworkFailure(msg)) return NETWORK_MESSAGE
   if (msg.includes('already registered') || msg.includes('already exists'))
     return 'An account with this email already exists. Try signing in instead.'
   if (msg.includes('valid email')) return 'Please enter a valid email address.'
